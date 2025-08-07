@@ -1,0 +1,4 @@
+#API KEYS
+swipeshare_app/lib/firebase_options.dart
+swipeshare_app/android/app/google-services.json
+swipeshare_app/ios/Runner/GoogleService-Info.plist
