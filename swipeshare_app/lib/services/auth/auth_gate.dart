@@ -16,7 +16,7 @@ class AuthGate extends StatelessWidget {
           // user is logged in
           if (snapshot.hasData) {
             if (FirebaseAuth.instance.currentUser!.emailVerified) {
-              return const HomeScreen(hasOrders: false);
+              return const HomeScreen();
             } else {
               return const OnboardingCarousel();
             }

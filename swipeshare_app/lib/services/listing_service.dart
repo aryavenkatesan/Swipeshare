@@ -35,4 +35,7 @@ class ListingService extends ChangeNotifier {
   }
 
   //DELETE LISTING
+  Future<void> deleteListing(String docId) async {
+    await _fireStore.collection('listings').doc(docId).delete();
+  }
 }

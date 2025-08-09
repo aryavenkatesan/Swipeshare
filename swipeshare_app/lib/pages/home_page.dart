@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
@@ -10,22 +14,86 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  final bool hasOrders;
-
-  const HomeScreen({super.key, required this.hasOrders});
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late bool hasOrders;
+  List<MealOrder> orders = [];
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  StreamSubscription<QuerySnapshot>? _ordersSubscription;
 
   @override
   void initState() {
     super.initState();
-    hasOrders = widget.hasOrders;
+    print("HomeScreen initState called");
+
+    // Listen to auth state changes
+    _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        print("User authenticated: ${user.email}");
+        _listenToUserOrders();
+      } else {
+        print("User not authenticated");
+        // Handle unauthenticated state
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ordersSubscription?.cancel();
+    super.dispose();
+  }
+
+  // Function to listen to real-time updates for orders
+  void _listenToUserOrders() {
+    print(_auth.currentUser == null);
+    String currentUserId = "123089";
+    try {
+      currentUserId = _auth.currentUser!.uid;
+    } catch (e, s) {
+      print(e);
+      print(s);
+    }
+
+    _ordersSubscription = FirebaseFirestore.instance
+        .collection('orders')
+        .where(
+          Filter.or(
+            Filter('sellerId', isEqualTo: currentUserId),
+            Filter('buyerId', isEqualTo: currentUserId),
+          ),
+        )
+        .snapshots()
+        .listen(
+          (QuerySnapshot querySnapshot) {
+            List<MealOrder> userOrders = [];
+            for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+              // Create MealOrder from the document data
+              MealOrder order = MealOrder(
+                docId: doc.id,
+                sellerId: data['sellerId'],
+                buyerId: data['buyerId'],
+                location: data['location'],
+                transactionDate: DateTime.parse(data['transactionDate']),
+                time: data['time'],
+              );
+              userOrders.add(order);
+            }
+
+            setState(() {
+              orders = userOrders;
+            });
+          },
+          onError: (error) {
+            print('Error listening to orders: $error');
+          },
+        );
   }
 
   void signOut() {
@@ -105,14 +173,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Text("Active Orders", style: HeaderStyle),
               SizedBox(height: 12),
-              if (hasOrders)
+              if (orders.isNotEmpty)
                 //TODO: Change the conditional and the data population
-                Row(
-                  children: [
-                    orderCard("Chase", "11:00 AM", active: true),
-                    SizedBox(width: 12),
-                    orderCard("Lenoir", "12:00 PM"),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: orders.map((order) {
+                      // Adjust these based on your MealOrder model properties
+                      String location = order.location;
+                      String time = (order.time != null)
+                          ? "${order.time!.hour}:${order.time!.minute.toString().padLeft(2, '0')}"
+                          : "TBD";
+                      bool isActive = true; //change this
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: orders.last == order ? 0 : 12,
+                        ),
+                        child: ActiveOrderCard(title: location, time: time),
+                      );
+                    }).toList(),
+                  ),
                 )
               else
                 Container(
@@ -181,17 +262,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget orderCard(String title, String time, {bool active = false}) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: active ? Colors.red : Colors.black12),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(children: [Text(title), Text(time)]),
     );
   }
 }

@@ -3,8 +3,6 @@ import 'dart:ui';
 import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/my_button.dart';
-import 'package:swipeshare_app/components/my_text_field.dart';
 import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -26,16 +24,16 @@ class _RegisterPageState extends State<RegisterPage> {
   //sign up user
   void signUp() async {
     // make it unc email only
-    if (!emailController.text.trim().toLowerCase().endsWith('unc.edu')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Please use a valid UNC email address (ending with @unc.edu)",
-          ),
-        ),
-      );
-      return;
-    }
+    // if (!emailController.text.trim().toLowerCase().endsWith('unc.edu')) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text(
+    //         "Please use a valid UNC email address (ending with @unc.edu)",
+    //       ),
+    //     ),
+    //   );
+    //   return;
+    // }
 
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(

@@ -1,6 +1,7 @@
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/pages/chat_page.dart';
 
 class ActiveOrderCard extends StatelessWidget {
   final String title;
@@ -13,11 +14,19 @@ class ActiveOrderCard extends StatelessWidget {
     return CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: () {
-        Navigator.pushNamed(context, '/order_details');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatPage(
+              receiverUserEmail: 'receiverUserEmail',
+              receiverUserID: 'receiverUserID',
+            ),
+          ),
+        );
       },
       child: Container(
-        width: 150,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        width: 225,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.6),
           borderRadius: BorderRadius.circular(12),
@@ -27,8 +36,8 @@ class ActiveOrderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: HeaderStyle),
-            const SizedBox(height: 4),
-            Text(time, style: SubTextStyle),
+            const SizedBox(height: 6),
+            Text(time, style: GreyHeaderStyle),
           ],
         ),
       ),

@@ -9,6 +9,14 @@ final HeaderStyle = GoogleFonts.instrumentSans(
   decoration: TextDecoration.none,
 );
 
+final GreyHeaderStyle = GoogleFonts.instrumentSans(
+  color: const Color.fromARGB(108, 55, 58, 64),
+  fontSize: 24,
+  fontWeight: FontWeight.w400,
+  letterSpacing: 0,
+  decoration: TextDecoration.none,
+);
+
 final SubHeaderStyle = GoogleFonts.instrumentSans(
   color: const Color(0xFF111827),
   fontSize: 24,

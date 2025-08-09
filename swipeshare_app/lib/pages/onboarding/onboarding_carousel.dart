@@ -220,9 +220,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
           // Navigate to home screen
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => HomeScreen(hasOrders: false),
-            ),
+            MaterialPageRoute(builder: (context) => HomeScreen()),
           );
         }
       }

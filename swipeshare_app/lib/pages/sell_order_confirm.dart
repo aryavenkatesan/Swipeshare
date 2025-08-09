@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:swipeshare_app/services/listings/listing_service.dart';
+import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:flutter/material.dart';
 
 class SellOrderConfirmScreen extends StatefulWidget {
@@ -133,7 +133,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                             );
                             Navigator.pop(context);
                             Navigator.pop(context);
-                            //add a congratulations pop up with confetti  after returning home?
+                            // TODO: add a congratulations pop up with confetti  after returning home?
                           },
                           child: const Center(child: Text("Confirm Listing")),
                         ),

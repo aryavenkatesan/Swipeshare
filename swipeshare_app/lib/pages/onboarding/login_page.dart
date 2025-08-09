@@ -1,8 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/my_button.dart';
-import 'package:swipeshare_app/components/my_text_field.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:provider/provider.dart';
 

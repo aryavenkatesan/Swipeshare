@@ -1,10 +1,9 @@
 import 'package:swipeshare_app/models/listing.dart';
-import 'package:swipeshare_app/pages/chat_page.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:swipeshare_app/services/listing_service.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
@@ -27,6 +26,8 @@ class ListingSelectionPage extends StatefulWidget {
 class _ListingSelectionPageState extends State<ListingSelectionPage> {
   // instance of auth
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final _listingService = ListingService();
+  final _orderService = OrderService();
 
   @override
   Widget build(BuildContext context) {
@@ -65,12 +66,15 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       listing['timeStart'],
     );
     final TimeOfDay listingEndTime = Listing.minutesToTOD(listing['timeEnd']);
+    final docId = document.id;
 
     // display all listings with a selection location
     // TODO: add PaymentType filtering here
     // TODO: add a date selector and only display the listings on that date
     // TODO: add a filter to stop people from seeing their own posts (compare uid of current user to listing sellerID)
-    if (widget.locations.contains(listing['diningHall'])) {
+    if (widget.locations.contains(listing['diningHall']) &&
+        _auth.currentUser!.uid != listing['sellerId'] &&
+        widget.date.toIso8601String() != listing['transactionDate']) {
       return ListTile(
         // change this from a listTile to a custom componenent that will take arguments and spit out smth beautiful
         // need to add ratings somehow, probably easiest to do it through the listing itself with another content field
@@ -78,9 +82,22 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         title: Text(
           "${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')} @ ${listing['diningHall']}",
         ),
-        onTap: () {
-          // open a confimation screen
-          print("Selected this one woo");
+        onTap: () async {
+          try {
+            await _listingService.deleteListing(docId);
+            await _orderService.postOrder(
+              listing['sellerId'],
+              _auth.currentUser!.uid,
+              listing['diningHall'],
+              widget.date,
+            );
+            Navigator.pop(context);
+            Navigator.pop(context);
+          } catch (e, s) {
+            // Handle the error and stack trace
+            print('Error: $e');
+            print('Stack: $s');
+          }
         },
       );
     } else {
