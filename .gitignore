@@ -1,4 +1,18 @@
-#API KEYS
+# --- Virtual Environment ---
+**/.venv/
+
+# --- Python Cache ---
+**/__pycache__/
+
+# --- Secrets ---
+**/.env
+backend/src/serviceAccountKey.json
 swipeshare_app/lib/firebase_options.dart
 swipeshare_app/android/app/google-services.json
 swipeshare_app/ios/Runner/GoogleService-Info.plist
+
+# --- Editor Config ---
+**/.vscode/
+
+# --- Operating System ---
+.DS_Store
