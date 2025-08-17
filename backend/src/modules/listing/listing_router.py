@@ -14,8 +14,8 @@ async def create_listing(
     listing_collection: AsyncCollectionReference = Depends(get_listing_collection),
     user_collection: AsyncCollectionReference = Depends(get_user_collection),
 ) -> ListingDto:
-    if not await user_exists(listing_data.sellerId, user_collection):
-        raise HTTPException(404, f"Seller with id {listing_data.sellerId} not found")
+    if not await user_exists(listing_data.seller_id, user_collection):
+        raise HTTPException(404, f"Seller with id {listing_data.seller_id} not found")
     listing_ref = listing_collection.document()
     await listing_ref.set(listing_data.model_dump())
     return ListingDto.from_doc(await listing_ref.get())
@@ -52,10 +52,10 @@ async def update_listing(
     current_data = doc.to_dict()
     if not doc.exists or current_data is None:
         raise HTTPException(404, f"Listing with id {listing_id} not found")
-    if listing_data.sellerId != current_data.get("sellerId"):
-        if not await user_exists(listing_data.sellerId, user_collection):
+    if listing_data.seller_id != current_data.get("sellerId"):
+        if not await user_exists(listing_data.seller_id, user_collection):
             raise HTTPException(
-                404, f"Seller with id {listing_data.sellerId} not found"
+                404, f"Seller with id {listing_data.seller_id} not found"
             )
     await listing_ref.set(listing_data.model_dump())
     return ListingDto.from_doc(await listing_ref.get())

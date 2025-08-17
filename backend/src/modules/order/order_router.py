@@ -14,10 +14,10 @@ async def create_order(
     order_collection: AsyncCollectionReference = Depends(get_order_collection),
     user_collection: AsyncCollectionReference = Depends(get_user_collection),
 ) -> OrderDto:
-    if not await user_exists(order_data.sellerId, user_collection):
-        raise HTTPException(404, f"Seller with id {order_data.sellerId} not found")
-    if not await user_exists(order_data.buyerId, user_collection):
-        raise HTTPException(404, f"Buyer with id {order_data.buyerId} not found")
+    if not await user_exists(order_data.seller_id, user_collection):
+        raise HTTPException(404, f"Seller with id {order_data.seller_id} not found")
+    if not await user_exists(order_data.buyer_id, user_collection):
+        raise HTTPException(404, f"Buyer with id {order_data.buyer_id} not found")
 
     order_ref = order_collection.document()
     await order_ref.set(order_data.model_dump())
@@ -56,13 +56,13 @@ async def update_order(
     if not doc.exists or current_data is None:
         raise HTTPException(404, f"Order with id {order_id} not found")
 
-    if order_data.sellerId != current_data.get("sellerId"):
-        if not await user_exists(order_data.sellerId, user_collection):
-            raise HTTPException(404, f"Seller with id {order_data.sellerId} not found")
+    if order_data.seller_id != current_data.get("sellerId"):
+        if not await user_exists(order_data.seller_id, user_collection):
+            raise HTTPException(404, f"Seller with id {order_data.seller_id} not found")
 
-    if order_data.buyerId != current_data.get("buyerId"):
-        if not await user_exists(order_data.buyerId, user_collection):
-            raise HTTPException(404, f"Buyer with id {order_data.buyerId} not found")
+    if order_data.buyer_id != current_data.get("buyerId"):
+        if not await user_exists(order_data.buyer_id, user_collection):
+            raise HTTPException(404, f"Buyer with id {order_data.buyer_id} not found")
 
     await order_ref.set(order_data.model_dump())
     return OrderDto.from_doc(await order_ref.get())

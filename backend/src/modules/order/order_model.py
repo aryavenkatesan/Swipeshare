@@ -6,10 +6,10 @@ from pydantic import BaseModel
 
 
 class OrderCreateDto(BaseModel):
-    sellerId: str
-    buyerId: str
-    diningHall: Literal["Chase", "Lenoir"]
-    transactionDatetime: datetime
+    seller_id: str
+    buyer_id: str
+    dining_hall: Literal["Chase", "Lenoir"]
+    transaction_datetime: datetime
 
 
 class OrderDto(OrderCreateDto):
@@ -22,8 +22,8 @@ class OrderDto(OrderCreateDto):
             raise ValueError("Invalid document snapshot")
         return cls(
             id=doc.id,
-            sellerId=data["sellerId"],
-            buyerId=data["buyerId"],
-            diningHall=data["diningHall"],
-            transactionDatetime=data["transactionDatetime"],
+            seller_id=data["sellerId"],
+            buyer_id=data["buyerId"],
+            dining_hall=data["diningHall"],
+            transaction_datetime=data["transactionDatetime"],
         )

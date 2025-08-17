@@ -6,11 +6,11 @@ from pydantic import BaseModel
 
 
 class ListingCreateDto(BaseModel):
-    sellerId: str
-    diningHall: Literal["Chase", "Lenoir"]
-    timeStart: int
-    timeEnd: int
-    transactionDate: datetime
+    seller_id: str
+    dining_hall: Literal["Chase", "Lenoir"]
+    time_start: int
+    time_end: int
+    transaction_date: datetime
 
 
 class ListingDto(ListingCreateDto):
@@ -23,9 +23,9 @@ class ListingDto(ListingCreateDto):
             raise ValueError("Invalid document snapshot")
         return cls(
             id=doc.id,
-            sellerId=data["sellerId"],
-            diningHall=data["diningHall"],
-            timeStart=data["timeStart"],
-            timeEnd=data["timeEnd"],
-            transactionDate=data["transactionDate"],
+            seller_id=data["sellerId"],
+            dining_hall=data["diningHall"],
+            time_start=data["timeStart"],
+            time_end=data["timeEnd"],
+            transaction_date=data["transactionDate"],
         )
