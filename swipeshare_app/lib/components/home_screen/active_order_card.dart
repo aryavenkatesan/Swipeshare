@@ -11,34 +11,37 @@ class ActiveOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatPage(
-              receiverUserEmail: 'receiverUserEmail',
-              receiverUserID: 'receiverUserID',
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatPage(
+                receiverUserEmail: 'receiverUserEmail',
+                receiverUserID: 'receiverUserID',
+              ),
             ),
+          );
+        },
+        child: Container(
+          width: 225,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF98D2EB), width: 2),
           ),
-        );
-      },
-      child: Container(
-        width: 225,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF98D2EB), width: 2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: HeaderStyle),
-            const SizedBox(height: 6),
-            Text(time, style: GreyHeaderStyle),
-          ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: HeaderStyle),
+              const SizedBox(height: 6),
+              Text(time, style: GreyHeaderStyle),
+            ],
+          ),
         ),
       ),
     );
