@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from core.security.authentication import authenticate_user
+from fastapi import APIRouter, Depends, HTTPException, Request
 from google.cloud.firestore_v1.async_collection import AsyncCollectionReference
+from modules.auth.auth_service import get_password_hash
 from modules.user.user_model import UserCreateDto, UserDto
 from utils.collections import get_user_collection
 
-user_router = APIRouter(prefix="/users")
+user_router = APIRouter(prefix="/users", dependencies=[Depends(authenticate_user)])
 
 
 @user_router.post("/", status_code=201, response_model=UserDto)
@@ -12,16 +14,27 @@ async def create_user(
     user_collection: AsyncCollectionReference = Depends(get_user_collection),
 ) -> UserDto:
     user_ref = user_collection.document()
+    user_data.password = get_password_hash(user_data.password)
     await user_ref.set(user_data.model_dump())
     return UserDto.from_doc(await user_ref.get())
 
 
 @user_router.get("/", response_model=list[UserDto])
-async def get_all_users(
+async def get_users(
+    request: Request,
     user_collection: AsyncCollectionReference = Depends(get_user_collection),
 ) -> list[UserDto]:
-    docs = user_collection.stream()
+    filters = dict(request.query_params)
+    query = user_collection
+    for field, value in filters.items():
+        query = query.where(field, "==", value)
+    docs = query.stream()
     return [UserDto.from_doc(doc) async for doc in docs]
+
+
+@user_router.get("/me", response_model=UserDto)
+async def get_current_user(user: UserDto = Depends(authenticate_user)) -> UserDto:
+    return user
 
 
 @user_router.get("/{user_id}", response_model=UserDto)

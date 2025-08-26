@@ -1,3 +1,4 @@
+from core.security.authentication import authenticate_user
 from fastapi import APIRouter, Depends, HTTPException
 from google.cloud.firestore_v1.async_collection import AsyncCollectionReference
 from modules.user.user_service import user_exists
@@ -5,7 +6,7 @@ from utils.collections import get_order_collection, get_user_collection
 
 from .order_model import OrderCreateDto, OrderDto
 
-order_router = APIRouter(prefix="/orders")
+order_router = APIRouter(prefix="/orders", dependencies=[Depends(authenticate_user)])
 
 
 @order_router.post("/", status_code=201, response_model=OrderDto)

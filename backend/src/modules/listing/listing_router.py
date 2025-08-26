@@ -1,3 +1,4 @@
+from core.security.authentication import authenticate_user
 from fastapi import APIRouter, Depends, HTTPException
 from google.cloud.firestore_v1.async_collection import AsyncCollectionReference
 from modules.user.user_service import user_exists
@@ -5,7 +6,9 @@ from utils.collections import get_listing_collection, get_user_collection
 
 from .listing_model import ListingCreateDto, ListingDto
 
-listing_router = APIRouter(prefix="/listings")
+listing_router = APIRouter(
+    prefix="/listings", dependencies=[Depends(authenticate_user)]
+)
 
 
 @listing_router.post("/", status_code=201, response_model=ListingDto)
