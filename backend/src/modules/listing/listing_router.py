@@ -7,7 +7,7 @@ from utils.collections import get_listing_collection, get_user_collection
 from .listing_model import ListingCreateDto, ListingDto
 
 listing_router = APIRouter(
-    prefix="/listings", dependencies=[Depends(authenticate_user)]
+    prefix="/api/listings", dependencies=[Depends(authenticate_user)]
 )
 
 

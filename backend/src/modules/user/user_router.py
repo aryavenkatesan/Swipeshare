@@ -5,7 +5,7 @@ from modules.auth.auth_service import get_password_hash
 from modules.user.user_model import UserCreateDto, UserDto
 from utils.collections import get_user_collection
 
-user_router = APIRouter(prefix="/users", dependencies=[Depends(authenticate_user)])
+user_router = APIRouter(prefix="/api/users", dependencies=[Depends(authenticate_user)])
 
 
 @user_router.post("/", status_code=201, response_model=UserDto)

@@ -6,7 +6,7 @@ from utils.collections import get_order_collection, get_user_collection
 
 from .order_model import OrderCreateDto, OrderDto
 
-order_router = APIRouter(prefix="/orders", dependencies=[Depends(authenticate_user)])
+order_router = APIRouter(prefix="/api/orders", dependencies=[Depends(authenticate_user)])
 
 
 @order_router.post("/", status_code=201, response_model=OrderDto)

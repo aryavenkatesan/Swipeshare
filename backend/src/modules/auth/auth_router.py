@@ -20,7 +20,7 @@ from modules.user.user_service import get_user_doc_by_email
 from utils.collections import get_user_collection
 from utils.get_platform import get_platform
 
-auth_router = APIRouter(prefix="/auth")
+auth_router = APIRouter(prefix="/api/auth")
 
 
 @auth_router.post("/token", response_model=TokensDto | AccessTokenDto)
