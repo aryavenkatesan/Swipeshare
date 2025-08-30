@@ -6,10 +6,12 @@ from pydantic import BaseModel, EmailStr
 
 class UserCreateDto(BaseModel):
     email: EmailStr
+    password: str
 
 
-class UserDto(UserCreateDto):
+class UserDto(BaseModel):
     id: str
+    email: EmailStr
 
     @classmethod
     def from_doc(cls, doc: DocumentSnapshot) -> Self:

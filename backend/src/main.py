@@ -4,6 +4,7 @@ from database import check_firestore_connection
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from h11 import Request
+from modules.auth.auth_router import auth_router
 from modules.listing.listing_router import listing_router
 from modules.order.order_router import order_router
 from modules.user.user_router import user_router
@@ -39,6 +40,7 @@ def read_root():
     return {"message": "Successful Test"}
 
 
+app.include_router(auth_router, tags=["Auth"])
 app.include_router(user_router, tags=["Users"])
 app.include_router(order_router, tags=["Orders"])
 app.include_router(listing_router, tags=["Listings"])
