@@ -258,6 +258,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+
+              //Feedback section, to be stuck at the bottom
+              Expanded(
+                child: Align(
+                  alignment: FractionalOffset.bottomCenter,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SellPostScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Give us feedback!",
+                      style: SubTextStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
