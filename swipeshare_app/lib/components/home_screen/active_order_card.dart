@@ -6,8 +6,16 @@ import 'package:swipeshare_app/pages/chat_page.dart';
 class ActiveOrderCard extends StatelessWidget {
   final String title;
   final String time;
+  // final String receiverUserEmail;
+  final String receiverUserID;
 
-  const ActiveOrderCard({super.key, required this.title, required this.time});
+  const ActiveOrderCard({
+    super.key,
+    required this.title,
+    required this.time,
+    // required this.receiverUserEmail,
+    required this.receiverUserID,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +28,9 @@ class ActiveOrderCard extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => ChatPage(
-                receiverUserEmail: 'receiverUserEmail',
-                receiverUserID: 'receiverUserID',
+                receiverUserEmail:
+                    'receiverUserEmail', // a bunch of other things need to be updated for this to work
+                receiverUserID: receiverUserID,
               ),
             ),
           );

@@ -282,6 +282,9 @@ class _HomeScreenState extends State<HomeScreen> {
       time: (data['time'] != null)
           ? "${data['time']!.hour}:${data['time']!.minute.toString().padLeft(2, '0')}"
           : "TBD",
+      receiverUserID: _auth.currentUser!.uid == data['sellerId']
+          ? data['buyerId']
+          : data['sellerId'],
     );
   }
 }
