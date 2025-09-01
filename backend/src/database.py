@@ -7,6 +7,10 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "serviceAccountKey.json"
 db = firestore.AsyncClient()
 
 
+def get_db():
+    return db
+
+
 async def check_firestore_connection():
     try:
         await db.collection("test").get()
