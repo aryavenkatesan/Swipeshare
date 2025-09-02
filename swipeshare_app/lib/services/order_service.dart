@@ -32,4 +32,16 @@ class OrderService extends ChangeNotifier {
       print('Stack: $s');
     }
   }
+
+  Stream<QuerySnapshot> getOrders(String userId) {
+    return _fireStore
+        .collection('orders')
+        .where(
+          Filter.or(
+            Filter('sellerId', isEqualTo: userId),
+            Filter('buyerId', isEqualTo: userId),
+          ),
+        )
+        .snapshots();
+  }
 }

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,78 +24,79 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<MealOrder> orders = [];
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  StreamSubscription<QuerySnapshot>? _ordersSubscription;
+  final OrderService _orderService = OrderService();
+  // StreamSubscription<QuerySnapshot>? _ordersSubscription;
 
-  @override
-  void initState() {
-    super.initState();
-    print("HomeScreen initState called");
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   print("HomeScreen initState called");
 
-    // Listen to auth state changes
-    _auth.authStateChanges().listen((User? user) {
-      if (user != null) {
-        print("User authenticated: ${user.email}");
-        _listenToUserOrders();
-      } else {
-        print("User not authenticated");
-        // Handle unauthenticated state
-      }
-    });
-  }
+  //   // Listen to auth state changes
+  //   _auth.authStateChanges().listen((User? user) {
+  //     if (user != null) {
+  //       print("User authenticated: ${user.email}");
+  //       _listenToUserOrders();
+  //     } else {
+  //       print("User not authenticated");
+  //       // Handle unauthenticated state
+  //     }
+  //   });
+  // }
 
-  @override
-  void dispose() {
-    _ordersSubscription?.cancel();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _ordersSubscription?.cancel();
+  //   super.dispose();
+  // }
 
-  // Function to listen to real-time updates for orders
-  void _listenToUserOrders() {
-    print(_auth.currentUser == null);
-    String currentUserId = "123089";
-    try {
-      currentUserId = _auth.currentUser!.uid;
-    } catch (e, s) {
-      print(e);
-      print(s);
-    }
+  // // Function to listen to real-time updates for orders
+  // void _listenToUserOrders() {
+  //   print(_auth.currentUser == null);
+  //   String currentUserId = "123089";
+  //   try {
+  //     currentUserId = _auth.currentUser!.uid;
+  //   } catch (e, s) {
+  //     print(e);
+  //     print(s);
+  //   }
 
-    _ordersSubscription = FirebaseFirestore.instance
-        .collection('orders')
-        .where(
-          Filter.or(
-            Filter('sellerId', isEqualTo: currentUserId),
-            Filter('buyerId', isEqualTo: currentUserId),
-          ),
-        )
-        .snapshots()
-        .listen(
-          (QuerySnapshot querySnapshot) {
-            List<MealOrder> userOrders = [];
-            for (QueryDocumentSnapshot doc in querySnapshot.docs) {
-              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+  //   _ordersSubscription = FirebaseFirestore.instance
+  //       .collection('orders')
+  //       .where(
+  //         Filter.or(
+  //           Filter('sellerId', isEqualTo: currentUserId),
+  //           Filter('buyerId', isEqualTo: currentUserId),
+  //         ),
+  //       )
+  //       .snapshots()
+  //       .listen(
+  //         (QuerySnapshot querySnapshot) {
+  //           List<MealOrder> userOrders = [];
+  //           for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+  //             Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-              // Create MealOrder from the document data
-              MealOrder order = MealOrder(
-                docId: doc.id,
-                sellerId: data['sellerId'],
-                buyerId: data['buyerId'],
-                location: data['location'],
-                transactionDate: DateTime.parse(data['transactionDate']),
-                time: data['time'],
-              );
-              userOrders.add(order);
-            }
+  //             // Create MealOrder from the document data
+  //             MealOrder order = MealOrder(
+  //               docId: doc.id,
+  //               sellerId: data['sellerId'],
+  //               buyerId: data['buyerId'],
+  //               location: data['location'],
+  //               transactionDate: DateTime.parse(data['transactionDate']),
+  //               time: data['time'],
+  //             );
+  //             userOrders.add(order);
+  //           }
 
-            setState(() {
-              orders = userOrders;
-            });
-          },
-          onError: (error) {
-            print('Error listening to orders: $error');
-          },
-        );
-  }
+  //           setState(() {
+  //             orders = userOrders;
+  //           });
+  //         },
+  //         onError: (error) {
+  //           print('Error listening to orders: $error');
+  //         },
+  //       );
+  // }
 
   void signOut() {
     //get auth service
@@ -173,41 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Text("Active Orders", style: HeaderStyle),
               SizedBox(height: 12),
-              if (orders.isNotEmpty)
-                //TODO: Change the conditional and the data population
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: orders.map((order) {
-                      // Adjust these based on your MealOrder model properties
-                      String location = order.location;
-                      String time = (order.time != null)
-                          ? "${order.time!.hour}:${order.time!.minute.toString().padLeft(2, '0')}"
-                          : "TBD";
-                      bool isActive = true; //change this
-
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: orders.last == order ? 0 : 12,
-                        ),
-                        child: ActiveOrderCard(title: location, time: time),
-                      );
-                    }).toList(),
-                  ),
-                )
-              else
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    "Orders will show up here—tap the buttons below to buy a swipe from someone or sell a swipe to someone else!",
-                    style: SubTextStyle,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+              //Handles both orders and no orders
+              _buildOrderSection(),
               SizedBox(height: 20),
               Text("Place Order", style: HeaderStyle),
               SizedBox(height: 12),
@@ -262,6 +231,60 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildOrderSection() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _orderService.getOrders(_auth.currentUser!.uid),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text('Loading..');
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        final hasOrders = docs.isNotEmpty;
+
+        if (!hasOrders) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              "Orders will show up here—tap the buttons below to buy a swipe from someone or sell a swipe to someone else!",
+              style: SubTextStyle,
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        // Has orders -> show horizontally scrollable cards
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: docs.map((doc) => _buildOrderCard(doc)).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderCard(DocumentSnapshot document) {
+    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+
+    return ActiveOrderCard(
+      title: data['location'],
+      time: (data['time'] != null)
+          ? "${data['time']!.hour}:${data['time']!.minute.toString().padLeft(2, '0')}"
+          : "TBD",
+      receiverUserID: _auth.currentUser!.uid == data['sellerId']
+          ? data['buyerId']
+          : data['sellerId'],
     );
   }
 }
