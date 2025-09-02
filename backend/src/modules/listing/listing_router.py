@@ -1,77 +1,88 @@
-from core.security.authentication import authenticate_user
-from fastapi import APIRouter, Depends, HTTPException
-from google.cloud.firestore_v1.async_collection import AsyncCollectionReference
-from modules.user.user_service import user_exists
-from utils.collections import get_listing_collection, get_user_collection
+from core.authentication import authenticate_user
+from fastapi import APIRouter, Depends, Request
+from modules.listing.listing_service import ListingService
+from modules.user.user_model import UserDto
 
-from .listing_model import ListingCreateDto, ListingDto
+from .listing_model import ListingCreate, ListingData, ListingDto
 
-listing_router = APIRouter(
-    prefix="/api/listings", dependencies=[Depends(authenticate_user)]
+listing_router = APIRouter(prefix="/api/listings")
+
+
+@listing_router.post(
+    "/",
+    status_code=201,
+    response_model=ListingDto,
+    description="Create a new listing with the current user as the seller",
 )
-
-
-@listing_router.post("/", status_code=201, response_model=ListingDto)
 async def create_listing(
-    listing_data: ListingCreateDto,
-    listing_collection: AsyncCollectionReference = Depends(get_listing_collection),
-    user_collection: AsyncCollectionReference = Depends(get_user_collection),
+    listing_data: ListingCreate,
+    listing_service: ListingService = Depends(),
+    user: UserDto = Depends(authenticate_user),
 ) -> ListingDto:
-    if not await user_exists(listing_data.seller_id, user_collection):
-        raise HTTPException(404, f"Seller with id {listing_data.seller_id} not found")
-    listing_ref = listing_collection.document()
-    await listing_ref.set(listing_data.model_dump())
-    return ListingDto.from_doc(await listing_ref.get())
+    with_seller = ListingData(
+        seller_id=user.id,
+        dining_hall=listing_data.dining_hall,
+        time_start=listing_data.time_start,
+        time_end=listing_data.time_end,
+        transaction_date=listing_data.transaction_date,
+    )
+    return await listing_service.create_listing(with_seller)
 
 
-@listing_router.get("/", response_model=list[ListingDto])
-async def get_all_listings(
-    listing_collection: AsyncCollectionReference = Depends(get_listing_collection),
+@listing_router.get(
+    "/",
+    response_model=list[ListingDto],
+    description="Get a list of all listings, with query params as filters",
+)
+async def get_listings(
+    request: Request,
+    listing_service: ListingService = Depends(),
+    _=Depends(authenticate_user),
 ) -> list[ListingDto]:
-    docs = listing_collection.stream()
-    return [ListingDto.from_doc(doc) async for doc in docs]
+    filters = dict(request.query_params)
+    return await listing_service.get_listings(filters)
 
 
 @listing_router.get("/{listing_id}", response_model=ListingDto)
 async def get_listing_by_id(
     listing_id: str,
-    listing_collection: AsyncCollectionReference = Depends(get_listing_collection),
+    listing_service: ListingService = Depends(),
+    _=Depends(authenticate_user),
 ) -> ListingDto:
-    doc = await listing_collection.document(listing_id).get()
-    if not doc.exists:
-        raise HTTPException(404, f"Listing with id {listing_id} not found")
-    return ListingDto.from_doc(doc)
+    return await listing_service.get_listing_by_id(listing_id)
 
 
-@listing_router.put("/{listing_id}", response_model=ListingDto)
+@listing_router.put(
+    "/{listing_id}",
+    response_model=ListingDto,
+    description="Update an existing listing associated with the current user",
+)
 async def update_listing(
     listing_id: str,
-    listing_data: ListingCreateDto,
-    listing_collection: AsyncCollectionReference = Depends(get_listing_collection),
-    user_collection: AsyncCollectionReference = Depends(get_user_collection),
+    listing_data: ListingCreate,
+    listing_service: ListingService = Depends(),
+    user: UserDto = Depends(authenticate_user),
 ) -> ListingDto:
-    listing_ref = listing_collection.document(listing_id)
-    doc = await listing_ref.get()
-    current_data = doc.to_dict()
-    if not doc.exists or current_data is None:
-        raise HTTPException(404, f"Listing with id {listing_id} not found")
-    if listing_data.seller_id != current_data.get("sellerId"):
-        if not await user_exists(listing_data.seller_id, user_collection):
-            raise HTTPException(
-                404, f"Seller with id {listing_data.seller_id} not found"
-            )
-    await listing_ref.set(listing_data.model_dump())
-    return ListingDto.from_doc(await listing_ref.get())
+    with_seller = ListingData(
+        seller_id=user.id,
+        dining_hall=listing_data.dining_hall,
+        time_start=listing_data.time_start,
+        time_end=listing_data.time_end,
+        transaction_date=listing_data.transaction_date,
+    )
+    return await listing_service.update_listing_for_user(
+        user.id, listing_id, with_seller
+    )
 
 
-@listing_router.delete("/{listing_id}", response_model=ListingDto)
+@listing_router.delete(
+    "/{listing_id}",
+    response_model=ListingDto,
+    description="Delete a listing associated with the current user",
+)
 async def delete_listing(
     listing_id: str,
-    listing_collection: AsyncCollectionReference = Depends(get_listing_collection),
+    listing_service: ListingService = Depends(),
+    user: UserDto = Depends(authenticate_user),
 ) -> ListingDto:
-    listing_ref = listing_collection.document(listing_id)
-    doc = await listing_ref.get()
-    if not doc.exists:
-        raise HTTPException(404, f"Listing with id {listing_id} not found")
-    await listing_ref.delete()
-    return ListingDto.from_doc(doc)
+    return await listing_service.delete_listing_for_user(user.id, listing_id)
