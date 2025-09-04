@@ -213,30 +213,34 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: 12),
               Row(
                 children: [
-                  PlaceOrderCard(
-                    label: "Buy",
-                    iconPath: "assets/fork_and_knife.svg",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BuySwipeScreen(),
-                        ),
-                      );
-                    },
+                  Expanded(
+                    child: PlaceOrderCard(
+                      label: "Buy",
+                      iconPath: "assets/fork_and_knife.svg",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BuySwipeScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   SizedBox(width: 22),
-                  PlaceOrderCard(
-                    label: "Sell",
-                    iconPath: "assets/wallet.svg",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SellPostScreen(),
-                        ),
-                      );
-                    },
+                  Expanded(
+                    child: PlaceOrderCard(
+                      label: "Sell",
+                      iconPath: "assets/wallet.svg",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SellPostScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
