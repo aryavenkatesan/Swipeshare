@@ -51,4 +51,10 @@ class ChatService extends ChangeNotifier {
         .orderBy('timestamp', descending: false)
         .snapshots();
   }
+
+  Future<void> reportUser(String userId, String otherUserId) async {}
+
+  Future<void> blockUser(String userId, String otherUserId) async {}
+
+  Future<void> deleteChat(String userId, String otherUserId) async {}
 }
