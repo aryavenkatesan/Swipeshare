@@ -1,17 +1,18 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
-import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/pages/buy_swipes.dart';
-import 'package:swipeshare_app/pages/sell_post.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
+import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/services/auth/auth_service.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/pages/buy_swipes.dart';
+import 'package:swipeshare_app/pages/sell_post.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -97,10 +98,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void signOut() {
-    //get auth service
-    final authService = Provider.of<AuthServices>(context, listen: false);
-
-    authService.signOut();
+    final authService = context.read<AuthService>();
+    authService.logout();
   }
 
   @override

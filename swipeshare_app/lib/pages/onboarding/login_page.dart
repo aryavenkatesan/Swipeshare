@@ -1,8 +1,10 @@
 import 'dart:ui';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:provider/provider.dart';
+import 'package:swipeshare_app/core/network/api_client.dart';
+import 'package:swipeshare_app/services/auth/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   final void Function()? onTap;
@@ -21,10 +23,10 @@ class _LoginPageState extends State<LoginPage> {
   //sign in user
   void signIn() async {
     //get the auth service
-    final authService = Provider.of<AuthServices>(context, listen: false);
+    final authService = context.read<AuthService>();
 
     try {
-      await authService.signInWithEmailAndPassword(
+      await authService.login(
         emailController.text,
         passwordController.text,
       );
@@ -33,6 +35,39 @@ class _LoginPageState extends State<LoginPage> {
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
+  }
+
+  // Custom function - replace this with whatever you want
+  void myCustomFunction() async {
+    String data = '';
+    try {
+      final response = await apiClient.get('/users/me');
+      data = "${response.data.toString()}";
+    } catch (e, stackTrace) {
+      debugPrint('Error occurred at: $stackTrace');
+      if (e is DioException) {
+        debugPrint('DioException details:');
+        debugPrint('  - Type: ${e.type}');
+        debugPrint('  - Message: ${e.message}');
+        debugPrint('  - Response: ${e.response?.data}');
+        debugPrint('  - Status Code: ${e.response?.statusCode}');
+
+        if (e.response != null && e.response!.data != null) {
+          data = 'Error: ${e.response!.data.toString()}';
+        } else if (e.message != null) {
+          data = 'Error: ${e.message}';
+        } else {
+          data = 'Network error occurred';
+        }
+      } else {
+        debugPrint('Non-Dio error: ${e.runtimeType} - $e');
+        data = 'Error: $e';
+      }
+    }
+    debugPrint('Final data: $data');
+
+    // Example: Show a snackbar
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data)));
   }
 
   @override
@@ -132,6 +167,16 @@ class _LoginPageState extends State<LoginPage> {
                       ElevatedButton(
                         onPressed: () => signIn(),
                         child: const Center(child: Text("Log In")),
+                      ),
+                      const SizedBox(height: 8),
+                      // Custom function button
+                      ElevatedButton(
+                        onPressed: () => myCustomFunction(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Center(child: Text("Custom Function")),
                       ),
                       const SizedBox(height: 8),
                       const Text("Or", style: TextStyle(color: Colors.black45)),
