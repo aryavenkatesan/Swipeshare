@@ -1,82 +1,91 @@
-from core.security.authentication import authenticate_user
-from fastapi import APIRouter, Depends, HTTPException
-from google.cloud.firestore_v1.async_collection import AsyncCollectionReference
-from modules.user.user_service import user_exists
-from utils.collections import get_order_collection, get_user_collection
+from core.authentication import authenticate_user
+from fastapi import APIRouter, Depends, HTTPException, Request
+from modules.order.order_service import OrderService
+from modules.user.user_model import UserDto
 
-from .order_model import OrderCreateDto, OrderDto
+from .order_model import (
+    OrderCreate,
+    OrderData,
+    OrderDto,
+    TransactionCreate,
+)
 
-order_router = APIRouter(prefix="/api/orders", dependencies=[Depends(authenticate_user)])
+order_router = APIRouter(prefix="/api/orders")
 
 
-@order_router.post("/", status_code=201, response_model=OrderDto)
+@order_router.post(
+    "/",
+    status_code=201,
+    response_model=OrderDto,
+    description="Create a new order with the current user as the buyer",
+)
 async def create_order(
-    order_data: OrderCreateDto,
-    order_collection: AsyncCollectionReference = Depends(get_order_collection),
-    user_collection: AsyncCollectionReference = Depends(get_user_collection),
+    order_data: OrderCreate,
+    order_service: OrderService = Depends(),
+    user: UserDto = Depends(authenticate_user),
 ) -> OrderDto:
-    if not await user_exists(order_data.seller_id, user_collection):
-        raise HTTPException(404, f"Seller with id {order_data.seller_id} not found")
-    if not await user_exists(order_data.buyer_id, user_collection):
-        raise HTTPException(404, f"Buyer with id {order_data.buyer_id} not found")
+    with_buyer = OrderData(
+        seller_id=order_data.seller_id,
+        buyer_id=user.id,
+        dining_hall=order_data.dining_hall,
+        transaction_datetime=order_data.transaction_datetime,
+    )
+    return await order_service.create_order(with_buyer)
 
-    order_ref = order_collection.document()
-    await order_ref.set(order_data.model_dump())
-    return OrderDto.from_doc(await order_ref.get())
+
+@order_router.post(
+    "/consume-listing/{listing_id}",
+    status_code=201,
+    response_model=OrderDto,
+    description="Create a new order based on an existing listing, with the current user as the buyer, deleting the listing upon creation",
+)
+async def make_transaction(
+    listing_id: str,
+    transaction_data: TransactionCreate,
+    order_service: OrderService = Depends(),
+    user: UserDto = Depends(authenticate_user),
+):
+    return await order_service.make_transaction(listing_id, user.id, transaction_data)
 
 
-@order_router.get("/", response_model=list[OrderDto])
-async def get_all_orders(
-    order_collection: AsyncCollectionReference = Depends(get_order_collection),
+@order_router.get(
+    "/",
+    response_model=list[OrderDto],
+    description="Get a list of all orders with the current user as the buyer, with query params as optional filters",
+)
+async def get_orders(
+    request: Request,
+    order_service: OrderService = Depends(),
+    user: UserDto = Depends(authenticate_user),
 ) -> list[OrderDto]:
-    docs = order_collection.stream()
-    return [OrderDto.from_doc(doc) async for doc in docs]
+    filters = {**request.query_params, "buyer_id": user.id}
+    return await order_service.get_orders(filters)
 
 
-@order_router.get("/{order_id}", response_model=OrderDto)
-async def get_order_by_order_id(
+@order_router.get(
+    "/{order_id}",
+    response_model=OrderDto,
+    description="Get a specific order associated with the current user by id",
+)
+async def get_order_by_id(
     order_id: str,
-    order_collection: AsyncCollectionReference = Depends(get_order_collection),
+    order_service: OrderService = Depends(),
+    user: UserDto = Depends(authenticate_user),
 ) -> OrderDto:
-    doc = await order_collection.document(order_id).get()
-    if not doc.exists:
-        raise HTTPException(404, f"Order with id {order_id} not found")
-    return OrderDto.from_doc(doc)
+    order = await order_service.get_order_by_id(order_id)
+    if order.buyer_id != user.id:
+        raise HTTPException(403, "You are not allowed to access this order")
+    return order
 
 
-@order_router.put("/{order_id}", response_model=OrderDto)
-async def update_order(
-    order_id: str,
-    order_data: OrderCreateDto,
-    order_collection: AsyncCollectionReference = Depends(get_order_collection),
-    user_collection: AsyncCollectionReference = Depends(get_user_collection),
-) -> OrderDto:
-    order_ref = order_collection.document(order_id)
-    doc = await order_ref.get()
-    current_data = doc.to_dict()
-    if not doc.exists or current_data is None:
-        raise HTTPException(404, f"Order with id {order_id} not found")
-
-    if order_data.seller_id != current_data.get("sellerId"):
-        if not await user_exists(order_data.seller_id, user_collection):
-            raise HTTPException(404, f"Seller with id {order_data.seller_id} not found")
-
-    if order_data.buyer_id != current_data.get("buyerId"):
-        if not await user_exists(order_data.buyer_id, user_collection):
-            raise HTTPException(404, f"Buyer with id {order_data.buyer_id} not found")
-
-    await order_ref.set(order_data.model_dump())
-    return OrderDto.from_doc(await order_ref.get())
-
-
-@order_router.delete("/{order_id}", response_model=OrderDto)
+@order_router.delete(
+    "/{order_id}",
+    response_model=OrderDto,
+    description="Delete an order associated with the current user by id",
+)
 async def delete_order(
     order_id: str,
-    order_collection: AsyncCollectionReference = Depends(get_order_collection),
+    order_service: OrderService = Depends(),
+    user: UserDto = Depends(authenticate_user),
 ) -> OrderDto:
-    order_ref = order_collection.document(order_id)
-    doc = await order_ref.get()
-    if not doc.exists:
-        raise HTTPException(404, f"Order with id {order_id} not found")
-    await order_ref.delete()
-    return OrderDto.from_doc(doc)
+    return await order_service.delete_order_for_user(user.id, order_id)
