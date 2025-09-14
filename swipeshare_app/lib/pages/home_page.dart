@@ -13,6 +13,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/order_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -145,89 +146,112 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ShaderMask(
-                shaderCallback: (Rect bounds) {
-                  return const LinearGradient(
-                    colors: [Color(0xFF98D2EB), Color(0xFFA2A0DD)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(bounds);
-                },
-                blendMode: BlendMode.srcIn,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Hi, ${_auth.currentUser!.email}",
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -1.6,
-                      decoration: TextDecoration.none,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShaderMask(
+                  shaderCallback: (Rect bounds) {
+                    return const LinearGradient(
+                      colors: [Color(0xFF98D2EB), Color(0xFFA2A0DD)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds);
+                  },
+                  blendMode: BlendMode.srcIn,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Hi, ${_auth.currentUser!.email}",
+                      style: GoogleFonts.instrumentSans(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -1.6,
+                        decoration: TextDecoration.none,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              Text("Active Orders", style: HeaderStyle),
-              SizedBox(height: 12),
-              //Handles both orders and no orders
-              _buildOrderSection(),
-              SizedBox(height: 20),
-              Text("Place Order", style: HeaderStyle),
-              SizedBox(height: 12),
-              Row(
-                children: [
-                  PlaceOrderCard(
-                    label: "Buy",
-                    iconPath: "assets/fork_and_knife.svg",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BuySwipeScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  SizedBox(width: 22),
-                  PlaceOrderCard(
-                    label: "Sell",
-                    iconPath: "assets/wallet.svg",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SellPostScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: 24),
-              Text("Rewards", style: HeaderStyle),
-              SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Text("Active Orders", style: HeaderStyle),
+                SizedBox(height: 12),
+                //Handles both orders and no orders
+                _buildOrderSection(),
+                SizedBox(height: 20),
+                Text("Place Order", style: HeaderStyle),
+                SizedBox(height: 12),
+                Row(
                   children: [
-                    Text("50% off", style: SubHeaderStyle),
-                    Text("After referring two friends", style: SubTextStyle),
+                    Expanded(
+                      child: PlaceOrderCard(
+                        label: "Buy",
+                        iconPath: "assets/fork_and_knife.svg",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BuySwipeScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 22),
+                    Expanded(
+                      child: PlaceOrderCard(
+                        label: "Sell",
+                        iconPath: "assets/wallet.svg",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SellPostScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
+                SizedBox(height: 24),
+                Text("Rewards", style: HeaderStyle),
+                SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("50% off", style: SubHeaderStyle),
+                      Text("After referring two friends", style: SubTextStyle),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 48),
+                GestureDetector(
+                  //This should always be at the bottom
+                  onTap: () async {
+                    print('Text clicked!');
+                    await launchUrl(
+                      Uri.parse(
+                        "https://docs.google.com/forms/d/e/1FAIpQLSfTmI3DIHP85a78MlNmQ9gUicQhjff5Tj34pWsUhvN6ATzGXg/viewform",
+                      ),
+                      mode: LaunchMode.inAppBrowserView,
+                    );
+                  },
+                  child: Center(
+                    child: Text("Give us Feedback!", style: SubTextStyle),
+                  ),
+                ),
+                SizedBox(height: 48),
+              ],
+            ),
           ),
         ),
       ),
