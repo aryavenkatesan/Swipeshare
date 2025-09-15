@@ -1,9 +1,9 @@
-import 'package:swipeshare_app/models/listing.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/services/listing_service.dart';
-import 'package:swipeshare_app/services/order_service.dart';
+import 'package:provider/provider.dart';
+import 'package:swipeshare_app/models/listing.dart';
+import 'package:swipeshare_app/providers/listing_provider.dart';
+import 'package:swipeshare_app/providers/order_provider.dart';
+import 'package:swipeshare_app/providers/user_provider.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
@@ -24,84 +24,97 @@ class ListingSelectionPage extends StatefulWidget {
 }
 
 class _ListingSelectionPageState extends State<ListingSelectionPage> {
-  // instance of auth
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final _listingService = ListingService();
-  final _orderService = OrderService();
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("View Listings")),
-      body: _buildUserList(),
-    );
-  }
-
-  // build a list of users except for the current logged in user
-  Widget _buildUserList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('listings').snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text('error');
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text('loading..');
-        }
-
-        return ListView(
-          children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildUserListItem(doc))
-              .toList(),
+    return Consumer3<ListingProvider, OrderProvider, UserProvider>(
+      builder: (context, listingProvider, orderProvider, userProvider, child) {
+        return Scaffold(
+          appBar: AppBar(title: Text("View Listings")),
+          body: _buildUserList(listingProvider, orderProvider, userProvider),
         );
       },
     );
   }
 
-  // build individual user list items
-  Widget _buildUserListItem(DocumentSnapshot document) {
-    Map<String, dynamic> listing = document.data()! as Map<String, dynamic>;
-    final TimeOfDay listingStartTime = Listing.minutesToTOD(
-      listing['timeStart'],
-    );
-    final TimeOfDay listingEndTime = Listing.minutesToTOD(listing['timeEnd']);
-    final docId = document.id;
-
-    // display all listings with a selection location
-    // TODO: add PaymentType filtering here
-    // TODO: add a date selector and only display the listings on that date
-    // TODO: add a filter to stop people from seeing their own posts (compare uid of current user to listing sellerID)
-    if (widget.locations.contains(listing['diningHall']) &&
-        _auth.currentUser!.uid != listing['sellerId'] &&
-        widget.date.toIso8601String() != listing['transactionDate']) {
-      return ListTile(
-        // change this from a listTile to a custom componenent that will take arguments and spit out smth beautiful
-        // need to add ratings somehow, probably easiest to do it through the listing itself with another content field
-        // TODO: find overlap% between the buyer and possible sellers
-        title: Text(
-          "${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')} @ ${listing['diningHall']}",
-        ),
-        onTap: () async {
-          try {
-            await _listingService.deleteListing(docId);
-            await _orderService.postOrder(
-              listing['sellerId'],
-              _auth.currentUser!.uid,
-              listing['diningHall'],
-              widget.date,
-            );
-            Navigator.pop(context);
-            Navigator.pop(context);
-          } catch (e, s) {
-            // Handle the error and stack trace
-            print('Error: $e');
-            print('Stack: $s');
-          }
-        },
-      );
-    } else {
-      return Container();
+  // build a list of users except for the current logged in user
+  Widget _buildUserList(
+    ListingProvider listingProvider,
+    OrderProvider orderProvider,
+    UserProvider userProvider,
+  ) {
+    if (listingProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
+
+    // Handle error state
+    if (listingProvider.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Error loading listings: ${listingProvider.error}'),
+            ElevatedButton(
+              onPressed: () => listingProvider.ensureInitialized(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Filter listings based on your criteria
+    final filteredListings = listingProvider.listings.where((listing) {
+      // Only show listings that match the selected locations
+      // TODO: Add other filtering logic here (PaymentType, date, etc.)
+      return widget.locations.contains(listing.diningHall) &&
+          listing.sellerId != userProvider.currentUser!.id &&
+          listing.transactionDate != widget.date.toIso8601String();
+    }).toList();
+
+    // Handle empty state
+    if (filteredListings.isEmpty) {
+      return const Center(
+        child: Text('No listings found for the selected criteria'),
+      );
+    }
+
+    // Build the list
+    return ListView.builder(
+      itemCount: filteredListings.length,
+      itemBuilder: (context, index) {
+        final listing = filteredListings[index];
+        return _buildUserListItem(listing, orderProvider);
+      },
+    );
+  }
+
+  // build individual user list items
+  Widget _buildUserListItem(Listing listing, OrderProvider orderProvider) {
+    // display all listings with a selection location
+    return ListTile(
+      // change this from a listTile to a custom componenent that will take arguments and spit out smth beautiful
+      // need to add ratings somehow, probably easiest to do it through the listing itself with another content field
+      // TODO: find overlap% between the buyer and possible sellers
+      title: Text(
+        "${listing.timeStart.hour}:${listing.timeStart.minute.toString().padLeft(2, '0')} to ${listing.timeEnd.hour}:${listing.timeEnd.minute.toString().padLeft(2, '0')} @ ${listing.diningHall}",
+      ),
+      onTap: () async {
+        try {
+          await orderProvider.makeTransaction(listing.id, widget.date);
+          if (mounted) {
+            Navigator.pop(context);
+            Navigator.pop(context);
+          }
+        } catch (e, s) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to create order: $e')),
+            );
+          }
+          print('Error: $e');
+          print('Stack: $s');
+        }
+      },
+    );
   }
 }

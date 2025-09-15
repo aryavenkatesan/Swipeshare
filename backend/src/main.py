@@ -1,9 +1,9 @@
 from contextlib import asynccontextmanager
 
 from database import check_firestore_connection
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from h11 import Request
 from modules.auth.auth_router import auth_router
 from modules.listing.listing_router import listing_router
 from modules.order.order_router import order_router
@@ -17,6 +17,24 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://localhost:8080",  # Flutter web dev server
+        "http://127.0.0.1:3000",  # Alternative localhost
+        "http://127.0.0.1:8080",  # Alternative localhost
+        "https://localhost:3000",  # HTTPS versions
+        "https://localhost:8080",
+        "https://127.0.0.1:3000",
+        "https://127.0.0.1:8080",
+        "http://localhost:50803",  # Flutter web dev server alternative port
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 
 @app.exception_handler(HTTPException)
@@ -35,7 +53,7 @@ def handle_general_exception(req: Request, exc: Exception):
     )
 
 
-@app.get("/")
+@app.get("/api")
 def read_root():
     return {"message": "Successful Test"}
 

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
+import 'package:swipeshare_app/services/auth/auth_service.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -43,10 +43,10 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     //get auth service
-    final authService = Provider.of<AuthServices>(context, listen: false);
+    final authService = context.read<AuthService>();
 
     try {
-      await authService.signUpWithEmailandPassword(
+      await authService.register(
         emailController.text,
         passwordController.text,
       );

@@ -1,7 +1,7 @@
 from database import get_db
 from fastapi import Depends
 from google.cloud import firestore
-from google.cloud.firestore import AsyncClient, AsyncTransaction
+from google.cloud.firestore import AsyncClient, AsyncTransaction, FieldFilter
 from modules.listing.listing_model import ListingDto
 from modules.listing.listing_service import ListingNotFoundException
 from modules.order.order_model import OrderData, OrderDto, TransactionCreate
@@ -21,12 +21,12 @@ class OrderService:
     async def create_order(self, order_data: OrderData) -> OrderDto:
         order_ref = self.order_collection.document()
         await order_ref.set(order_data.model_dump())
-        return order_ref.id
+        return OrderDto.from_doc(await order_ref.get())
 
     async def get_orders(self, filters: dict[str, str]) -> list[OrderDto]:
         query = self.order_collection
         for field, value in filters.items():
-            query = query.where(field, "==", value)
+            query = query.where(filter=FieldFilter(field, "==", value))
         docs = query.stream()
         return [OrderDto.from_doc(doc) async for doc in docs]
 
