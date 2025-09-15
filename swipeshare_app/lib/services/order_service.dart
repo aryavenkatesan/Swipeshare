@@ -1,35 +1,54 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:swipeshare_app/core/network/api_client.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 
-class OrderService extends ChangeNotifier {
-  //instance of auth
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+class OrderService {
+  final Dio _apiClient;
 
-  //instance of firestore
-  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+  OrderService({Dio? dio}) : _apiClient = dio ?? apiClient;
 
-  //POST LISTING
-  Future<void> postOrder(
+  Future<MealOrder> postOrder(
     String sellerId,
-    String buyerId,
-    String location,
+    String diningHall,
     DateTime transactionDate,
   ) async {
-    MealOrder newOrder = MealOrder(
+    MealOrderCreate newOrder = MealOrderCreate(
       sellerId: sellerId,
-      buyerId: buyerId,
-      location: location,
+      diningHall: diningHall,
       transactionDate: transactionDate,
     );
 
     try {
-      await _fireStore.collection('orders').add(newOrder.toMap());
+      final response = await _apiClient.post('/orders', data: newOrder.toMap());
+      return MealOrder.fromJson(response.data);
     } catch (e, s) {
       // Handle the error and stack trace
       print('Error: $e');
       print('Stack: $s');
+      rethrow;
+    }
+  }
+
+  Future<List<MealOrder>> fetchOrders() async {
+    try {
+      final response = await _apiClient.get('/orders');
+      List<dynamic> data = response.data as List<dynamic>;
+      return data.map((json) => MealOrder.fromJson(json)).toList();
+    } catch (e) {
+      print('Error fetching orders: $e');
+      rethrow;
+    }
+  }
+
+  Future<MealOrder> makeTransaction(String listingId, DateTime datetime) async {
+    try {
+      final response = await _apiClient.post('/orders/consume-listing/$listingId', data: {
+        'transaction_datetime': datetime.toIso8601String(),
+      });
+      return MealOrder.fromJson(response.data);
+    } catch (e) {
+      print('Error making transaction: $e');
+      rethrow;
     }
   }
 }

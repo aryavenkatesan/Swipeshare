@@ -1,9 +1,10 @@
-import 'package:swipeshare_app/components/my_text_field.dart';
-import 'package:swipeshare_app/components/chat_bubble.dart';
-import 'package:swipeshare_app/services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:swipeshare_app/components/chat_bubble.dart';
+import 'package:swipeshare_app/components/my_text_field.dart';
+import 'package:swipeshare_app/providers/user_provider.dart';
+import 'package:swipeshare_app/services/chat/chat_service.dart';
 
 class ChatPage extends StatefulWidget {
   final String receiverUserEmail;
@@ -21,7 +22,6 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -35,31 +35,34 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.receiverUserEmail)),
-      body: SafeArea(
-        child: Column(
-          children: [
-            //messages
-            Expanded(child: _buildMessageList()),
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        return Scaffold(
+          appBar: AppBar(title: Text(widget.receiverUserEmail)),
+          body: SafeArea(
+            child: Column(
+              children: [
+                //messages
+                Expanded(
+                  child: _buildMessageList(userProvider.currentUser!.id),
+                ),
 
-            //userInput
-            _buildMessageInput(),
+                //userInput
+                _buildMessageInput(),
 
-            SizedBox(height: 10),
-          ],
-        ),
-      ),
+                SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   //build message list
-  Widget _buildMessageList() {
+  Widget _buildMessageList(String userId) {
     return StreamBuilder(
-      stream: _chatService.getMessages(
-        widget.receiverUserID,
-        _firebaseAuth.currentUser!.uid,
-      ),
+      stream: _chatService.getMessages(widget.receiverUserID, userId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text("Error" + snapshot.error.toString());
@@ -71,7 +74,7 @@ class _ChatPageState extends State<ChatPage> {
 
         return ListView(
           children: snapshot.data!.docs
-              .map((document) => _buildMessageItem(document))
+              .map((document) => _buildMessageItem(document, userId))
               .toList(),
         );
       },
@@ -79,11 +82,11 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   //build message item
-  Widget _buildMessageItem(DocumentSnapshot document) {
+  Widget _buildMessageItem(DocumentSnapshot document, String uid) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
 
     //align the messages based on who sent it
-    var alignment = (data['senderId'] == _firebaseAuth.currentUser!.uid)
+    var alignment = (data['senderId'] == uid)
         ? Alignment.centerRight
         : Alignment.centerLeft;
 
@@ -92,8 +95,7 @@ class _ChatPageState extends State<ChatPage> {
       child: Container(
         alignment: alignment,
         child: Column(
-          crossAxisAlignment:
-              (data['senderId'] == _firebaseAuth.currentUser!.uid)
+          crossAxisAlignment: (data['senderId'] == uid)
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [

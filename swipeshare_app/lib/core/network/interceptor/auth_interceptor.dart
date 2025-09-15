@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:swipeshare_app/services/auth/auth_service.dart';
 
+/// An API interceptor that attaches the access token to requests 
+/// and handles token refresh on 401 responses.
 class AuthInterceptor extends QueuedInterceptor {
   final AuthService _authService;
 
-  AuthInterceptor({AuthService? authService, Dio? dio})
+  AuthInterceptor({AuthService? authService})
     : _authService = authService ?? AuthService();
 
   @override

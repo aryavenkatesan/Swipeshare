@@ -1,41 +1,45 @@
-import 'package:swipeshare_app/models/listing.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/core/network/api_client.dart';
+import 'package:swipeshare_app/models/listing.dart';
 
-class ListingService extends ChangeNotifier {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+class ListingService {
+  final Dio _apiClient;
+
+  ListingService({Dio? dio}) : _apiClient = dio ?? apiClient;
 
   //POST LISTING
-  Future<void> postListing(
+  Future<Listing> postListing(
     String diningHall,
     TimeOfDay timeStart,
     TimeOfDay timeEnd,
     DateTime transactionDate,
   ) async {
-    final String currentUserId = _firebaseAuth.currentUser!.uid;
-
-    Listing newListing = Listing(
-      sellerId: currentUserId,
+    final newListing = ListingCreate(
       diningHall: diningHall,
       timeStart: timeStart,
       timeEnd: timeEnd,
       transactionDate: transactionDate,
-      //rating
-      //payment types
     );
 
-    await _fireStore.collection('listings').add(newListing.toMap());
+    final response = await _apiClient.post(
+      '/listings',
+      data: newListing.toMap(),
+    );
+    return Listing.fromJson(response.data);
   }
 
   //GET ALL LISTINGS
-  Stream<QuerySnapshot> getListings() {
-    return _fireStore.collection('listings').snapshots();
+  Future<List<Listing>> fetchListings() async {
+    final response = await _apiClient.get('/listings');
+    return (response.data as List)
+        .map((listing) => Listing.fromJson(listing))
+        .toList();
   }
 
   //DELETE LISTING
-  Future<void> deleteListing(String docId) async {
-    await _fireStore.collection('listings').doc(docId).delete();
+  Future<Listing> deleteListing(String docId) async {
+    final response = await _apiClient.delete('/listings/$docId');
+    return Listing.fromJson(response.data);
   }
 }

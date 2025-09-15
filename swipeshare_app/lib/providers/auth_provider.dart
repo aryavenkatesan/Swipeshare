@@ -1,0 +1,74 @@
+import 'package:flutter/foundation.dart';
+import 'package:swipeshare_app/providers/util/async_provider.dart';
+import 'package:swipeshare_app/services/auth/auth_service.dart';
+
+class AuthProvider extends AsyncProvider {
+  final AuthService authService;
+  bool _isAuthenticated = false;
+
+  AuthProvider({AuthService? authService})
+    : authService = authService ?? AuthService() {
+    ensureInitialized();
+  }
+
+  bool get isAuthenticated => _isAuthenticated;
+
+  @override
+  Future<void> initialize() async {
+    try {
+      await authService.refreshToken();
+      _isAuthenticated = true;
+    } catch (e) {
+      await authService.logout();
+      _isAuthenticated = false;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> reset() async {
+    await authService.logout();
+    _isAuthenticated = false;
+  }
+
+  Future<void> login(String email, String password) async {
+    try {
+      await authService.login(email, password);
+      _isAuthenticated = true;
+    } catch (e) {
+      _isAuthenticated = false;
+      rethrow;
+    }
+  }
+
+  Future<void> register(String email, String password) async {
+    try {
+      await authService.register(email, password);
+      _isAuthenticated = true;
+    } catch (e) {
+      _isAuthenticated = false;
+      rethrow;
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await authService.logout();
+      _isAuthenticated = false;
+    } catch (e) {
+      debugPrint('Error during logout: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> refreshToken() async {
+    try {
+      final newAccessToken = await authService.refreshToken();
+      _isAuthenticated = true;
+      return newAccessToken;
+    } catch (e) {
+      _isAuthenticated = false;
+      rethrow;
+    }
+  }
+}
