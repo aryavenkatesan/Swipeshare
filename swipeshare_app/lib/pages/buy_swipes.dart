@@ -88,7 +88,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
         const SizedBox(height: BuySwipesConstants.smallSpacing),
         Text(
           'Select a dining hall, date, and time to find available swipes',
-          style: AppTextStyles.bodyText,
+          style: AppTextStyles.bodyText, //TODO: center allign later
         ),
       ],
     );
