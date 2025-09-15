@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:swipeshare_app/providers/util/async_provider.dart';
 import 'package:swipeshare_app/services/auth/auth_service.dart';
 
@@ -31,44 +30,50 @@ class AuthProvider extends AsyncProvider {
     _isAuthenticated = false;
   }
 
-  Future<void> login(String email, String password) async {
-    try {
-      await authService.login(email, password);
-      _isAuthenticated = true;
-    } catch (e) {
-      _isAuthenticated = false;
-      rethrow;
-    }
+  Future<void> login(String email, String password) {
+    return executeOperation(() async {
+      try {
+        await authService.login(email, password);
+        _isAuthenticated = true;
+      } catch (e) {
+        _isAuthenticated = false;
+        rethrow;
+      }
+    });
   }
 
-  Future<void> register(String email, String password) async {
-    try {
-      await authService.register(email, password);
-      _isAuthenticated = true;
-    } catch (e) {
-      _isAuthenticated = false;
-      rethrow;
-    }
+  Future<void> register(String email, String password) {
+    return executeOperation(() async {
+      try {
+        await authService.register(email, password);
+        _isAuthenticated = true;
+      } catch (e) {
+        _isAuthenticated = false;
+        rethrow;
+      }
+    });
   }
 
-  Future<void> logout() async {
-    try {
-      await authService.logout();
-      _isAuthenticated = false;
-    } catch (e) {
-      debugPrint('Error during logout: $e');
-      rethrow;
-    }
+  Future<void> logout() {
+    return executeOperation(() async {
+      try {
+        await authService.logout();
+      } finally {
+        _isAuthenticated = false;
+      }
+    });
   }
 
-  Future<String> refreshToken() async {
-    try {
-      final newAccessToken = await authService.refreshToken();
-      _isAuthenticated = true;
-      return newAccessToken;
-    } catch (e) {
-      _isAuthenticated = false;
-      rethrow;
-    }
+  Future<String> refreshToken() {
+    return executeOperation(() async {
+      try {
+        final newAccessToken = await authService.refreshToken();
+        _isAuthenticated = true;
+        return newAccessToken;
+      } catch (e) {
+        _isAuthenticated = false;
+        rethrow;
+      }
+    });
   }
 }

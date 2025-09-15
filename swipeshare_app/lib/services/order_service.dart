@@ -7,6 +7,7 @@ class OrderService {
 
   OrderService({Dio? dio}) : _apiClient = dio ?? apiClient;
 
+  /// Create a new order
   Future<MealOrder> postOrder(
     String sellerId,
     String diningHall,
@@ -18,37 +19,64 @@ class OrderService {
       transactionDate: transactionDate,
     );
 
-    try {
-      final response = await _apiClient.post('/orders', data: newOrder.toMap());
-      return MealOrder.fromJson(response.data);
-    } catch (e, s) {
-      // Handle the error and stack trace
-      print('Error: $e');
-      print('Stack: $s');
-      rethrow;
-    }
+    final response = await _apiClient.post('/orders', data: newOrder.toMap());
+    return MealOrder.fromJson(response.data);
   }
 
-  Future<List<MealOrder>> fetchOrders() async {
-    try {
-      final response = await _apiClient.get('/orders');
-      List<dynamic> data = response.data as List<dynamic>;
-      return data.map((json) => MealOrder.fromJson(json)).toList();
-    } catch (e) {
-      print('Error fetching orders: $e');
-      rethrow;
-    }
-  }
-
+  /// Create an order by consuming a listing
   Future<MealOrder> makeTransaction(String listingId, DateTime datetime) async {
-    try {
-      final response = await _apiClient.post('/orders/consume-listing/$listingId', data: {
-        'transaction_datetime': datetime.toIso8601String(),
-      });
-      return MealOrder.fromJson(response.data);
-    } catch (e) {
-      print('Error making transaction: $e');
-      rethrow;
+    final response = await _apiClient.post(
+      '/orders/consume-listing/$listingId',
+      data: {'transaction_datetime': datetime.toIso8601String()},
+    );
+    return MealOrder.fromJson(response.data);
+  }
+
+  /// Get all orders for the current user with optional filters
+  Future<List<MealOrder>> fetchOrders({Map<String, dynamic>? filters}) async {
+    final response = await _apiClient.get('/orders', queryParameters: filters);
+    List<dynamic> data = response.data as List<dynamic>;
+    return data.map((json) => MealOrder.fromJson(json)).toList();
+  }
+
+  /// Get a specific order by ID
+  Future<MealOrder> getOrderById(String orderId) async {
+    final response = await _apiClient.get('/orders/$orderId');
+    return MealOrder.fromJson(response.data);
+  }
+
+  /// Delete an order by ID
+  Future<MealOrder> deleteOrder(String orderId) async {
+    final response = await _apiClient.delete('/orders/$orderId');
+    return MealOrder.fromJson(response.data);
+  }
+
+  // Convenience methods for common filtering scenarios
+
+  /// Get orders filtered by multiple criteria
+  Future<List<MealOrder>> getFilteredOrders({
+    String? diningHall,
+    DateTime? transactionDateTime,
+    String? sellerId,
+  }) async {
+    final filters = <String, dynamic>{};
+
+    if (diningHall != null) filters['dining_hall'] = diningHall;
+    if (transactionDateTime != null) {
+      filters['transaction_datetime'] = transactionDateTime.toIso8601String();
     }
+    if (sellerId != null) filters['seller_id'] = sellerId;
+
+    return fetchOrders(filters: filters.isNotEmpty ? filters : null);
+  }
+
+  /// Get orders filtered by dining hall
+  Future<List<MealOrder>> getOrdersByDiningHall(String diningHall) async {
+    return getFilteredOrders(diningHall: diningHall);
+  }
+
+  /// Get orders filtered by seller ID
+  Future<List<MealOrder>> getOrdersBySeller(String sellerId) async {
+    return getFilteredOrders(sellerId: sellerId);
   }
 }

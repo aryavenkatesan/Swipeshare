@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
-  final String? id;
+  final String id;
   final String sellerId;
   final String buyerId;
   final String diningHall;
@@ -11,7 +11,7 @@ class MealOrder {
   final DateTime transactionDate;
 
   MealOrder({
-    this.id,
+    required this.id,
     required this.sellerId,
     required this.buyerId,
     required this.diningHall,
