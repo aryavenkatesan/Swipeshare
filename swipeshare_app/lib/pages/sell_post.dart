@@ -6,6 +6,7 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart'
 import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/post_listing_button.dart';
 import 'package:swipeshare_app/pages/sell_order_confirm.dart';
 
 class SellPostScreen extends StatefulWidget {
@@ -118,24 +119,8 @@ class _SellPostScreenState extends State<SellPostScreen> {
 
   /// Builds the post listing button
   Widget _buildPostListingButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _canPostListing() ? _navigateToConfirmation : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accentBlue,
-          foregroundColor: AppColors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(BuySwipesConstants.borderRadius),
-          ),
-          padding: BuySwipesConstants.buttonPadding,
-        ),
-        child: Text(
-          "Post Listing",
-          style: AppTextStyles.buttonText,
-        ),
-      ),
+    return PostListingButton(
+      onPressed: _canPostListing() ? _navigateToConfirmation : null,
     );
   }
 
@@ -164,11 +149,12 @@ class _SellPostScreenState extends State<SellPostScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => SellOrderConfirmScreen(
-          location: selectedLocations.first, // For backward compatibility
+          location: selectedLocations.first,
           date: selectedDate,
           startTime: startTime!,
           endTime: endTime!,
-          note: 'Swipe count: $swipeCount, Payment: ${selectedPaymentOptions.join(", ")}',
+          swipeCount: swipeCount,
+          paymentOptions: selectedPaymentOptions,
         ),
       ),
     );
