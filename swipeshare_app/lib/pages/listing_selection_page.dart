@@ -68,7 +68,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       // TODO: Add other filtering logic here (PaymentType, date, etc.)
       return widget.locations.contains(listing.diningHall) &&
           listing.sellerId != userProvider.currentUser!.id &&
-          listing.transactionDate != widget.date.toIso8601String();
+          DateTime(widget.date.year, widget.date.month, widget.date.day) ==
+              DateTime(widget.date.year, widget.date.month, widget.date.day);
     }).toList();
 
     // Handle empty state

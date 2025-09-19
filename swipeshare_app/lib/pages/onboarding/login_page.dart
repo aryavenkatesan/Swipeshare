@@ -24,11 +24,8 @@ class _LoginPageState extends State<LoginPage> {
     final authProvider = context.read<AuthProvider>();
 
     try {
-      debugPrint(emailController.text + passwordController.text);
       await authProvider.login(emailController.text, passwordController.text);
     } catch (e) {
-      debugPrint(e.toString());
-      debugPrint(StackTrace.current.toString());
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
