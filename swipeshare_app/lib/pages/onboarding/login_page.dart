@@ -131,7 +131,6 @@ class _LoginPageState extends State<LoginPage> {
                         child: const Center(child: Text("Log In")),
                       ),
                       const SizedBox(height: 8),
-                      const SizedBox(height: 8),
                       const Text("Or", style: TextStyle(color: Colors.black45)),
                       const SizedBox(height: 8),
                       GestureDetector(
