@@ -1,6 +1,7 @@
 from core.authentication import authenticate_user
 from fastapi import APIRouter, Depends
 from modules.user.user_model import UserDto
+from modules.user.user_service import UserService
 
 # from google.cloud.firestore_v1.async_collection import AsyncCollectionReference
 # from modules.auth.auth_service import get_password_hash
@@ -24,17 +25,11 @@ user_router = APIRouter(prefix="/api/users")
 #     return UserDto.from_doc(await user_ref.get())
 
 
-# @user_router.get("/", response_model=list[UserDto])
-# async def get_users(
-#     request: Request,
-#     user_collection: AsyncCollectionReference = Depends(get_user_collection),
-# ) -> list[UserDto]:
-#     filters = dict(request.query_params)
-#     query = user_collection
-#     for field, value in filters.items():
-#         query = query.where(field, "==", value)
-#     docs = query.stream()
-#     return [UserDto.from_doc(doc) async for doc in docs]
+@user_router.get("/", response_model=list[UserDto])
+async def get_users(
+    user_service: UserService = Depends(),
+) -> list[UserDto]:
+    return await user_service.get_all_users()
 
 
 @user_router.get(

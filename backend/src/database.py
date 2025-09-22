@@ -5,10 +5,15 @@ from google.cloud import firestore
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "serviceAccountKey.json"
 db = firestore.AsyncClient()
+sync_db = firestore.Client()
 
 
 def get_db():
     return db
+
+
+def get_sync_db():
+    return sync_db
 
 
 async def check_firestore_connection():

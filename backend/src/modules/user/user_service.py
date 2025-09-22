@@ -33,6 +33,10 @@ class UserService:
         await user_ref.set(user_data.model_dump())
         return UserDto.from_doc(await user_ref.get())
 
+    async def get_all_users(self) -> list[UserDto]:
+        docs = self.user_collection.stream()
+        return [UserDto.from_doc(doc) async for doc in docs]
+
     async def get_user_by_email(self, email: str) -> UserDto:
         query = self.user_collection.where(
             filter=FieldFilter("email", "==", email)
@@ -52,6 +56,18 @@ class UserService:
     async def user_with_id_exists(self, user_id: str) -> bool:
         doc = await self.user_collection.document(user_id).get()
         return doc.exists
+
+    async def user_exists(
+        self, id: str | None = None, email: str | None = None
+    ) -> bool:
+        if id is not None and email is not None:
+            raise ValueError("Only one of user_id or email should be provided")
+        if id is not None:
+            return await self.user_with_id_exists(id)
+        elif email is not None:
+            return await self.user_with_email_exists(email)
+        else:
+            raise ValueError("Either user_id or email must be provided")
 
     async def get_hashed_password(self, email: str) -> str:
         query = self.user_collection.where(

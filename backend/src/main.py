@@ -6,14 +6,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from modules.auth.auth_router import auth_router
 from modules.listing.listing_router import listing_router
+from modules.message.message_router import message_router
+from modules.message.message_service import MessageService
 from modules.order.order_router import order_router
 from modules.user.user_router import user_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup
     await check_firestore_connection()
-    yield
+
+    yield  # App Runs
+
+    # Shutdown
+    await MessageService.cleanup_all_listeners()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -62,3 +69,4 @@ app.include_router(auth_router, tags=["Auth"])
 app.include_router(user_router, tags=["Users"])
 app.include_router(order_router, tags=["Orders"])
 app.include_router(listing_router, tags=["Listings"])
+app.include_router(message_router, tags=["Messages"])
