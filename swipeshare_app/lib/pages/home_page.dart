@@ -237,7 +237,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 GestureDetector(
                   //This should always be at the bottom
                   onTap: () async {
-                    print('Text clicked!');
                     await launchUrl(
                       Uri.parse(
                         "https://docs.google.com/forms/d/e/1FAIpQLSfTmI3DIHP85a78MlNmQ9gUicQhjff5Tj34pWsUhvN6ATzGXg/viewform",
