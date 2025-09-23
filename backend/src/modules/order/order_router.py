@@ -28,7 +28,7 @@ async def create_order(
 ) -> OrderDto:
     if order_data.seller_id == user.id:
         raise HTTPException(400, "You cannot create an order for your own listing")
-    
+
     if not await user_service.user_with_id_exists(order_data.seller_id):
         raise HTTPException(404, f"User with id {order_data.seller_id} not found")
 

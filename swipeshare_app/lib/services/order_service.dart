@@ -79,4 +79,16 @@ class OrderService {
   Future<List<MealOrder>> getOrdersBySeller(String sellerId) async {
     return getFilteredOrders(sellerId: sellerId);
   }
+
+  Stream<QuerySnapshot> getOrders(String userId) {
+    return _fireStore
+        .collection('orders')
+        .where(
+          Filter.or(
+            Filter('sellerId', isEqualTo: userId),
+            Filter('buyerId', isEqualTo: userId),
+          ),
+        )
+        .snapshots();
+  }
 }
