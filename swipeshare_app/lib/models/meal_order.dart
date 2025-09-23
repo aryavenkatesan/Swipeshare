@@ -21,7 +21,7 @@ class MealOrder {
 
   Map<String, dynamic> toMap() {
     return {
-      'doc_id': id,
+      'id': id,
       'seller_id': sellerId,
       'buyer_id': buyerId,
       'dining_hall': diningHall,
@@ -38,7 +38,7 @@ class MealOrder {
   }
 
   MealOrder.fromJson(Map<String, dynamic> json)
-    : id = json['doc_id'],
+    : id = json['id'],
       sellerId = json['seller_id'],
       buyerId = json['buyer_id'],
       diningHall = json['dining_hall'],

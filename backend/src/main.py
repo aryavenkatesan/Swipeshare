@@ -28,15 +28,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # React dev server
-        "http://localhost:8080",  # Flutter web dev server
-        "http://127.0.0.1:3000",  # Alternative localhost
-        "http://127.0.0.1:8080",  # Alternative localhost
-        "https://localhost:3000",  # HTTPS versions
-        "https://localhost:8080",
-        "https://127.0.0.1:3000",
-        "https://127.0.0.1:8080",
-        "http://localhost:50803",  # Flutter web dev server alternative port
+        "http://localhost:49898",  # Flutter web dev server alternative port
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods

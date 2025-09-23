@@ -5,11 +5,13 @@ import 'package:provider/provider.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
 import 'package:swipeshare_app/providers/auth_provider.dart';
 import 'package:swipeshare_app/providers/order_provider.dart';
 import 'package:swipeshare_app/providers/user_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -21,11 +23,16 @@ class HomeScreen extends StatelessWidget {
     return Consumer2<UserProvider, OrderProvider>(
       builder: (context, userProvider, orderProvider, child) {
         // Show loading state while user data is being fetched
-        if (userProvider.isLoading || orderProvider.isLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+        debugPrint("userProvider.isLoading: ${userProvider.isLoading}");
+        debugPrint("orderProvider.isLoading: ${orderProvider.isLoading}");
+        debugPrint(
+          "userProvider.hasInitialized: ${userProvider.hasInitialized}",
+        );
+        debugPrint(
+          "orderProvider.hasInitialized: ${orderProvider.hasInitialized}",
+        );
+        debugPrint("userProvider.error: ${userProvider.error}");
+        debugPrint("orderProvider.error: ${orderProvider.error}");
 
         // Show error state if user data failed to load
         if (userProvider.error != null) {
@@ -63,9 +70,60 @@ class HomeScreen extends StatelessWidget {
           );
         }
 
+        if (userProvider.isLoading ||
+            orderProvider.isLoading ||
+            !userProvider.hasInitialized ||
+            !orderProvider.hasInitialized) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         // Main UI - user data is loaded
+        debugPrint("userProvider.currentUser: ${userProvider.currentUser}");
         final user = userProvider.currentUser!;
         final orders = orderProvider.orders;
+
+        debugPrint("orders: $orders");
+
+        Widget buildOrderCard(MealOrder order) {
+          return ActiveOrderCard(
+            title: order.diningHall,
+            time: (order.time != null)
+                ? "${order.time!.hour}:${order.time!.minute.toString().padLeft(2, '0')}"
+                : "TBD",
+            receiverUserID: user.id == order.sellerId
+                ? order.buyerId
+                : order.sellerId,
+          );
+        }
+
+        Widget buildOrderSection() {
+          final hasOrders = orders.isNotEmpty;
+
+          if (!hasOrders) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                "Orders will show up here—tap the buttons below to buy a swipe from someone or sell a swipe to someone else!",
+                style: SubTextStyle,
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          // Has orders -> show horizontally scrollable cards
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: orders.map((order) => buildOrderCard(order)).toList(),
+            ),
+          );
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -111,124 +169,117 @@ class HomeScreen extends StatelessWidget {
                 horizontal: 30.0,
                 vertical: 12.0,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ShaderMask(
-                    shaderCallback: (Rect bounds) {
-                      return const LinearGradient(
-                        colors: [Color(0xFF98D2EB), Color(0xFFA2A0DD)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ).createShader(bounds);
-                    },
-                    blendMode: BlendMode.srcIn,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Hi, ${user.email}",
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -1.6,
-                          decoration: TextDecoration.none,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (Rect bounds) {
+                        return const LinearGradient(
+                          colors: [Color(0xFF98D2EB), Color(0xFFA2A0DD)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ).createShader(bounds);
+                      },
+                      blendMode: BlendMode.srcIn,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Hi, ${user.email}",
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -1.6,
+                            decoration: TextDecoration.none,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  Text("Active Orders", style: HeaderStyle),
-                  SizedBox(height: 12),
-                  if (orders.isNotEmpty)
-                    //TODO: Change the conditional and the data population
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: orders.map((order) {
-                          // Adjust these based on your MealOrder model properties
-                          String location = order.diningHall;
-                          String time = (order.time != null)
-                              ? "${order.time!.hour}:${order.time!.minute.toString().padLeft(2, '0')}"
-                              : "TBD";
-
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              right: orders.last == order ? 0 : 12,
-                            ),
-                            child: ActiveOrderCard(title: location, time: time),
-                          );
-                        }).toList(),
-                      ),
-                    )
-                  else
+                    Text("Active Orders", style: HeaderStyle),
+                    SizedBox(height: 12),
+                    //Handles both orders and no orders
+                    buildOrderSection(),
+                    SizedBox(height: 20),
+                    Text("Place Order", style: HeaderStyle),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: PlaceOrderCard(
+                            label: "Buy",
+                            iconPath: "assets/fork_and_knife.svg",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BuySwipeScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 22),
+                        Expanded(
+                          child: PlaceOrderCard(
+                            label: "Sell",
+                            iconPath: "assets/wallet.svg",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SellPostScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+                    Text("Rewards", style: HeaderStyle),
+                    SizedBox(height: 12),
                     Container(
-                      padding: EdgeInsets.all(16),
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.black12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        "Orders will show up here—tap the buttons below to buy a swipe from someone or sell a swipe to someone else!",
-                        style: SubTextStyle,
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("50% off", style: SubHeaderStyle),
+                          Text(
+                            "After referring two friends",
+                            style: SubTextStyle,
+                          ),
+                        ],
                       ),
                     ),
-                  SizedBox(height: 20),
-                  Text("Place Order", style: HeaderStyle),
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      PlaceOrderCard(
-                        label: "Buy",
-                        iconPath: "assets/fork_and_knife.svg",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BuySwipeScreen(),
-                            ),
-                          );
-                        },
+                    SizedBox(height: 48),
+                    GestureDetector(
+                      //This should always be at the bottom
+                      onTap: () async {
+                        await launchUrl(
+                          Uri.parse(
+                            "https://docs.google.com/forms/d/e/1FAIpQLSfTmI3DIHP85a78MlNmQ9gUicQhjff5Tj34pWsUhvN6ATzGXg/viewform",
+                          ),
+                          mode: LaunchMode.inAppBrowserView,
+                        );
+                      },
+                      child: Center(
+                        child: Text("Give us Feedback!", style: SubTextStyle),
                       ),
-                      SizedBox(width: 22),
-                      PlaceOrderCard(
-                        label: "Sell",
-                        iconPath: "assets/wallet.svg",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SellPostScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 24),
-                  Text("Rewards", style: HeaderStyle),
-                  SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black12),
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("50% off", style: SubHeaderStyle),
-                        Text(
-                          "After referring two friends",
-                          style: SubTextStyle,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                    SizedBox(height: 48),
+                  ],
+                ),
               ),
             ),
           ),

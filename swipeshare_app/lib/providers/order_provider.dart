@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/providers/util/async_provider.dart';
 import 'package:swipeshare_app/services/order_service.dart';
@@ -13,6 +14,7 @@ class OrderProvider extends AsyncProvider {
 
   @override
   Future<void> initialize() async {
+    debugPrint("Initializing OrderProvider...");
     _orders = await _orderService.fetchOrders();
   }
 
@@ -24,6 +26,22 @@ class OrderProvider extends AsyncProvider {
   Future<MealOrder> makeTransaction(String listingId, DateTime datetime) async {
     return executeOperation(() async {
       final order = await _orderService.makeTransaction(listingId, datetime);
+      _orders.add(order);
+      return order;
+    });
+  }
+
+  Future<MealOrder> postOrder(
+    String sellerId,
+    String diningHall,
+    DateTime transactionDate,
+  ) async {
+    return executeOperation(() async {
+      final order = await _orderService.postOrder(
+        sellerId,
+        diningHall,
+        transactionDate,
+      );
       _orders.add(order);
       return order;
     });

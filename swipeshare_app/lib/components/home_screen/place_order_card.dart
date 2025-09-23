@@ -20,7 +20,6 @@ class PlaceOrderCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 160,
         height: 160,
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.6),
