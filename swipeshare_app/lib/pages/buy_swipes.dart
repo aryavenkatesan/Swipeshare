@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
 import 'package:swipeshare_app/pages/listing_selection_page.dart';
 
 class BuySwipeScreen extends StatefulWidget {
@@ -76,7 +76,10 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
             ),
             Expanded(
               child: Center(
-                child: Text('Find a Swipe', style: AppTextStyles.pageTitle),
+                child: Text(
+                  'Find a Swipe',
+                  style: AppTextStyles.pageTitle,
+                ),
               ),
             ),
             const SizedBox(width: 48), // Balance the back button
@@ -96,21 +99,20 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _canProceedToNextScreen()
-            ? _navigateToListingSelection
-            : null,
+        onPressed: _canProceedToNextScreen() ? _navigateToListingSelection : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accentBlue,
           foregroundColor: AppColors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              BuySwipesConstants.borderRadius,
-            ),
+            borderRadius: BorderRadius.circular(BuySwipesConstants.borderRadius),
           ),
           padding: BuySwipesConstants.buttonPadding,
         ),
-        child: Text("Find Swipe Seller", style: AppTextStyles.buttonText),
+        child: Text(
+          "Find Swipe Seller",
+          style: AppTextStyles.buttonText,
+        ),
       ),
     );
   }
@@ -126,10 +128,10 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
 
   /// Validates if user can proceed to next screen
   bool _canProceedToNextScreen() {
-    return startTime != null &&
-        endTime != null &&
-        selectedLocations.isNotEmpty &&
-        !_isEndTimeBeforeStartTime();
+    return startTime != null && 
+           endTime != null && 
+           selectedLocations.isNotEmpty &&
+           !_isEndTimeBeforeStartTime();
   }
 
   /// Navigates to listing selection page with current selections
@@ -150,10 +152,10 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   /// Validates if end time is before start time
   bool _isEndTimeBeforeStartTime() {
     if (startTime == null || endTime == null) return false;
-
+    
     final startMinutes = startTime!.hour * 60 + startTime!.minute;
     final endMinutes = endTime!.hour * 60 + endTime!.minute;
-
+    
     return endMinutes <= startMinutes;
   }
 }
