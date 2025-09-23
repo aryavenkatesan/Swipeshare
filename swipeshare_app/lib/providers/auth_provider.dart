@@ -20,7 +20,6 @@ class AuthProvider extends AsyncProvider {
     } catch (e) {
       await authService.logout();
       _isAuthenticated = false;
-      rethrow;
     }
   }
 

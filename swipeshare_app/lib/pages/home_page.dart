@@ -23,11 +23,16 @@ class HomeScreen extends StatelessWidget {
     return Consumer2<UserProvider, OrderProvider>(
       builder: (context, userProvider, orderProvider, child) {
         // Show loading state while user data is being fetched
-        if (userProvider.isLoading || orderProvider.isLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+        debugPrint("userProvider.isLoading: ${userProvider.isLoading}");
+        debugPrint("orderProvider.isLoading: ${orderProvider.isLoading}");
+        debugPrint(
+          "userProvider.hasInitialized: ${userProvider.hasInitialized}",
+        );
+        debugPrint(
+          "orderProvider.hasInitialized: ${orderProvider.hasInitialized}",
+        );
+        debugPrint("userProvider.error: ${userProvider.error}");
+        debugPrint("orderProvider.error: ${orderProvider.error}");
 
         // Show error state if user data failed to load
         if (userProvider.error != null) {
@@ -65,9 +70,21 @@ class HomeScreen extends StatelessWidget {
           );
         }
 
+        if (userProvider.isLoading ||
+            orderProvider.isLoading ||
+            !userProvider.hasInitialized ||
+            !orderProvider.hasInitialized) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         // Main UI - user data is loaded
+        debugPrint("userProvider.currentUser: ${userProvider.currentUser}");
         final user = userProvider.currentUser!;
         final orders = orderProvider.orders;
+
+        debugPrint("orders: $orders");
 
         Widget buildOrderCard(MealOrder order) {
           return ActiveOrderCard(

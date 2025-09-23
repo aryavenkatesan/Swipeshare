@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:swipeshare_app/core/network/api_client.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 
@@ -34,9 +35,16 @@ class OrderService {
 
   /// Get all orders for the current user with optional filters
   Future<List<MealOrder>> fetchOrders({Map<String, dynamic>? filters}) async {
+    debugPrint("OrderService fetchOrders called with filters: $filters");
     final response = await _apiClient.get('/orders', queryParameters: filters);
     List<dynamic> data = response.data as List<dynamic>;
-    return data.map((json) => MealOrder.fromJson(json)).toList();
+    debugPrint("OrderService fetchOrders returned data: $data");
+    try {
+      return data.map((json) => MealOrder.fromJson(json)).toList();
+    } on Exception catch (e) {
+      debugPrint("Error parsing orders: $e");
+      rethrow;
+    }
   }
 
   /// Get a specific order by ID
@@ -78,17 +86,5 @@ class OrderService {
   /// Get orders filtered by seller ID
   Future<List<MealOrder>> getOrdersBySeller(String sellerId) async {
     return getFilteredOrders(sellerId: sellerId);
-  }
-
-  Stream<QuerySnapshot> getOrders(String userId) {
-    return _fireStore
-        .collection('orders')
-        .where(
-          Filter.or(
-            Filter('sellerId', isEqualTo: userId),
-            Filter('buyerId', isEqualTo: userId),
-          ),
-        )
-        .snapshots();
   }
 }

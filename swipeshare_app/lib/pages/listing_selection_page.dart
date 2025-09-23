@@ -46,8 +46,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
 
   // build a list of users except for the current logged in user
   Widget _buildUserList(BuildContext context) {
-    return Consumer3<ListingProvider, UserProvider, OrderProvider>(
-      builder: (context, listingProvider, userProvider, orderProvider, child) {
+    return Consumer2<ListingProvider, UserProvider>(
+      builder: (context, listingProvider, userProvider, child) {
         if (listingProvider.error != null || userProvider.error != null) {
           return const Text('error');
         }
@@ -191,11 +191,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     }
   }
 
-  Future<void> _handleListingSelection(
-    Listing listing,
-    OrderProvider orderProvider,
-  ) async {
+  Future<void> _handleListingSelection(Listing listing) async {
     try {
+      final orderProvider = context.read<OrderProvider>();
       await orderProvider.makeTransaction(listing.id, widget.date);
       Navigator.pop(context);
       Navigator.pop(context);
