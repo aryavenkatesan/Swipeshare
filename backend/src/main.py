@@ -6,8 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from modules.auth.auth_router import auth_router
 from modules.listing.listing_router import listing_router
+from modules.message.message_queue_service import MessageQueueRegistry
 from modules.message.message_router import message_router
-from modules.message.message_service import MessageService
 from modules.order.order_router import order_router
 from modules.user.user_router import user_router
 
@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     yield  # App Runs
 
     # Shutdown
-    await MessageService.cleanup_all_listeners()
+    await MessageQueueRegistry().cleanup_all_listeners()
 
 
 app = FastAPI(lifespan=lifespan)
