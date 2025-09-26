@@ -1,8 +1,8 @@
+from core.exceptions import ForbiddenException, NotFoundException
 from database import get_db
 from fastapi import Depends
-from google.cloud.firestore import AsyncClient
+from google.cloud.firestore import AsyncClient, FieldFilter
 from modules.listing.listing_model import ListingData, ListingDto
-from core.exceptions import ForbiddenException, NotFoundException
 
 
 class ListingNotFoundException(NotFoundException):
@@ -21,7 +21,7 @@ class ListingService:
     async def get_listings(self, filters: dict[str, str]):
         query = self.listing_collection
         for field, value in filters.items():
-            query = query.where(field, "==", value)
+            query = query.where(filter=FieldFilter(field, "==", value))
         docs = query.stream()
         return [ListingDto.from_doc(doc) async for doc in docs]
 

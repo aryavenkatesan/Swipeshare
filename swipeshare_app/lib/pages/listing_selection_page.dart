@@ -1,10 +1,11 @@
-import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/listing.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/services/listing_service.dart';
-import 'package:swipeshare_app/services/order_service.dart';
+import 'package:provider/provider.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/auth.dart';
+import 'package:swipeshare_app/models/listing.dart';
+import 'package:swipeshare_app/providers/listing_provider.dart';
+import 'package:swipeshare_app/providers/order_provider.dart';
+import 'package:swipeshare_app/providers/user_provider.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
@@ -25,11 +26,6 @@ class ListingSelectionPage extends StatefulWidget {
 }
 
 class _ListingSelectionPageState extends State<ListingSelectionPage> {
-  // instance of auth
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final _listingService = ListingService();
-  final _orderService = OrderService();
-
   String? _expandedListingId;
 
   @override
@@ -43,27 +39,29 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
             _expandedListingId = null;
           });
         },
-        child: _buildUserList(),
+        child: _buildUserList(context),
       ),
     );
   }
 
   // build a list of users except for the current logged in user
-  Widget _buildUserList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('listings').snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
+  Widget _buildUserList(BuildContext context) {
+    return Consumer2<ListingProvider, UserProvider>(
+      builder: (context, listingProvider, userProvider, child) {
+        if (listingProvider.error != null || userProvider.error != null) {
           return const Text('error');
         }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (listingProvider.isLoading || userProvider.isLoading) {
           return const Text('loading..');
         }
 
         return ListView(
-          children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildUserListItem(doc))
+          children: listingProvider.listings
+              .map<Widget>(
+                (listing) =>
+                    _buildUserListItem(listing, userProvider.currentUser!),
+              )
               .toList(),
         );
       },
@@ -71,22 +69,20 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
   }
 
   // build individual user list items
-  Widget _buildUserListItem(DocumentSnapshot document) {
-    Map<String, dynamic> listing = document.data()! as Map<String, dynamic>;
-    final TimeOfDay listingStartTime = Listing.minutesToTOD(
-      listing['timeStart'],
-    );
-    final TimeOfDay listingEndTime = Listing.minutesToTOD(listing['timeEnd']);
-    final docId = document.id;
-    final bool isExpanded = _expandedListingId == docId;
+  Widget _buildUserListItem(Listing listing, User user) {
+    final bool isExpanded = _expandedListingId == listing.id;
 
     // display all listings with a selection location
     // TODO: add PaymentType filtering here
     // TODO: add a date selector and only display the listings on that date
-    // TODO: add a filter to stop people from seeing their own posts (compare uid of current user to listing sellerID)
-    if (widget.locations.contains(listing['diningHall']) &&
-        _auth.currentUser!.uid != listing['sellerId'] &&
-        widget.date.toIso8601String() != listing['transactionDate']) {
+    if (widget.locations.contains(listing.diningHall) &&
+        user.id != listing.sellerId &&
+        DateTime(widget.date.year, widget.date.month, widget.date.day) ==
+            DateTime(
+              listing.transactionDate.year,
+              listing.transactionDate.month,
+              listing.transactionDate.day,
+            )) {
       return GestureDetector(
         // change this from a listTile to a custom componenent that will take arguments and spit out smth beautiful
         // need to add ratings somehow, probably easiest to do it through the listing itself with another content field
@@ -94,7 +90,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         onTap: () {
           setState(() {
             // Toggle expansion - if it's already expanded, collapse it
-            _expandedListingId = isExpanded ? null : docId;
+            _expandedListingId = isExpanded ? null : listing.id;
           });
         },
         child: Container(
@@ -121,7 +117,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        "${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')} @ ${listing['diningHall']}",
+                        "${listing.timeStart.hour}:${listing.timeStart.minute.toString().padLeft(2, '0')} to ${listing.timeEnd.hour}:${listing.timeEnd.minute.toString().padLeft(2, '0')} @ ${listing.diningHall}",
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -150,12 +146,13 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                       SizedBox(height: 8),
                       // Add more listing details here
                       Text(
-                        "Seller ID: ${listing['sellerId']}",
+                        "Seller ID: ${listing.sellerId}",
                         style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                       ),
                       SizedBox(height: 4),
                       Text(
-                        "Price: \$${listing['price'] ?? 'N/A'}",
+                        // TODO: Get price from listing
+                        "Price: \$N/A",
                         style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                       ),
                       // Add more fields as needed
@@ -164,8 +161,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () =>
-                              _handleListingSelection(docId, listing),
+                          onPressed: () => _handleListingSelection(listing),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(
                               192,
@@ -195,18 +191,10 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     }
   }
 
-  Future<void> _handleListingSelection(
-    String docId,
-    Map<String, dynamic> listing,
-  ) async {
+  Future<void> _handleListingSelection(Listing listing) async {
     try {
-      await _listingService.deleteListing(docId);
-      await _orderService.postOrder(
-        listing['sellerId'],
-        _auth.currentUser!.uid,
-        listing['diningHall'],
-        widget.date,
-      );
+      final orderProvider = context.read<OrderProvider>();
+      await orderProvider.makeTransaction(listing.id, widget.date);
       Navigator.pop(context);
       Navigator.pop(context);
     } catch (e, s) {

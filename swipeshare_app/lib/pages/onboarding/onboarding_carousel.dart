@@ -1,5 +1,5 @@
+import 'package:swipeshare_app/services/auth/auth_service.dart';
 import 'package:swipeshare_app/pages/home_page.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_1.dart';
@@ -295,9 +295,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   }
 
   void signOut() {
-    //get auth service
-    final authService = Provider.of<AuthServices>(context, listen: false);
-
-    authService.signOut();
+    final authService = context.read<AuthService>();
+    authService.logout();
   }
 }

@@ -2,6 +2,7 @@ from core.authentication import authenticate_user
 from fastapi import APIRouter, Depends, HTTPException, Request
 from modules.order.order_service import OrderService
 from modules.user.user_model import UserDto
+from modules.user.user_service import UserService
 
 from .order_model import (
     OrderCreate,
@@ -22,8 +23,15 @@ order_router = APIRouter(prefix="/api/orders")
 async def create_order(
     order_data: OrderCreate,
     order_service: OrderService = Depends(),
+    user_service: UserService = Depends(),
     user: UserDto = Depends(authenticate_user),
 ) -> OrderDto:
+    if order_data.seller_id == user.id:
+        raise HTTPException(400, "You cannot create an order for your own listing")
+
+    if not await user_service.user_with_id_exists(order_data.seller_id):
+        raise HTTPException(404, f"User with id {order_data.seller_id} not found")
+
     with_buyer = OrderData(
         seller_id=order_data.seller_id,
         buyer_id=user.id,
