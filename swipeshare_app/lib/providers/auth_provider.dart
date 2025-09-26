@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:swipeshare_app/providers/util/async_provider.dart';
 import 'package:swipeshare_app/services/auth/auth_service.dart';
 
@@ -13,6 +14,7 @@ class AuthProvider extends AsyncProvider {
   bool get isAuthenticated => _isAuthenticated;
 
   @override
+  @protected
   Future<void> initialize() async {
     try {
       await authService.refreshToken();
@@ -24,6 +26,7 @@ class AuthProvider extends AsyncProvider {
   }
 
   @override
+  @protected
   Future<void> reset() async {
     await authService.logout();
     _isAuthenticated = false;

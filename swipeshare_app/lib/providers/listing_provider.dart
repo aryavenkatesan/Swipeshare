@@ -13,11 +13,13 @@ class ListingProvider extends AsyncProvider {
   List<Listing> get listings => _listings;
 
   @override
+  @protected
   Future<void> initialize() async {
     _listings = await _listingService.fetchListings();
   }
 
   @override
+  @protected
   Future<void> reset() async {
     _listings.clear();
   }

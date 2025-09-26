@@ -13,12 +13,14 @@ class UserProvider extends AsyncProvider {
   User? get currentUser => _currentUser;
 
   @override
+  @protected
   Future<void> initialize() async {
     _currentUser = await _userService.getCurrentUser();
     debugPrint("UserProvider initialized with user: ${_currentUser?.email}");
   }
 
   @override
+  @protected
   Future<void> reset() async {
     _currentUser = null;
   }
