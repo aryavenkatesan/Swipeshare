@@ -1,9 +1,9 @@
+from core.exceptions import ConflictException, NotFoundException
 from database import get_db
 from fastapi import Depends
-from google.cloud.firestore import AsyncClient
+from google.cloud.firestore import AsyncClient, FieldFilter
 from modules.auth.auth_service import get_password_hash
 from modules.user.user_model import UserCreate, UserDto
-from core.exceptions import ConflictException, NotFoundException
 
 
 class UserConflictException(ConflictException):
@@ -34,7 +34,9 @@ class UserService:
         return UserDto.from_doc(await user_ref.get())
 
     async def get_user_by_email(self, email: str) -> UserDto:
-        query = self.user_collection.where("email", "==", email).limit(1)
+        query = self.user_collection.where(
+            filter=FieldFilter("email", "==", email)
+        ).limit(1)
         users = await query.get()
         if not users or not users[0].exists:
             raise UserNotFoundException(f"User with email {email} not found")
@@ -47,12 +49,18 @@ class UserService:
         except UserNotFoundException:
             return False
 
+    async def user_with_id_exists(self, user_id: str) -> bool:
+        doc = await self.user_collection.document(user_id).get()
+        return doc.exists
+
     async def get_hashed_password(self, email: str) -> str:
-        query = self.user_collection.where("email", "==", email).limit(1)
-        user, *_ = await query.get()
-        if user is None or not user.exists:
+        query = self.user_collection.where(
+            filter=FieldFilter("email", "==", email)
+        ).limit(1)
+        users = await query.get()
+        if not users or not users[0].exists:
             raise UserNotFoundException(f"User with email {email} not found")
-        password = user.get("password")
+        password = users[0].get("password")
         if password is None:
             raise UserPasswordNotSetException(
                 f"User with email {email} has no password set"

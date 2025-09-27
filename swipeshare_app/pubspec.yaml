@@ -42,6 +42,9 @@ dependencies:
   smooth_page_indicator: ^1.2.1
   flutter_svg: ^2.2.0
   google_fonts: ^6.1.0
+  dio: ^5.9.0
+  flutter_secure_storage: ^9.2.4
+  flutter_dotenv: ^5.1.0
   url_launcher: ^6.3.2
 
 dev_dependencies:
@@ -71,6 +74,7 @@ flutter:
     - assets/wallet.svg
     - assets/fork_and_knife.svg
     - assets/star.svg
+    - .env
       #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
