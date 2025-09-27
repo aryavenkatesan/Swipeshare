@@ -13,12 +13,14 @@ class OrderProvider extends AsyncProvider {
   List<MealOrder> get orders => _orders;
 
   @override
+  @protected
   Future<void> initialize() async {
     debugPrint("Initializing OrderProvider...");
     _orders = await _orderService.fetchOrders();
   }
 
   @override
+  @protected
   Future<void> reset() async {
     _orders.clear();
   }

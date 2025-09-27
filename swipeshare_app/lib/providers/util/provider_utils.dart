@@ -11,7 +11,7 @@ void initializeAuthBasedProviders(BuildContext context) {
 }
 
 void resetAuthBasedProviders(BuildContext context) {
-  context.read<UserProvider>().reset();
-  context.read<OrderProvider>().reset();
-  context.read<ListingProvider>().reset();
+  context.read<UserProvider>().ensureReset();
+  context.read<OrderProvider>().ensureReset();
+  context.read<ListingProvider>().ensureReset();
 }
