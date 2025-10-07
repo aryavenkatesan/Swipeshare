@@ -18,11 +18,7 @@ class ListingSelectionPage extends StatefulWidget {
     required this.date,
     required this.startTime,
     required this.endTime,
-  }) {
-    debugPrint(
-      'Locations: $locations, Date: $date, Start: $startTime, End: $endTime',
-    );
-  }
+  });
 
   @override
   State<ListingSelectionPage> createState() => _ListingSelectionPageState();
@@ -53,7 +49,6 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       filter: _buildListingsFilter(),
       builder: (context, listings, isLoading, error) {
         if (error != null) {
-          debugPrint('Error fetching listings: $error');
           return Text('error: $error');
         }
 
