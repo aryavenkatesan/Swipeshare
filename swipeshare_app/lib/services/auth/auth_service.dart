@@ -1,79 +1,42 @@
-import 'package:dio/dio.dart';
-import 'package:swipeshare_app/services/token_storage.dart';
-import 'package:swipeshare_app/core/network/auth_client.dart';
-import 'package:swipeshare_app/models/auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
-  final Dio _dio;
-  final TokenStorage _tokenStorage;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
 
-  AuthService({Dio? dio, TokenStorage? tokenStorage})
-    : _dio = dio ?? authClient,
-      _tokenStorage = tokenStorage ?? getTokenStorage();
+  Future<UserCredential> login(String email, String password) async {
+    try {
+      UserCredential userCredential = await _firebaseAuth
+          .signInWithEmailAndPassword(email: email, password: password);
 
-  Dio get dio => _dio;
+      //add a new document for the user in users collection if it doesn't already exist
+      await _fireStore.collection('users').doc(userCredential.user!.uid).set({
+        'email': email,
+      }, SetOptions(merge: true));
 
-  Future<AuthResponse> login(String email, String password) async {
-    final response = await _dio.post(
-      '/auth/login',
-      data: {'email': email, 'password': password},
-    );
-
-    final accessToken = response.data['access_token'] as String;
-    final refreshToken = response.data['refresh_token'] as String?;
-
-    await _tokenStorage.saveTokens(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    );
-
-    return AuthResponse(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      user: User.fromJson(response.data['user']),
-    );
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.code);
+    }
   }
 
-  Future<AuthResponse> register(String email, String password) async {
-    final response = await _dio.post(
-      '/auth/signup',
-      data: {'email': email, 'password': password},
-    );
+  Future<UserCredential> signUp(String email, String password) async {
+    try {
+      UserCredential userCredential = await _firebaseAuth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-    final accessToken = response.data['access_token'] as String;
-    final refreshToken = response.data['refresh_token'] as String?;
+      await _fireStore.collection('users').doc(userCredential.user!.uid).set({
+        'email': email,
+      });
 
-    await _tokenStorage.saveTokens(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    );
-
-    return AuthResponse(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      user: User.fromJson(response.data['user']),
-    );
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.code);
+    }
   }
 
-  Future<String> refreshToken() async {
-    final refreshToken = await _tokenStorage.getRefreshToken();
-
-    final response = await _dio.post(
-      '/auth/refresh',
-      data: {'refresh_token': refreshToken},
-    );
-
-    final newAccessToken = response.data['access_token'];
-    _tokenStorage.saveTokens(accessToken: newAccessToken);
-
-    return newAccessToken;
-  }
-
-  Future<void> logout() async {
-    await _tokenStorage.clearTokens();
-  }
-
-  Future<String?> getAccessToken() async {
-    return await _tokenStorage.getAccessToken();
+  Future<void> signOut() async {
+    return await FirebaseAuth.instance.signOut();
   }
 }

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/post_listing_button.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/providers/listing_provider.dart';
+import 'package:swipeshare_app/services/listing_service.dart';
 
 class SellOrderConfirmScreen extends StatefulWidget {
   final String location;
@@ -56,26 +55,22 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ListingProvider>(
-      builder: (context, listingProvider, child) {
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          body: SafeArea(
-            child: Padding(
-              padding: BuySwipesConstants.screenPadding,
-              child: Column(
-                children: [
-                  // Header with back button
-                  _buildHeader(),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: BuySwipesConstants.screenPadding,
+          child: Column(
+            children: [
+              // Header with back button
+              _buildHeader(),
 
-                  // Expanded content that fills remaining space
-                  _buildConfirmContent(listingProvider),
-                ],
-              ),
-            ),
+              // Expanded content that fills remaining space
+              _buildConfirmContent(),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -96,7 +91,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
     );
   }
 
-  Widget _buildConfirmContent(ListingProvider listingProvider) {
+  Widget _buildConfirmContent() {
     return Expanded(
       child: Column(
         children: [
@@ -332,21 +327,22 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
           // Button section with enhanced styling
           Padding(
             padding: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
-            child: _buildConfirmButton(listingProvider),
+            child: _buildConfirmButton(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildConfirmButton(ListingProvider listingProvider) {
+  Widget _buildConfirmButton() {
     return PostListingButton(
       onPressed: () {
-        listingProvider.postListing(
-          widget.location,
-          widget.startTime,
-          widget.endTime,
-          widget.date,
+        final listingService = ListingService();
+        listingService.createListing(
+          diningHall: widget.location,
+          timeStart: widget.startTime,
+          timeEnd: widget.endTime,
+          transactionDate: widget.date,
         );
         _showSuccessDialog();
       },

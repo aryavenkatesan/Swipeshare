@@ -1,14 +1,14 @@
-import 'package:swipeshare_app/services/auth/auth_service.dart';
-import 'package:swipeshare_app/pages/home_page.dart';
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:swipeshare_app/pages/home_page.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_1.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_2.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
-import 'package:provider/provider.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'dart:async';
+import 'package:swipeshare_app/services/auth/auth_service.dart';
 
 //TODO: Clean this code and conduct edge case checking
 
@@ -295,7 +295,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   }
 
   void signOut() {
-    final authService = context.read<AuthService>();
-    authService.logout();
+    final authService = AuthService();
+    authService.signOut();
   }
 }

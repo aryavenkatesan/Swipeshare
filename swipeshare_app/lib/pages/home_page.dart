@@ -1,102 +1,45 @@
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
-import 'package:swipeshare_app/providers/auth_provider.dart';
-import 'package:swipeshare_app/providers/order_provider.dart';
-import 'package:swipeshare_app/providers/user_provider.dart';
+import 'package:swipeshare_app/services/auth/auth_service.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  void signOut(BuildContext context) => context.read<AuthProvider>().logout();
+  void signOut(BuildContext context) => AuthService().signOut();
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserProvider, OrderProvider>(
-      builder: (context, userProvider, orderProvider, child) {
-        // Show loading state while user data is being fetched
-        debugPrint("userProvider.isLoading: ${userProvider.isLoading}");
-        debugPrint("orderProvider.isLoading: ${orderProvider.isLoading}");
-        debugPrint(
-          "userProvider.hasInitialized: ${userProvider.hasInitialized}",
-        );
-        debugPrint(
-          "orderProvider.hasInitialized: ${orderProvider.hasInitialized}",
-        );
-        debugPrint("userProvider.error: ${userProvider.error}");
-        debugPrint("orderProvider.error: ${orderProvider.error}");
-
-        // Show error state if user data failed to load
-        if (userProvider.error != null) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error loading user data: ${userProvider.error}'),
-                  ElevatedButton(
-                    onPressed: () => userProvider.ensureInitialized(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
+    return OrderService().orderStream(
+      builder: (context, orders, isLoading, error) {
         // Show error state if orders failed to load
-        if (orderProvider.error != null) {
+        if (error != null) {
           return Scaffold(
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error loading orders: ${orderProvider.error}'),
-                  ElevatedButton(
-                    onPressed: () => orderProvider.ensureInitialized(),
-                    child: const Text('Retry'),
-                  ),
-                ],
+                children: [Text('Error loading orders: $error')],
               ),
             ),
           );
         }
 
-        if (userProvider.isLoading ||
-            orderProvider.isLoading ||
-            !userProvider.hasInitialized ||
-            !orderProvider.hasInitialized) {
+        if (isLoading) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
         // Main UI - user data is loaded
-        debugPrint("userProvider.currentUser: ${userProvider.currentUser}");
-        final user = userProvider.currentUser!;
-        final orders = orderProvider.orders;
-
-        debugPrint("orders: $orders");
-
-        Widget buildOrderCard(MealOrder order) {
-          return ActiveOrderCard(
-            title: order.diningHall,
-            time: (order.time != null)
-                ? "${order.time!.hour}:${order.time!.minute.toString().padLeft(2, '0')}"
-                : "TBD",
-            receiverUserID: user.id == order.sellerId
-                ? order.buyerId
-                : order.sellerId,
-          );
-        }
+        final user = FirebaseAuth.instance.currentUser!;
 
         Widget buildOrderSection() {
           final hasOrders = orders.isNotEmpty;
@@ -120,7 +63,9 @@ class HomeScreen extends StatelessWidget {
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: orders.map((order) => buildOrderCard(order)).toList(),
+              children: orders
+                  .map((order) => ActiveOrderCard(order: order))
+                  .toList(),
             ),
           );
         }
