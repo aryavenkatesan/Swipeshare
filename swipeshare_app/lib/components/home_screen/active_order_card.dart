@@ -1,21 +1,13 @@
-import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
 
 class ActiveOrderCard extends StatelessWidget {
-  final String title;
-  final String time;
-  // final String receiverUserEmail;
-  final String receiverUserID;
+  final MealOrder order;
 
-  const ActiveOrderCard({
-    super.key,
-    required this.title,
-    required this.time,
-    // required this.receiverUserEmail,
-    required this.receiverUserID,
-  });
+  const ActiveOrderCard({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +18,7 @@ class ActiveOrderCard extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => ChatPage(
-                receiverUserEmail:
-                    'receiverUserEmail', // a bunch of other things need to be updated for this to work
-                receiverUserID: receiverUserID,
-              ),
-            ),
+            MaterialPageRoute(builder: (context) => ChatPage(order: order)),
           );
         },
         child: Container(
@@ -46,9 +32,14 @@ class ActiveOrderCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: HeaderStyle),
+              Text(order.diningHall, style: HeaderStyle),
               const SizedBox(height: 6),
-              Text(time, style: GreyHeaderStyle),
+              Text(
+                (order.time != null)
+                    ? "${order.time!.hour}:${order.time!.minute.toString().padLeft(2, '0')}"
+                    : "TBD",
+                style: GreyHeaderStyle,
+              ),
             ],
           ),
         ),

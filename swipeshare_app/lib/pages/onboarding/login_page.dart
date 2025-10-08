@@ -1,9 +1,7 @@
 import 'dart:ui';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:swipeshare_app/providers/auth_provider.dart';
+import 'package:swipeshare_app/services/auth/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   final void Function()? onTap;
@@ -21,10 +19,10 @@ class _LoginPageState extends State<LoginPage> {
 
   //sign in user
   void signIn() async {
-    final authProvider = context.read<AuthProvider>();
+    final authService = AuthService();
 
     try {
-      await authProvider.login(emailController.text, passwordController.text);
+      await authService.login(emailController.text, passwordController.text);
     } catch (e) {
       ScaffoldMessenger.of(
         context,

@@ -1,9 +1,8 @@
 import 'dart:ui';
 
-import 'package:swipeshare_app/services/auth/auth_service.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
+import 'package:swipeshare_app/services/auth/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   final void Function()? onTap;
@@ -43,13 +42,10 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     //get auth service
-    final authService = context.read<AuthService>();
+    final authService = AuthService();
 
     try {
-      await authService.register(
-        emailController.text,
-        passwordController.text,
-      );
+      await authService.signUp(emailController.text, passwordController.text);
     } catch (e) {
       ScaffoldMessenger.of(
         context,

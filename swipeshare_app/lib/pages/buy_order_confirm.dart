@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/providers/order_provider.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 
 class BuyOrderConfirmScreen extends StatefulWidget {
   final String sellerName;
@@ -237,11 +236,15 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
 
   Future<void> _placeOrder() async {
     try {
-      final orderProvider = context.read<OrderProvider>();
-      await orderProvider.postOrder(
-        widget.sellerId,
-        widget.location,
-        widget.date,
+      final orderService = OrderService();
+      await orderService.createOrder(
+        sellerId: widget.sellerId,
+        diningHall: widget.location,
+        date: widget.date,
+        time: TimeOfDay(
+          hour: widget.startTime.hour,
+          minute: widget.startTime.minute,
+        ),
       );
 
       // Show success message and navigate back

@@ -1,35 +1,32 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:swipeshare_app/pages/home_page.dart';
-import 'package:swipeshare_app/providers/auth_provider.dart';
-import 'package:swipeshare_app/providers/util/provider_utils.dart';
-import 'package:swipeshare_app/services/auth/login_or_register.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
+import 'package:swipeshare_app/pages/onboarding/login_or_register.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        if (!authProvider.hasInitialized) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (authProvider.isAuthenticated) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            initializeAuthBasedProviders(context);
-          });
-          return const HomeScreen();
-        } else {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            resetAuthBasedProviders(context);
-          });
-          return const LoginOrRegister();
-        }
-      },
+    return Scaffold(
+      body: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          // user is logged in
+          if (snapshot.hasData) {
+            if (FirebaseAuth.instance.currentUser!.emailVerified) {
+              return const HomeScreen();
+            } else {
+              return const OnboardingCarousel();
+            }
+          }
+          // user is NOT logged in
+          else {
+            return const LoginOrRegister();
+          }
+        },
+      ),
     );
   }
 }

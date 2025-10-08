@@ -1,107 +1,84 @@
-import 'package:dio/dio.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/core/network/api_client.dart';
 import 'package:swipeshare_app/models/listing.dart';
 
 class ListingService {
-  final Dio _apiClient;
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
 
-  ListingService({Dio? dio}) : _apiClient = dio ?? apiClient;
-
-  /// Create a new listing
-  Future<Listing> postListing(
-    String diningHall,
-    TimeOfDay timeStart,
-    TimeOfDay timeEnd,
-    DateTime transactionDate,
-  ) async {
-    final newListing = ListingCreate(
-      diningHall: diningHall,
-      timeStart: timeStart,
-      timeEnd: timeEnd,
-      transactionDate: transactionDate,
-    );
-
-    final response = await _apiClient.post(
-      '/listings',
-      data: newListing.toMap(),
-    );
-    return Listing.fromJson(response.data);
-  }
-
-  /// Get all listings with optional filters
-  Future<List<Listing>> fetchListings({Map<String, dynamic>? filters}) async {
-    final response = await _apiClient.get(
-      '/listings',
-      queryParameters: filters,
-    );
-    return (response.data as List)
-        .map((listing) => Listing.fromJson(listing))
-        .toList();
-  }
-
-  /// Get a specific listing by ID
-  Future<Listing> getListingById(String listingId) async {
-    final response = await _apiClient.get('/listings/$listingId');
-    return Listing.fromJson(response.data);
-  }
-
-  /// Update an existing listing
-  Future<Listing> updateListing(
-    String listingId,
-    String diningHall,
-    TimeOfDay timeStart,
-    TimeOfDay timeEnd,
-    DateTime transactionDate,
-  ) async {
-    final updatedListing = ListingCreate(
-      diningHall: diningHall,
-      timeStart: timeStart,
-      timeEnd: timeEnd,
-      transactionDate: transactionDate,
-    );
-
-    final response = await _apiClient.put(
-      '/listings/$listingId',
-      data: updatedListing.toMap(),
-    );
-    return Listing.fromJson(response.data);
-  }
-
-  /// Delete a listing (DELETE /api/listings/{id})
-  Future<Listing> deleteListing(String listingId) async {
-    final response = await _apiClient.delete('/listings/$listingId');
-    return Listing.fromJson(response.data);
-  }
-
-  // Convenience methods for common filtering scenarios
-
-  /// Get listings filtered by multiple criteria
-  Future<List<Listing>> getFilteredListings({
-    String? diningHall,
-    DateTime? transactionDate,
-    int? timeStart,
-    int? timeEnd,
+  Future<Listing> createListing({
+    required String diningHall,
+    required TimeOfDay timeStart,
+    required TimeOfDay timeEnd,
+    required DateTime transactionDate,
+    Transaction? transaction,
   }) async {
-    final filters = <String, dynamic>{};
+    final newListingRef = _firestore.collection('listings').doc();
 
-    if (diningHall != null) filters['dining_hall'] = diningHall;
-    if (transactionDate != null) {
-      filters['transaction_date'] = transactionDate.toIso8601String();
+    final newListing = Listing(
+      id: newListingRef.id,
+      sellerId: _auth.currentUser!.uid,
+      diningHall: diningHall,
+      timeStart: timeStart,
+      timeEnd: timeEnd,
+      transactionDate: transactionDate,
+    );
+
+    if (transaction == null) {
+      await newListingRef.set(newListing.toMap());
+    } else {
+      transaction.set(newListingRef, newListing.toMap());
     }
-    if (timeStart != null) filters['time_start'] = timeStart.toString();
-    if (timeEnd != null) filters['time_end'] = timeEnd.toString();
 
-    return fetchListings(filters: filters.isNotEmpty ? filters : null);
+    return newListing;
   }
 
-  /// Get listings filtered by dining hall
-  Future<List<Listing>> getListingsByDiningHall(String diningHall) async {
-    return getFilteredListings(diningHall: diningHall);
+  Future<Listing> getListingById(
+    String listngId, {
+    Transaction? transaction,
+  }) async {
+    final doc = await (transaction != null
+        ? transaction.get(_firestore.collection('listings').doc(listngId))
+        : _firestore.collection('listings').doc(listngId).get());
+
+    if (!doc.exists) {
+      throw Exception("Listing with id $listngId not found");
+    }
+
+    return Listing.fromDoc(doc);
   }
 
-  /// Get listings filtered by transaction date
-  Future<List<Listing>> getListingsByDate(DateTime date) async {
-    return getFilteredListings(transactionDate: date);
+  Widget listingStream({
+    required Widget Function(
+      BuildContext context,
+      List<Listing> listings,
+      bool isLoading,
+      Object? error,
+    )
+    builder,
+    Filter? filter,
+  }) {
+    Query query = _firestore.collection('listings');
+    if (filter != null) {
+      query = query.where(filter);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: query.snapshots(),
+      builder: (context, snapshot) {
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+        final error = snapshot.error;
+
+        List<Listing> listings = [];
+        if (snapshot.hasData) {
+          listings = snapshot.data!.docs
+              .map((doc) => Listing.fromDoc(doc))
+              .toList();
+        }
+
+        return builder(context, listings, isLoading, error);
+      },
+    );
   }
 }

@@ -1,13 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
-import 'package:swipeshare_app/services/auth/auth_gate.dart';
 import 'package:swipeshare_app/firebase_options.dart';
-import 'package:swipeshare_app/providers/auth_provider.dart';
-import 'package:swipeshare_app/providers/listing_provider.dart';
-import 'package:swipeshare_app/providers/order_provider.dart';
-import 'package:swipeshare_app/providers/user_provider.dart';
+import 'package:swipeshare_app/services/auth/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,17 +10,7 @@ void main() async {
   await dotenv.load(fileName: ".env");
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => AuthProvider()),
-        ChangeNotifierProvider(create: (context) => UserProvider()),
-        ChangeNotifierProvider(create: (context) => OrderProvider()),
-        ChangeNotifierProvider(create: (context) => ListingProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
