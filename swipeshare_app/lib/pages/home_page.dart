@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
+import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
@@ -13,7 +14,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/order_service.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,78 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<MealOrder> orders = [];
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final OrderService _orderService = OrderService();
-  // StreamSubscription<QuerySnapshot>? _ordersSubscription;
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   print("HomeScreen initState called");
-
-  //   // Listen to auth state changes
-  //   _auth.authStateChanges().listen((User? user) {
-  //     if (user != null) {
-  //       print("User authenticated: ${user.email}");
-  //       _listenToUserOrders();
-  //     } else {
-  //       print("User not authenticated");
-  //       // Handle unauthenticated state
-  //     }
-  //   });
-  // }
-
-  // @override
-  // void dispose() {
-  //   _ordersSubscription?.cancel();
-  //   super.dispose();
-  // }
-
-  // // Function to listen to real-time updates for orders
-  // void _listenToUserOrders() {
-  //   print(_auth.currentUser == null);
-  //   String currentUserId = "123089";
-  //   try {
-  //     currentUserId = _auth.currentUser!.uid;
-  //   } catch (e, s) {
-  //     print(e);
-  //     print(s);
-  //   }
-
-  //   _ordersSubscription = FirebaseFirestore.instance
-  //       .collection('orders')
-  //       .where(
-  //         Filter.or(
-  //           Filter('sellerId', isEqualTo: currentUserId),
-  //           Filter('buyerId', isEqualTo: currentUserId),
-  //         ),
-  //       )
-  //       .snapshots()
-  //       .listen(
-  //         (QuerySnapshot querySnapshot) {
-  //           List<MealOrder> userOrders = [];
-  //           for (QueryDocumentSnapshot doc in querySnapshot.docs) {
-  //             Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
-  //             // Create MealOrder from the document data
-  //             MealOrder order = MealOrder(
-  //               docId: doc.id,
-  //               sellerId: data['sellerId'],
-  //               buyerId: data['buyerId'],
-  //               location: data['location'],
-  //               transactionDate: DateTime.parse(data['transactionDate']),
-  //               time: data['time'],
-  //             );
-  //             userOrders.add(order);
-  //           }
-
-  //           setState(() {
-  //             orders = userOrders;
-  //           });
-  //         },
-  //         onError: (error) {
-  //           print('Error listening to orders: $error');
-  //         },
-  //       );
-  // }
 
   void signOut() {
     //get auth service
@@ -106,10 +35,32 @@ class _HomeScreenState extends State<HomeScreen> {
     authService.signOut();
   }
 
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
+
+  void _onRefresh() async {
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 1000));
+    // if failed,use refreshFailed()
+    _refreshController.refreshCompleted();
+  }
+
+  void _onLoading() async {
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 1000));
+    // if failed,use loadFailed(),if no data return,use LoadNodata()
+    _refreshController.loadComplete();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // surfaceTintColor: Color.fromRGBO(254, 247, 255, 1),
+        forceMaterialTransparency: true,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0.0,
         actions: [
           Container(
             width: 70,
@@ -145,111 +96,113 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 12.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ShaderMask(
-                  shaderCallback: (Rect bounds) {
-                    return const LinearGradient(
-                      colors: [Color(0xFF98D2EB), Color(0xFFA2A0DD)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ).createShader(bounds);
-                  },
-                  blendMode: BlendMode.srcIn,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Hi, ${_auth.currentUser!.email}",
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -1.6,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+          padding: const EdgeInsets.only(right: 30.0, left: 30.0, bottom: 12.0),
+          child: SmartRefresher(
+            controller: _refreshController,
+            onRefresh: _onRefresh,
+            onLoading: _onLoading,
+            header: WaterDropHeader(),
+            footer: CustomFooter(
+              builder: (BuildContext context, LoadStatus? mode) {
+                return Text("");
+              },
+            ),
 
-                Text("Active Orders", style: HeaderStyle),
-                SizedBox(height: 12),
-                //Handles both orders and no orders
-                _buildOrderSection(),
-                SizedBox(height: 20),
-                Text("Place Order", style: HeaderStyle),
-                SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: PlaceOrderCard(
-                        label: "Buy",
-                        iconPath: "assets/fork_and_knife.svg",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BuySwipeScreen(),
-                            ),
-                          );
-                        },
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShaderMask(
+                    shaderCallback: (Rect bounds) {
+                      return const LinearGradient(
+                        colors: [Color(0xFF98D2EB), Color(0xFFA2A0DD)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds);
+                    },
+                    blendMode: BlendMode.srcIn,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Hi, ${_auth.currentUser!.email}",
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -1.6,
+                          decoration: TextDecoration.none,
+                        ),
                       ),
                     ),
-                    SizedBox(width: 22),
-                    Expanded(
-                      child: PlaceOrderCard(
-                        label: "Sell",
-                        iconPath: "assets/wallet.svg",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SellPostScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 24),
-                Text("Rewards", style: HeaderStyle),
-                SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black12),
-                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 24),
+
+                  Text("Active Orders", style: HeaderStyle),
+                  SizedBox(height: 12),
+                  //Handles both orders and no orders
+                  _buildOrderSection(),
+                  SizedBox(height: 20),
+                  Text("Place Order", style: HeaderStyle),
+                  SizedBox(height: 12),
+                  Row(
                     children: [
-                      Text("50% off", style: SubHeaderStyle),
-                      Text("After referring two friends", style: SubTextStyle),
+                      Expanded(
+                        child: PlaceOrderCard(
+                          label: "Buy",
+                          iconPath: "assets/fork_and_knife.svg",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BuySwipeScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 22),
+                      Expanded(
+                        child: PlaceOrderCard(
+                          label: "Sell",
+                          iconPath: "assets/wallet.svg",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SellPostScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                SizedBox(height: 48),
-                GestureDetector(
-                  //This should always be at the bottom
-                  onTap: () async {
-                    await launchUrl(
-                      Uri.parse(
-                        "https://docs.google.com/forms/d/e/1FAIpQLSfTmI3DIHP85a78MlNmQ9gUicQhjff5Tj34pWsUhvN6ATzGXg/viewform",
-                      ),
-                      mode: LaunchMode.inAppBrowserView,
-                    );
-                  },
-                  child: Center(
-                    child: Text("Give us Feedback!", style: SubTextStyle),
+                  SizedBox(height: 24),
+                  Text("Rewards", style: HeaderStyle),
+                  SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("50% off", style: SubHeaderStyle),
+                        Text(
+                          "After referring two friends",
+                          style: SubTextStyle,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(height: 48),
-              ],
+                  SizedBox(height: 48),
+                  Hyperlinks(),
+                  SizedBox(height: 48),
+                ],
+              ),
             ),
           ),
         ),
@@ -301,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
 
     return ActiveOrderCard(
-      title: data['location'],
+      title: data['diningHall'],
       time: (data['time'] != null)
           ? "${data['time']!.hour}:${data['time']!.minute.toString().padLeft(2, '0')}"
           : "TBD",
