@@ -1,5 +1,7 @@
-import 'package:swipeshare_app/components/my_text_field.dart';
-import 'package:swipeshare_app/components/chat_bubble.dart';
+import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
+import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
+import 'package:swipeshare_app/components/my_text_field.dart'; // Add this import
+import 'package:swipeshare_app/pages/ratings_page.dart';
 import 'package:swipeshare_app/services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,13 +20,10 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-enum SettingsItems { itemOne, itemTwo, itemThree }
-
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  SettingsItems? selectedItem;
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -42,150 +41,64 @@ class _ChatPageState extends State<ChatPage> {
       appBar: AppBar(
         title: Text(widget.receiverUserEmail),
         actions: <Widget>[
-          PopupMenuButton<SettingsItems>(
-            initialValue: selectedItem,
-            onSelected: (SettingsItems item) {
-              setState(() {
-                selectedItem = item;
-              });
-            },
-            itemBuilder: (BuildContext context) =>
-                <PopupMenuEntry<SettingsItems>>[
-                  PopupMenuItem<SettingsItems>(
-                    value: SettingsItems.itemOne,
-                    child: const Text('Report This User'),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Report User'),
-                            content: const Text(
-                              'Are you sure you want to report this User?',
+          Container(
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Close Order'),
+                          content: const Text(
+                            'Are you sure you want to mark this order as complete? This action cannot be undone.',
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Close the dialog
+                              },
+                              child: const Text('No'),
                             ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  print("Reporting the person");
-                                  //TODO: REPORT API GOES HERE
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RatingsPage(),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Yes',
+                                style: TextStyle(
+                                  color: Color.fromARGB(177, 96, 125, 139),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.task_alt),
+                  tooltip: 'Close Order',
+                ),
 
-                                  Navigator.of(
-                                    context,
-                                  ).pop(); // Close the dialog
-                                },
-                                child: const Text(
-                                  'Report',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(177, 96, 125, 139),
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  print("Closing the Thingy");
-                                  Navigator.of(
-                                    context,
-                                  ).pop(); // Close the dialog
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  PopupMenuItem<SettingsItems>(
-                    value: SettingsItems.itemTwo,
-                    child: Text('Block This User'),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Block User'),
-                            content: const Text(
-                              'Are you sure you want to block this User?',
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  print("Blocking the person");
-                                  //TODO: Block API GOES HERE
-                                  Navigator.of(
-                                    context,
-                                  ).pop(); // Close the dialog
-                                },
-                                child: const Text(
-                                  'Block',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(177, 96, 125, 139),
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  print("Closing the Thingy");
-                                  Navigator.of(
-                                    context,
-                                  ).pop(); // Close the dialog
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  PopupMenuItem<SettingsItems>(
-                    value: SettingsItems.itemThree,
-                    child: Text('Delete Chat'),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Delete Chat'),
-                            content: const Text(
-                              'Are you sure you want to Delete the Chat?',
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  print("Deleted the chat");
-                                  //TODO: Delete Chat API GOES HERE
-                                  Navigator.of(
-                                    context,
-                                  ).pop(); // Close the dialog
-                                },
-                                child: const Text(
-                                  'Delete',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(177, 96, 125, 139),
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  print("Closing the Thingy");
-                                  Navigator.of(
-                                    context,
-                                  ).pop(); // Close the dialog
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
+                ChatSettingsMenu(
+                  currentUserId: _firebaseAuth.currentUser!.uid,
+                  currentUserEmail: _firebaseAuth.currentUser!.email!,
+                  receiverUserId: widget.receiverUserID,
+                  receiverUserEmail: widget.receiverUserEmail,
+                  chatService: _chatService,
+                ),
+              ],
+            ),
           ),
         ],
       ),
-
       body: SafeArea(
         child: Column(
           children: [

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
@@ -94,8 +95,17 @@ class _HomeScreenState extends State<HomeScreen>
     var random = Random();
     int sheaintevenknowit = 100 + random.nextInt(1200);
     await Future.delayed(Duration(milliseconds: sheaintevenknowit));
-    // if failed,use refreshFailed()
-    _refreshController.refreshToIdle();
+
+    // Reset animation and reload data
+    setState(() {
+      isLoading = true;
+    });
+
+    _animationController.reset();
+    await _loadUserData();
+
+    // Complete the refresh
+    _refreshController.refreshCompleted();
   }
 
   void _onLoading() async {
@@ -111,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (isLoading) {
       return Scaffold(
         body: Center(
-          child: Image.asset('assets/logo.png', width: 150, height: 150),
+          // child: Image.asset('assets/logo.png', width: 150, height: 150),
         ),
       );
     }
@@ -271,6 +281,26 @@ class _HomeScreenState extends State<HomeScreen>
                         ],
                       ),
                     ),
+                    SizedBox(height: 48),
+                    PaymentOptionsComponent(
+                      selectedPaymentOptions: _paymentTypes,
+                      onPaymentOptionsChanged: (options) {
+                        setState(() => _paymentTypes = options);
+                      },
+                      fromHomeScreen: true,
+                      onUpdatePreferredMethods: () {
+                        // Call your user service to update payment methods
+                        _userService.updatePaymentTypes(
+                          _auth.currentUser!.uid,
+                          _paymentTypes,
+                        );
+                        // Show success message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Payment methods updated!')),
+                        );
+                      },
+                    ),
+
                     SizedBox(height: 48),
                     Hyperlinks(),
                     SizedBox(height: 48),

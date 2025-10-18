@@ -52,7 +52,31 @@ class ChatService extends ChangeNotifier {
         .snapshots();
   }
 
-  Future<void> reportUser(String userId, String otherUserId) async {}
+  Future<void> reportUser(
+    String userId,
+    String userEmail,
+    String otherUserId,
+    String otherUserEmail,
+    String message,
+  ) async {
+    try {
+      final Timestamp timestamp = Timestamp.now();
+
+      await _fireStore.collection('reports').add({
+        'reporterId': userId,
+        'reporterEmail': userEmail,
+        'reportedId': otherUserId,
+        'reportedEmail': otherUserEmail,
+        'reason': message,
+        'timestamp': timestamp,
+      });
+
+      //notifyListeners();
+    } catch (e) {
+      print('Error reporting user: $e');
+      rethrow;
+    }
+  }
 
   Future<void> blockUser(String userId, String otherUserId) async {}
 
