@@ -36,8 +36,20 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
   }
 
   String formatDate(DateTime date) {
-    final months = ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December'];
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
     return "${months[date.month - 1]} ${date.day}, ${date.year}";
   }
 
@@ -54,7 +66,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
             children: [
               // Header with back button
               _buildHeader(),
-              
+
               // Expanded content that fills remaining space
               _buildConfirmContent(_listingService),
             ],
@@ -73,10 +85,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
         ),
         Expanded(
           child: Center(
-            child: Text(
-              'Confirm Listing',
-              style: AppTextStyles.pageTitle,
-            ),
+            child: Text('Confirm Listing', style: AppTextStyles.pageTitle),
           ),
         ),
         const SizedBox(width: 48), // Balance the back button
@@ -90,13 +99,16 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
         children: [
           // Top spacing
           const SizedBox(height: 16),
-          
+
           // Time section - top priority with elegant styling
           Expanded(
             flex: 4,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -131,7 +143,10 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.accentBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
@@ -151,7 +166,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
               ),
             ),
           ),
-          
+
           // Location section with icon
           Expanded(
             flex: 2,
@@ -193,7 +208,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
               ),
             ),
           ),
-          
+
           // Payment methods section with enhanced styling
           Expanded(
             flex: 3,
@@ -216,48 +231,58 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                     spacing: 10,
                     runSpacing: 10,
                     alignment: WrapAlignment.center,
-                    children: widget.paymentOptions.map((method) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.accentBlue,
-                            AppColors.accentBlue.withOpacity(0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accentBlue.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                    children: widget.paymentOptions
+                        .map(
+                          (method) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.accentBlue,
+                                  AppColors.accentBlue.withOpacity(0.8),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(25),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accentBlue.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              method,
+                              style: AppTextStyles.bodyText.copyWith(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Text(
-                        method,
-                        style: AppTextStyles.bodyText.copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    )).toList(),
+                        )
+                        .toList(),
                   ),
                 ],
               ),
             ),
           ),
-          
+
           // Swipe count section with badge style
           Expanded(
             flex: 2,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.white,
                   borderRadius: BorderRadius.circular(22),
@@ -283,7 +308,9 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      widget.swipeCount == 1 ? '1 Swipe' : '${widget.swipeCount} Swipes',
+                      widget.swipeCount == 1
+                          ? '1 Swipe'
+                          : '${widget.swipeCount} Swipes',
                       style: AppTextStyles.bodyText.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
@@ -295,10 +322,10 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
               ),
             ),
           ),
-          
+
           // Spacer before button
           const Spacer(flex: 1),
-          
+
           // Button section with enhanced styling
           Padding(
             padding: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
@@ -372,7 +399,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Listing Posted! 🎉',
+                  'Listing Posted!',
                   style: AppTextStyles.headerStyle.copyWith(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -382,9 +409,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Your swipe listing is now live and ready for buyers.',
-                  style: AppTextStyles.subText.copyWith(
-                    fontSize: 16,
-                  ),
+                  style: AppTextStyles.subText.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -437,5 +462,4 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
       },
     );
   }
-
 }

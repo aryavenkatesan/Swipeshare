@@ -10,7 +10,9 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/post_listing_butt
 import 'package:swipeshare_app/pages/sell_order_confirm.dart';
 
 class SellPostScreen extends StatefulWidget {
-  const SellPostScreen({super.key});
+  List<String> paymentOptions;
+
+  SellPostScreen({super.key, required this.paymentOptions});
 
   @override
   State<SellPostScreen> createState() => _SellPostScreenState();
@@ -22,7 +24,6 @@ class _SellPostScreenState extends State<SellPostScreen> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   int swipeCount = 1;
-  List<String> selectedPaymentOptions = [];
 
   @override
   Widget build(BuildContext context) {
@@ -42,28 +43,34 @@ class _SellPostScreenState extends State<SellPostScreen> {
                     DiningHallsComponent(
                       selectedLocations: selectedLocations,
                       onLocationToggle: _toggleLocationSelection,
+                      sellOrBuy: "sell",
                     ),
                     const SizedBox(height: BuySwipesConstants.mediumSpacing),
                     DateSelectorComponent(
                       selectedDate: selectedDate,
-                      onDateSelected: (date) => setState(() => selectedDate = date),
+                      onDateSelected: (date) =>
+                          setState(() => selectedDate = date),
                     ),
                     const SizedBox(height: BuySwipesConstants.largeSpacing),
                     TimePickerComponent(
                       startTime: startTime,
                       endTime: endTime,
-                      onStartTimeChanged: (time) => setState(() => startTime = time),
-                      onEndTimeChanged: (time) => setState(() => endTime = time),
+                      onStartTimeChanged: (time) =>
+                          setState(() => startTime = time),
+                      onEndTimeChanged: (time) =>
+                          setState(() => endTime = time),
                     ),
                     const SizedBox(height: BuySwipesConstants.mediumSpacing),
                     _SwipeCountComponent(
                       swipeCount: swipeCount,
-                      onSwipeCountChanged: (count) => setState(() => swipeCount = count),
+                      onSwipeCountChanged: (count) =>
+                          setState(() => swipeCount = count),
                     ),
                     const SizedBox(height: BuySwipesConstants.mediumSpacing),
                     _PaymentOptionsComponent(
-                      selectedPaymentOptions: selectedPaymentOptions,
-                      onPaymentOptionsChanged: (options) => setState(() => selectedPaymentOptions = options),
+                      selectedPaymentOptions: widget.paymentOptions,
+                      onPaymentOptionsChanged: (options) =>
+                          setState(() => widget.paymentOptions = options),
                     ),
                     const SizedBox(height: BuySwipesConstants.mediumSpacing),
                     _SellValidationComponent(
@@ -71,7 +78,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
                       startTime: startTime,
                       endTime: endTime,
                       swipeCount: swipeCount,
-                      selectedPaymentOptions: selectedPaymentOptions,
+                      selectedPaymentOptions: widget.paymentOptions,
                     ),
                     const SizedBox(height: BuySwipesConstants.largeSpacing),
                   ],
@@ -99,10 +106,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
             ),
             Expanded(
               child: Center(
-                child: Text(
-                  'Sell Swipes',
-                  style: AppTextStyles.pageTitle,
-                ),
+                child: Text('Sell Swipes', style: AppTextStyles.pageTitle),
               ),
             ),
             const SizedBox(width: 48), // Balance the back button
@@ -127,20 +131,25 @@ class _SellPostScreenState extends State<SellPostScreen> {
   /// Toggles location selection (add/remove from selected list)
   void _toggleLocationSelection(String location) {
     setState(() {
-      selectedLocations.contains(location)
-          ? selectedLocations.remove(location)
-          : selectedLocations.add(location);
+      if (selectedLocations.contains(location)) {
+        // Deselect if clicking the same location
+        selectedLocations.remove(location);
+      } else {
+        // Replace selection with new location (single selection)
+        selectedLocations.clear();
+        selectedLocations.add(location);
+      }
     });
   }
 
   /// Validates if user can post listing
   bool _canPostListing() {
-    return startTime != null && 
-           endTime != null && 
-           selectedLocations.isNotEmpty &&
-           swipeCount > 0 &&
-           selectedPaymentOptions.isNotEmpty &&
-           !_isEndTimeBeforeStartTime();
+    return startTime != null &&
+        endTime != null &&
+        selectedLocations.isNotEmpty &&
+        swipeCount > 0 &&
+        widget.paymentOptions.isNotEmpty &&
+        !_isEndTimeBeforeStartTime();
   }
 
   /// Navigates to confirmation page
@@ -154,7 +163,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
           startTime: startTime!,
           endTime: endTime!,
           swipeCount: swipeCount,
-          paymentOptions: selectedPaymentOptions,
+          paymentOptions: widget.paymentOptions,
         ),
       ),
     );
@@ -163,10 +172,10 @@ class _SellPostScreenState extends State<SellPostScreen> {
   /// Validates if end time is before start time
   bool _isEndTimeBeforeStartTime() {
     if (startTime == null || endTime == null) return false;
-    
+
     final startMinutes = startTime!.hour * 60 + startTime!.minute;
     final endMinutes = endTime!.hour * 60 + endTime!.minute;
-    
+
     return endMinutes <= startMinutes;
   }
 }
@@ -198,24 +207,36 @@ class _SwipeCountComponent extends StatelessWidget {
             children: [
               Text(
                 'Number of Swipes',
-                style: AppTextStyles.bodyText.copyWith(fontWeight: FontWeight.w600),
+                style: AppTextStyles.bodyText.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
-                'How many swipes to sell?',
-                style: AppTextStyles.validationText.copyWith(color: AppColors.subText),
+                //'How many swipes to sell?',
+                'Feature under construction :)',
+                style: AppTextStyles.validationText.copyWith(
+                  color: AppColors.subText,
+                ),
               ),
             ],
           ),
           Row(
             children: [
               IconButton(
-                onPressed: swipeCount > 1 ? () => onSwipeCountChanged(swipeCount - 1) : null,
+                onPressed: swipeCount > 1
+                    ? () => onSwipeCountChanged(swipeCount - 1)
+                    : null,
                 icon: const Icon(Icons.remove_circle_outline),
-                color: swipeCount > 1 ? AppColors.accentBlue : AppColors.borderGrey,
+                color: swipeCount > 1
+                    ? AppColors.accentBlue
+                    : AppColors.borderGrey,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accentBlueLight,
                   borderRadius: BorderRadius.circular(8),
@@ -229,9 +250,15 @@ class _SwipeCountComponent extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: swipeCount < 10 ? () => onSwipeCountChanged(swipeCount + 1) : null,
+                onPressed:
+                    swipeCount <
+                        1 //change this number to upper bound of swipes to sell at one time
+                    ? () => onSwipeCountChanged(swipeCount + 1)
+                    : null,
                 icon: const Icon(Icons.add_circle_outline),
-                color: swipeCount < 10 ? AppColors.accentBlue : AppColors.borderGrey,
+                color: swipeCount < 10
+                    ? AppColors.accentBlue
+                    : AppColors.borderGrey,
               ),
             ],
           ),
@@ -252,12 +279,13 @@ class _PaymentOptionsComponent extends StatefulWidget {
   });
 
   @override
-  State<_PaymentOptionsComponent> createState() => _PaymentOptionsComponentState();
+  State<_PaymentOptionsComponent> createState() =>
+      _PaymentOptionsComponentState();
 }
 
 class _PaymentOptionsComponentState extends State<_PaymentOptionsComponent> {
   bool isExpanded = false;
-  
+
   final List<PaymentOption> paymentOptions = [
     PaymentOption('Cash', Icons.attach_money),
     PaymentOption('Venmo', Icons.payment),
@@ -291,16 +319,18 @@ class _PaymentOptionsComponentState extends State<_PaymentOptionsComponent> {
                       children: [
                         Text(
                           'Payment Options',
-                          style: AppTextStyles.bodyText.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTextStyles.bodyText.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          widget.selectedPaymentOptions.isEmpty 
+                          widget.selectedPaymentOptions.isEmpty
                               ? 'Tap to select payment methods'
                               : '${widget.selectedPaymentOptions.length} method${widget.selectedPaymentOptions.length > 1 ? 's' : ''} selected',
                           style: AppTextStyles.validationText.copyWith(
-                            color: widget.selectedPaymentOptions.isEmpty 
-                                ? AppColors.subText 
+                            color: widget.selectedPaymentOptions.isEmpty
+                                ? AppColors.subText
                                 : AppColors.accentBlue,
                           ),
                         ),
@@ -323,11 +353,13 @@ class _PaymentOptionsComponentState extends State<_PaymentOptionsComponent> {
           AnimatedSize(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            child: isExpanded 
+            child: isExpanded
                 ? Column(
                     children: [
                       const Divider(height: 1, color: AppColors.borderGrey),
-                      ...paymentOptions.map((option) => _buildPaymentOption(option)),
+                      ...paymentOptions.map(
+                        (option) => _buildPaymentOption(option),
+                      ),
                     ],
                   )
                 : const SizedBox.shrink(),
@@ -339,7 +371,7 @@ class _PaymentOptionsComponentState extends State<_PaymentOptionsComponent> {
 
   Widget _buildPaymentOption(PaymentOption option) {
     final isSelected = widget.selectedPaymentOptions.contains(option.name);
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
@@ -348,28 +380,23 @@ class _PaymentOptionsComponentState extends State<_PaymentOptionsComponent> {
         child: Container(
           padding: BuySwipesConstants.containerPadding,
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.accentBlue.withOpacity(0.05) : Colors.transparent,
+            color: isSelected
+                ? AppColors.accentBlue.withOpacity(0.05)
+                : Colors.transparent,
           ),
           child: Row(
             children: [
-              Icon(
-                option.icon,
-                color: AppColors.accentBlue,
-                size: 20,
-              ),
+              Icon(option.icon, color: AppColors.accentBlue, size: 20),
               const SizedBox(width: BuySwipesConstants.mediumSpacing),
-              Expanded(
-                child: Text(
-                  option.name,
-                  style: AppTextStyles.bodyText,
-                ),
-              ),
+              Expanded(child: Text(option.name, style: AppTextStyles.bodyText)),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Icon(
                   isSelected ? Icons.check_circle : Icons.circle_outlined,
                   key: ValueKey(isSelected),
-                  color: isSelected ? AppColors.accentBlue : AppColors.borderGrey,
+                  color: isSelected
+                      ? AppColors.accentBlue
+                      : AppColors.borderGrey,
                   size: 20,
                 ),
               ),
@@ -421,11 +448,11 @@ class _SellValidationComponent extends StatelessWidget {
     if (selectedLocations.isEmpty) {
       return _buildMessage('Please select a dining hall first');
     }
-    
+
     if (startTime == null || endTime == null) {
       return _buildMessage('Please select start and end times');
     }
-    
+
     if (_isEndTimeBeforeStartTime()) {
       return _buildMessage('End time cannot be before start time');
     }
@@ -437,7 +464,7 @@ class _SellValidationComponent extends StatelessWidget {
     if (selectedPaymentOptions.isEmpty) {
       return _buildMessage('Please select at least one payment method');
     }
-    
+
     // All validations passed
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
@@ -486,10 +513,10 @@ class _SellValidationComponent extends StatelessWidget {
   /// Validates if end time is before start time
   bool _isEndTimeBeforeStartTime() {
     if (startTime == null || endTime == null) return false;
-    
+
     final startMinutes = startTime!.hour * 60 + startTime!.minute;
     final endMinutes = endTime!.hour * 60 + endTime!.minute;
-    
+
     return endMinutes <= startMinutes;
   }
 }
