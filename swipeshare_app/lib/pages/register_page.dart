@@ -25,8 +25,8 @@ class _RegisterPageState extends State<RegisterPage> {
   void signUp() async {
     // make it unc email only
     if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
-        referralController.text == '' ||
-        !referralController.text.trim().toLowerCase().endsWith('unc.edu')) {
+        (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
+            referralController.text != '')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

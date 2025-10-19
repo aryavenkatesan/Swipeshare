@@ -130,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen>
       opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
       child: Scaffold(
         appBar: AppBar(
-          // surfaceTintColor: Color.fromRGBO(254, 247, 255, 1),
           forceMaterialTransparency: true,
           surfaceTintColor: Colors.transparent,
           scrolledUnderElevation: 0.0,
@@ -152,8 +151,7 @@ class _HomeScreenState extends State<HomeScreen>
                     width: 5,
                   ), // Add some spacing between star and text
                   Text(
-                    userData?.stars.toStringAsFixed(2) ??
-                        '5.00', //TODO: "{$_auth.currentUser!.rating}"
+                    userData?.stars.toStringAsFixed(2) ?? '5.00',
                     style: GoogleFonts.instrumentSans(
                       fontSize: 16,
                       color: const Color.fromARGB(255, 27, 27, 27),
@@ -257,6 +255,34 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ],
                     ),
+
+                    SizedBox(height: 24),
+                    Text("Active Listings", style: HeaderStyle),
+
+                    SizedBox(height: 12),
+
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Active Listings Go Here",
+                            style: SubHeaderStyle,
+                          ),
+                          Text("Trust the process", style: SubTextStyle),
+                        ],
+                      ),
+                    ),
+
                     SizedBox(height: 24),
                     Text("Rewards", style: HeaderStyle),
                     SizedBox(height: 12),
@@ -289,14 +315,16 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                       fromHomeScreen: true,
                       onUpdatePreferredMethods: () {
-                        // Call your user service to update payment methods
                         _userService.updatePaymentTypes(
                           _auth.currentUser!.uid,
                           _paymentTypes,
                         );
-                        // Show success message
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Payment methods updated!')),
+                          SnackBar(
+                            content: Text(
+                              'Preferred payment methods updated succesfully!',
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -356,6 +384,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildOrderCard(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+    MealOrder order = MealOrder.fromMap(data);
+    final String recieverName = userData?.name != order.buyerName
+        ? order.buyerName
+        : order.sellerName;
 
     return ActiveOrderCard(
       title: data['diningHall'],
@@ -365,6 +397,8 @@ class _HomeScreenState extends State<HomeScreen>
       receiverUserID: _auth.currentUser!.uid == data['sellerId']
           ? data['buyerId']
           : data['sellerId'],
+      orderData: order,
+      receiverName: recieverName,
     );
   }
 }

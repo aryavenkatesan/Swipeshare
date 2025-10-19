@@ -2,10 +2,12 @@ import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 
 class ListingService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+  final UserService _userService = UserService();
 
   //POST LISTING
   Future<void> postListing(
@@ -13,8 +15,12 @@ class ListingService extends ChangeNotifier {
     TimeOfDay timeStart,
     TimeOfDay timeEnd,
     DateTime transactionDate,
+    List<String> paymentTypes,
   ) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
+    final user = await _userService.getUserData(currentUserId);
+    final String currentUserName = user!.name;
+    final double currentUserRating = user.stars;
 
     Listing newListing = Listing(
       sellerId: currentUserId,
@@ -22,8 +28,9 @@ class ListingService extends ChangeNotifier {
       timeStart: timeStart,
       timeEnd: timeEnd,
       transactionDate: transactionDate,
-      //rating
-      //payment types
+      sellerName: currentUserName,
+      sellerRating: currentUserRating,
+      paymentTypes: paymentTypes,
     );
 
     await _fireStore.collection('listings').add(newListing.toMap());

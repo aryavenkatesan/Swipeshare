@@ -344,11 +344,19 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
           widget.startTime,
           widget.endTime,
           widget.date,
+          widget.paymentOptions,
         );
         _showSuccessDialog();
       },
     );
   }
+  // diningHall: diningHall,
+  // timeStart: timeStart,
+  // timeEnd: timeEnd,
+  // transactionDate: transactionDate,
+  // sellerName: sellerName,
+  // sellerRating: sellerRating,
+  // paymentTypes: paymentTypes,
 
   void _showSuccessDialog() {
     showDialog(

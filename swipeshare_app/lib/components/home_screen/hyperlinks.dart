@@ -21,7 +21,7 @@ class Hyperlinks extends StatelessWidget {
           },
           child: Center(child: Text("Give us Feedback!", style: SubTextStyle)),
         ),
-        SizedBox(height: 12),
+        SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [

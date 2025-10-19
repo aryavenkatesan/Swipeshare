@@ -1,20 +1,23 @@
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
 
 class ActiveOrderCard extends StatelessWidget {
   final String title;
   final String time;
-  // final String receiverUserEmail;
   final String receiverUserID;
+  final MealOrder orderData;
+  final String receiverName;
 
   const ActiveOrderCard({
     super.key,
     required this.title,
     required this.time,
-    // required this.receiverUserEmail,
     required this.receiverUserID,
+    required this.orderData,
+    required this.receiverName,
   });
 
   @override
@@ -28,9 +31,10 @@ class ActiveOrderCard extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => ChatPage(
-                receiverUserEmail:
-                    'receiverUserEmail', // a bunch of other things need to be updated for this to work
+                receiverUserName:
+                    receiverName, // a bunch of other things need to be updated for this to work
                 receiverUserID: receiverUserID,
+                orderData: orderData,
               ),
             ),
           );

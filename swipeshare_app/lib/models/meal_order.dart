@@ -2,33 +2,49 @@ import 'package:flutter/material.dart';
 
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
-  final String? docId;
   final String sellerId;
+  final String sellerName;
   final String buyerId;
-  final String location;
-  final TimeOfDay?
-  time; //will be set by the users, if not set just display as TBD
+  final String buyerName;
+  final String diningHall;
+  final TimeOfDay? time;
   final DateTime transactionDate;
 
   MealOrder({
-    this.docId,
     required this.sellerId,
+    required this.sellerName,
     required this.buyerId,
-    required this.location,
+    required this.buyerName,
+    required this.diningHall,
     this.time,
     required this.transactionDate,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'docId': docId,
       'sellerId': sellerId,
+      'sellerName': sellerName,
       'buyerId': buyerId,
-      'location': location,
+      'buyerName': buyerName,
+      'diningHall': diningHall,
       'time': time,
       'transactionDate': transactionDate
           .toIso8601String(), //better to have as string or no?
     };
+  }
+
+  factory MealOrder.fromMap(Map<String, dynamic> map) {
+    return MealOrder(
+      sellerId: map['sellerId'] ?? '',
+      sellerName: map['sellerName'] ?? '',
+      buyerId: map['buyerId'] ?? '',
+      buyerName: map['buyerName'] ?? '',
+      diningHall: map['diningHall'] ?? '',
+      time: map['time'] != null
+          ? TimeOfDay(hour: map['time']['hour'], minute: map['time']['minute'])
+          : null,
+      transactionDate: DateTime.parse(map['transactionDate']),
+    );
   }
 
   getRoomName() {

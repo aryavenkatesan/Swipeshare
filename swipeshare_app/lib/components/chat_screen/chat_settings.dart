@@ -7,7 +7,7 @@ class ChatSettingsMenu extends StatelessWidget {
   final String currentUserId;
   final String currentUserEmail;
   final String receiverUserId;
-  final String receiverUserEmail;
+  final String receiverUserName;
   final ChatService chatService;
 
   const ChatSettingsMenu({
@@ -15,7 +15,7 @@ class ChatSettingsMenu extends StatelessWidget {
     required this.currentUserId,
     required this.currentUserEmail,
     required this.receiverUserId,
-    required this.receiverUserEmail,
+    required this.receiverUserName,
     required this.chatService,
   });
 
@@ -82,7 +82,7 @@ class ChatSettingsMenu extends StatelessWidget {
                     currentUserId,
                     currentUserEmail,
                     receiverUserId,
-                    receiverUserEmail,
+                    receiverUserName,
                     reportController.text,
                   );
                   Navigator.of(context).pop();

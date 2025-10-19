@@ -6,34 +6,40 @@ enum PaymentType {
   paypal,
   cash,
 } // Update after customer survey
+//survey says.. enum is not it, just use List<String> lmao
 
 class Listing {
   final String sellerId;
+  final String sellerName;
   final String diningHall;
   final TimeOfDay timeStart;
   final TimeOfDay timeEnd;
   final DateTime transactionDate;
-  // sellerRating?!?
-  //final List<PaymentType> paymentTypes;
+  final double sellerRating;
+  final List<String> paymentTypes;
 
   Listing({
     required this.sellerId,
+    required this.sellerName,
     required this.diningHall,
     required this.timeStart,
     required this.timeEnd,
     required this.transactionDate,
-    //required this.paymentTypes,
+    required this.sellerRating,
+    required this.paymentTypes,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'sellerId': sellerId,
+      'sellerName': sellerName,
       'diningHall': diningHall,
       'timeStart': Listing.toMinutes(timeStart),
       'timeEnd': Listing.toMinutes(timeEnd),
       'transactionDate': transactionDate
           .toIso8601String(), //better to have as string or no?
-      //'paymentType': paymentTypes.map((pt) => pt.name).toList(),
+      'sellerRating': sellerRating,
+      'paymentTypes': paymentTypes,
     };
   }
 

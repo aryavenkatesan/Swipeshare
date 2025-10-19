@@ -40,8 +40,20 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
   }
 
   String formatDate(DateTime date) {
-    final months = ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December'];
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
     return "${months[date.month - 1]} ${date.day}, ${date.year}";
   }
 
@@ -56,7 +68,7 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
             children: [
               // Header with back button
               _buildHeader(),
-              
+
               // Expanded scrollable content
               Expanded(
                 child: SingleChildScrollView(
@@ -85,10 +97,7 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
         ),
         Expanded(
           child: Center(
-            child: Text(
-              'Confirm Order',
-              style: AppTextStyles.pageTitle,
-            ),
+            child: Text('Confirm Order', style: AppTextStyles.pageTitle),
           ),
         ),
         const SizedBox(width: 48), // Balance the back button
@@ -118,45 +127,46 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: BuySwipesConstants.largeSpacing),
-        
+
         // Seller
         _buildInfoCard(
           icon: Icons.person,
           title: widget.sellerName,
           subtitle: 'Seller',
         ),
-        
+
         const SizedBox(height: BuySwipesConstants.mediumSpacing),
-        
+
         // Location
         _buildInfoCard(
           icon: Icons.location_on,
           title: widget.location,
           subtitle: 'Dining Hall',
         ),
-        
+
         const SizedBox(height: BuySwipesConstants.mediumSpacing),
-        
+
         // Date and Time
         _buildInfoCard(
           icon: Icons.schedule,
-          title: "${formatDate(widget.date)} • ${_formatTime(widget.startTime)} - ${_formatTime(widget.endTime)}",
+          title:
+              "${formatDate(widget.date)} • ${_formatTime(widget.startTime)} - ${_formatTime(widget.endTime)}",
           subtitle: 'Meeting Time',
         ),
-        
+
         const SizedBox(height: BuySwipesConstants.mediumSpacing),
-        
+
         // Time Overlap
         _buildInfoCard(
           icon: Icons.access_time,
           title: '${widget.overlapMinutes} minutes',
           subtitle: 'Available Window',
         ),
-        
+
         const SizedBox(height: BuySwipesConstants.largeSpacing * 2),
-        
+
         // Confirm button
         _buildPlaceOrderButton(),
       ],
@@ -177,11 +187,7 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: AppColors.accentBlue,
-            size: 20,
-          ),
+          Icon(icon, color: AppColors.accentBlue, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -220,14 +226,13 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
           foregroundColor: AppColors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(BuySwipesConstants.borderRadius),
+            borderRadius: BorderRadius.circular(
+              BuySwipesConstants.borderRadius,
+            ),
           ),
           padding: BuySwipesConstants.buttonPadding,
         ),
-        child: Text(
-          "Place Order",
-          style: AppTextStyles.buttonText,
-        ),
+        child: Text("Place Order", style: AppTextStyles.buttonText),
       ),
     );
   }
@@ -237,11 +242,11 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
       final orderService = OrderService();
       await orderService.postOrder(
         widget.sellerId,
-        _firebaseAuth.currentUser!.uid,
         widget.location,
         widget.date,
+        widget.sellerName,
       );
-      
+
       // Show success message and navigate back
       _showSuccessDialog();
     } catch (e) {
@@ -261,16 +266,14 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.white,
-              borderRadius: BorderRadius.circular(BuySwipesConstants.borderRadius),
+              borderRadius: BorderRadius.circular(
+                BuySwipesConstants.borderRadius,
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.check_circle,
-                  color: AppColors.accentBlue,
-                  size: 48,
-                ),
+                Icon(Icons.check_circle, color: AppColors.accentBlue, size: 48),
                 const SizedBox(height: 16),
                 Text(
                   'Order Placed!',
@@ -289,14 +292,19 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context); // Close dialog
-                      Navigator.popUntil(context, (route) => route.isFirst); // Go back to home
+                      Navigator.popUntil(
+                        context,
+                        (route) => route.isFirst,
+                      ); // Go back to home
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accentBlue,
                       foregroundColor: AppColors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(BuySwipesConstants.borderRadius),
+                        borderRadius: BorderRadius.circular(
+                          BuySwipesConstants.borderRadius,
+                        ),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -331,5 +339,4 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
       },
     );
   }
-
 }

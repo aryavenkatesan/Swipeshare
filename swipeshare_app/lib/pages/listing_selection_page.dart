@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
@@ -203,9 +204,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       await _listingService.deleteListing(docId);
       await _orderService.postOrder(
         listing['sellerId'],
-        _auth.currentUser!.uid,
         listing['diningHall'],
         widget.date,
+        listing['sellerName'],
       );
       Navigator.pop(context);
       Navigator.pop(context);
