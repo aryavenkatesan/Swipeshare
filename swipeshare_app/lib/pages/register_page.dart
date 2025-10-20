@@ -41,20 +41,26 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    //get auth service
     final authService = AuthService();
 
     try {
       await authService.signUp(emailController.text, passwordController.text);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => OnboardingCarousel()),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      debugPrint("Sign up error: $e");
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     }
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => OnboardingCarousel()),
-    );
   }
 
   @override
