@@ -4,8 +4,10 @@ class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
   final String sellerId;
   final String sellerName;
+  final bool sellerVisibility;
   final String buyerId;
   final String buyerName;
+  final bool buyerVisibility;
   final String diningHall;
   final String?
   displayTime; //TimeOfDay.toString() use the static methods in time_formatter.dart to convert
@@ -14,8 +16,10 @@ class MealOrder {
   MealOrder({
     required this.sellerId,
     required this.sellerName,
+    required this.sellerVisibility,
     required this.buyerId,
     required this.buyerName,
+    required this.buyerVisibility,
     required this.diningHall,
     this.displayTime,
     required this.transactionDate,
@@ -25,8 +29,10 @@ class MealOrder {
     return {
       'sellerId': sellerId,
       'sellerName': sellerName,
+      'sellerVisibility': sellerVisibility,
       'buyerId': buyerId,
       'buyerName': buyerName,
+      'buyerVisibility': buyerVisibility,
       'diningHall': diningHall,
       'displayTime': displayTime,
       'transactionDate': transactionDate
@@ -38,8 +44,10 @@ class MealOrder {
     return MealOrder(
       sellerId: map['sellerId'] ?? '',
       sellerName: map['sellerName'] ?? '',
+      sellerVisibility: map['sellerVisibility'] ?? true,
       buyerId: map['buyerId'] ?? '',
       buyerName: map['buyerName'] ?? '',
+      buyerVisibility: map['buyerVisibility'] ?? true,
       diningHall: map['diningHall'] ?? '',
       displayTime: map['displayTime'] ?? "",
       transactionDate: DateTime.parse(map['transactionDate']),

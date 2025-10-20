@@ -3,12 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
+import 'package:swipeshare_app/models/user.dart';
+import 'package:swipeshare_app/services/chat/chat_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class OrderService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
   final UserService _userService = UserService();
+  final ChatService _chatService = ChatService();
 
   //POST LISTING
   Future<void> postOrder(
@@ -29,6 +32,8 @@ class OrderService extends ChangeNotifier {
       transactionDate: transactionDate,
       sellerName: sellerName,
       buyerName: currentUserName,
+      sellerVisibility: true,
+      buyerVisibility: true,
     );
 
     try {
@@ -40,21 +45,9 @@ class OrderService extends ChangeNotifier {
           .set(newOrder.toMap());
 
       //send message from system
-      final Timestamp timeStamp = Timestamp.now();
-      Message systemMessage = Message(
-        message:
-            'system message \n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-        receiverID: 'system',
-        senderName: 'system',
-        senderId: 'system',
-        timestamp: timeStamp,
-      );
-
-      await _fireStore
-          .collection('orders')
-          .doc(customDocId)
-          .collection('messages')
-          .add(systemMessage.toMap());
+      final String message =
+          'system message \n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
+      _chatService.systemMessage(message, customDocId);
     } catch (e, s) {
       // Handle the error and stack trace
       print('Error: $e');
@@ -67,10 +60,37 @@ class OrderService extends ChangeNotifier {
         .collection('orders')
         .where(
           Filter.or(
-            Filter('sellerId', isEqualTo: userId),
-            Filter('buyerId', isEqualTo: userId),
+            Filter.and(
+              Filter('sellerId', isEqualTo: userId),
+              Filter('sellerVisibility', isEqualTo: true),
+            ),
+            Filter.and(
+              Filter('buyerId', isEqualTo: userId),
+              Filter('buyerVisibility', isEqualTo: true),
+            ),
           ),
         )
         .snapshots();
+  }
+
+  Future<void> updateVisibility(MealOrder orderData) async {
+    final String currentUserId = _firebaseAuth.currentUser!.uid;
+
+    if (currentUserId == orderData.buyerId) {
+      //set buyer visibility to false
+      await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
+        {'buyerVisibility': false},
+      );
+    } else {
+      await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
+        {'sellerVisibility': false},
+      );
+    }
+    //send system message that the other person left
+    final UserModel? currentUser = await _userService.getUserData(
+      currentUserId,
+    );
+    final String message = "${currentUser?.name ?? 'User'} has left the chat.";
+    _chatService.systemMessage(message, orderData.getRoomName());
   }
 }

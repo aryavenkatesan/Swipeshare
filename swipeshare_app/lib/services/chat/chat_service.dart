@@ -138,6 +138,23 @@ class ChatService extends ChangeNotifier {
     }
   }
 
+  Future<void> systemMessage(String messageContent, String orderId) async {
+    final Timestamp timeStamp = Timestamp.now();
+    Message systemMessage = Message(
+      message: messageContent,
+      receiverID: 'system',
+      senderName: 'system',
+      senderId: 'system',
+      timestamp: timeStamp,
+    );
+
+    await _fireStore
+        .collection('orders')
+        .doc(orderId)
+        .collection('messages')
+        .add(systemMessage.toMap());
+  }
+
   Future<void> blockUser(String userId, String otherUserId) async {}
 
   Future<void> deleteChat(String userId, String otherUserId) async {}

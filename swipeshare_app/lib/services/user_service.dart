@@ -43,7 +43,7 @@ class UserService {
     try {
       final userDoc = await _fireStore.collection('users').doc(uid).get();
       final userData = userDoc.data()!;
-      int calculatedStarRating =
+      double calculatedStarRating =
           ((userData['transactions_completed'] * userData['stars']) +
               incomingStar) /
           (userData['transactions_completed'] + 1);

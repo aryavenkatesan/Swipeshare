@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class RatingsPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class _RatingsPageState extends State<RatingsPage> {
   String? selectedFace;
   final TextEditingController _feedbackController = TextEditingController();
   final _userService = UserService();
+  final _orderService = OrderService();
 
   @override
   void dispose() {
@@ -85,9 +87,9 @@ class _RatingsPageState extends State<RatingsPage> {
                   // sends the rating information to update the other person's star rating
                   int rating = 5;
                   if (selectedFace == 'sad') {
-                    int rating = 2;
+                    rating = 2;
                   } else if (selectedFace == 'neutral') {
-                    int rating = 4;
+                    rating = 4;
                   }
                   await _userService.updateStarRating(
                     widget.recieverId,
@@ -98,10 +100,20 @@ class _RatingsPageState extends State<RatingsPage> {
                   await _userService.incrementTransactionCount();
 
                   // blocks this order from being seen by the current user
+                  await _orderService.updateVisibility(widget.orderData);
+
+                  //do something with the feedback text
+
+                  //navigate back to the homescreen
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
 
                   // congratulations popup?
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Order complete, feedback submitted!'),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
