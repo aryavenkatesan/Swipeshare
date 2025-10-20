@@ -5,6 +5,7 @@ import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/components/my_text_field.dart'; // Add this import
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/pages/ratings_page.dart';
 import 'package:swipeshare_app/services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -116,7 +117,10 @@ class _ChatPageState extends State<ChatPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => RatingsPage(),
+                                    builder: (context) => RatingsPage(
+                                      recieverId: widget.receiverUserID,
+                                      orderData: widget.orderData,
+                                    ),
                                   ),
                                 );
                               },
@@ -230,6 +234,18 @@ class _ChatPageState extends State<ChatPage> {
 
     //check if its a time widget proposal
     if (data['senderId'] == 'time widget') {
+      //use factory method here
+
+      Message messageWithDocId = Message.fromFirestore(document);
+
+      String statusString = '';
+
+      if (messageWithDocId.status == 'accepted') {
+        statusString = 'the time was accepted';
+      } else if (messageWithDocId.status == 'declined') {
+        statusString = 'the time was declined';
+      } //figuring out statusString string here so that we can avoid another conditional in the return statement
+
       return Column(
         children: [
           SizedBox(height: 20),
@@ -250,8 +266,21 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
                 SizedBox(height: 12),
-                // Decline and Accept buttons
-                data['receiverId'] == widget.receiverUserID
+                statusString != ''
+                    //if the propsal was accepted or declined, show that here
+                    ? Text(
+                        statusString,
+                        style: TextStyle(
+                          color: Colors.blueGrey[200],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: -0.56,
+                          decoration: TextDecoration.none,
+                        ),
+                      )
+                    :
+                      // Decline and Accept buttons
+                      data['receiverId'] == widget.receiverUserID
                     // data['receiverID'] is the sender's id of the time widget
                     //ik its confusing
                     //if the sender id != the receiver id
@@ -261,10 +290,15 @@ class _ChatPageState extends State<ChatPage> {
                         children: [
                           // Decline button
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               print("Declined");
 
-                              // Add your decline logic here
+                              await _chatService.updateTimeWidgetStatus(
+                                widget.orderData,
+                                messageWithDocId.documentId!,
+                                'declined',
+                                'n/a',
+                              );
                             },
                             child: Text(
                               "Decline",
@@ -279,9 +313,15 @@ class _ChatPageState extends State<ChatPage> {
                           SizedBox(width: 24), // Space between buttons
                           // Accept button
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               print("Accepted");
                               // Add your accept logic here
+                              await _chatService.updateTimeWidgetStatus(
+                                widget.orderData,
+                                messageWithDocId.documentId!,
+                                'accepted',
+                                data['message'],
+                              );
                             },
                             child: Text(
                               "Accept",

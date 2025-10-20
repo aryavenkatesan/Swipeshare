@@ -1,3 +1,4 @@
+import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -80,6 +81,33 @@ class ChatService extends ChangeNotifier {
           .add(systemMessage.toMap());
     } catch (e) {
       print('Error sending time widget: $e');
+      rethrow;
+    }
+  }
+
+  //UPDATE TIME WIDGET
+  Future<void> updateTimeWidgetStatus(
+    MealOrder orderData,
+    String messageDocId,
+    String status, // 'accepted' or 'declined'
+    String? time,
+  ) async {
+    try {
+      await _fireStore
+          .collection('orders')
+          .doc(orderData.getRoomName())
+          .collection('messages')
+          .doc(messageDocId)
+          .update({'status': status});
+
+      if (status == 'accepted') {
+        await _fireStore
+            .collection('orders')
+            .doc(orderData.getRoomName())
+            .update({'displayTime': time!});
+      }
+    } catch (e) {
+      print('Error updating time widget status: $e');
       rethrow;
     }
   }

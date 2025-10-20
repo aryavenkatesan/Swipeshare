@@ -29,4 +29,17 @@ class Message {
       if (status != null) 'status': status,
     };
   }
+
+  factory Message.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Message(
+      documentId: doc.id,
+      senderId: data['senderId'],
+      senderName: data['senderName'],
+      receiverID: data['receiverId'],
+      message: data['message'],
+      timestamp: data['timestamp'],
+      status: data['status'],
+    );
+  }
 }

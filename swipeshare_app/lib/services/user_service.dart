@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:swipeshare_app/models/user.dart';
 
 class UserService {
@@ -35,6 +36,41 @@ class UserService {
       });
     } catch (e) {
       print('Error updating payment types: $e');
+    }
+  }
+
+  Future<void> updateStarRating(String uid, int incomingStar) async {
+    try {
+      final userDoc = await _fireStore.collection('users').doc(uid).get();
+      final userData = userDoc.data()!;
+      int calculatedStarRating =
+          ((userData['transactions_completed'] * userData['stars']) +
+              incomingStar) /
+          (userData['transactions_completed'] + 1);
+      //this is the true raw score, the initial 5 is not considered
+      await _fireStore.collection('users').doc(uid).update({
+        'stars': calculatedStarRating,
+      });
+    } catch (e) {
+      print('Error updating star rating: $e');
+    }
+  }
+
+  Future<void> incrementTransactionCount() async {
+    try {
+      final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      final userDoc = await _fireStore
+          .collection('users')
+          .doc(currentUserId)
+          .get();
+      final userData = userDoc.data()!;
+      int incrementedTransactionNumber =
+          (userData['transactions_completed'] + 1);
+      await _fireStore.collection('users').doc(currentUserId).update({
+        'transactions_completed': incrementedTransactionNumber,
+      });
+    } catch (e) {
+      print('Error updating star rating: $e');
     }
   }
 }

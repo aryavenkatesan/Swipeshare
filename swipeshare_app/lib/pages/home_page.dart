@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
+import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
@@ -391,8 +392,8 @@ class _HomeScreenState extends State<HomeScreen>
 
     return ActiveOrderCard(
       title: data['diningHall'],
-      time: (data['time'] != null)
-          ? "${data['time']!.hour}:${data['time']!.minute.toString().padLeft(2, '0')}"
+      time: data['displayTime'] != null
+          ? TimeFormatter.formatTimeOfDay(data['displayTime'])
           : "TBD",
       receiverUserID: _auth.currentUser!.uid == data['sellerId']
           ? data['buyerId']

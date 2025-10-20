@@ -7,7 +7,8 @@ class MealOrder {
   final String buyerId;
   final String buyerName;
   final String diningHall;
-  final TimeOfDay? time;
+  final String?
+  displayTime; //TimeOfDay.toString() use the static methods in time_formatter.dart to convert
   final DateTime transactionDate;
 
   MealOrder({
@@ -16,7 +17,7 @@ class MealOrder {
     required this.buyerId,
     required this.buyerName,
     required this.diningHall,
-    this.time,
+    this.displayTime,
     required this.transactionDate,
   });
 
@@ -27,7 +28,7 @@ class MealOrder {
       'buyerId': buyerId,
       'buyerName': buyerName,
       'diningHall': diningHall,
-      'time': time,
+      'displayTime': displayTime,
       'transactionDate': transactionDate
           .toIso8601String(), //better to have as string or no?
     };
@@ -40,9 +41,7 @@ class MealOrder {
       buyerId: map['buyerId'] ?? '',
       buyerName: map['buyerName'] ?? '',
       diningHall: map['diningHall'] ?? '',
-      time: map['time'] != null
-          ? TimeOfDay(hour: map['time']['hour'], minute: map['time']['minute'])
-          : null,
+      displayTime: map['displayTime'] ?? "",
       transactionDate: DateTime.parse(map['transactionDate']),
     );
   }
