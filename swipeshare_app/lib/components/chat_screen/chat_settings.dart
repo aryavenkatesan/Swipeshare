@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat/chat_service.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 
 enum SettingsItems { itemOne, itemTwo, itemThree }
 
@@ -9,6 +11,7 @@ class ChatSettingsMenu extends StatelessWidget {
   final String receiverUserId;
   final String receiverUserName;
   final ChatService chatService;
+  final MealOrder orderData;
 
   const ChatSettingsMenu({
     super.key,
@@ -17,6 +20,7 @@ class ChatSettingsMenu extends StatelessWidget {
     required this.receiverUserId,
     required this.receiverUserName,
     required this.chatService,
+    required this.orderData,
   });
 
   @override
@@ -126,8 +130,8 @@ class ChatSettingsMenu extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                print("Blocking the person");
-                //TODO: Block API GOES HERE
+                UserService().blockUser(orderData);
+                Navigator.of(context).pop();
                 Navigator.of(context).pop();
               },
               child: const Text(
@@ -158,9 +162,12 @@ class ChatSettingsMenu extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                print("Deleted the chat");
-                //TODO: Delete Chat API GOES HERE
+                chatService.deleteChat(orderData);
                 Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('The chat has been deleted.')),
+                );
               },
               child: const Text(
                 'Delete',
@@ -169,7 +176,6 @@ class ChatSettingsMenu extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                print("Closing the Thingy");
                 Navigator.of(context).pop();
               },
               child: const Text('Close'),

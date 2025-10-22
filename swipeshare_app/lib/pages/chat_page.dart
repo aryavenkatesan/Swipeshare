@@ -112,8 +112,6 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
         actions: <Widget>[
-          // --- MODIFICATION START ---
-          // Remove the outer Container and the StarContainer from here
           Row(
             // The Row is still useful for grouping these two
             children: [
@@ -169,10 +167,10 @@ class _ChatPageState extends State<ChatPage> {
                 receiverUserId: widget.receiverUserID,
                 receiverUserName: widget.receiverUserName,
                 chatService: _chatService,
+                orderData: widget.orderData,
               ),
             ],
           ),
-          // --- MODIFICATION END ---
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),

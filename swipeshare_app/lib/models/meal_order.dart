@@ -51,7 +51,7 @@ class MealOrder {
       sellerId: map['sellerId'] ?? '',
       sellerName: map['sellerName'] ?? '',
       sellerVisibility: map['sellerVisibility'] ?? true,
-      sellerStars: map['sellerStars'] ?? 5.0,
+      sellerStars: map['sellerStars'].toDouble() ?? 5.0,
       buyerId: map['buyerId'] ?? '',
       buyerName: map['buyerName'] ?? '',
       buyerVisibility: map['buyerVisibility'] ?? true,

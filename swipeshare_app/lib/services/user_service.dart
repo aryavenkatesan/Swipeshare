@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 
 class UserService {
@@ -72,6 +73,27 @@ class UserService {
       });
     } catch (e) {
       print('Error updating star rating: $e');
+    }
+  }
+
+  Future<void> blockUser(MealOrder orderData) async {
+    try {
+      final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      final String otherUserId = orderData.buyerId != currentUserId
+          ? orderData.buyerId
+          : orderData.sellerId;
+      final userDoc = await _fireStore
+          .collection('users')
+          .doc(currentUserId)
+          .get();
+      final userData = userDoc.data()!;
+      int appendedBlockList = (userData['blocked_users'].add(otherUserId));
+      await _fireStore.collection('users').doc(currentUserId).update({
+        'blocked_users': appendedBlockList,
+      });
+    } catch (e) {
+      print('Error blocking user: $e');
+      rethrow;
     }
   }
 }

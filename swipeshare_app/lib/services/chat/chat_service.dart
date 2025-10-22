@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class ChatService extends ChangeNotifier {
@@ -154,7 +155,16 @@ class ChatService extends ChangeNotifier {
         .add(systemMessage.toMap());
   }
 
-  Future<void> blockUser(String userId, String otherUserId) async {}
-
-  Future<void> deleteChat(String userId, String otherUserId) async {}
+  Future<void> deleteChat(MealOrder orderData) async {
+    try {
+      final String message =
+          "${_firebaseAuth.currentUser!.uid == orderData.buyerId ? orderData.buyerName : orderData.sellerName} has deleted the chat.";
+      //TODO: Have to stop the other user from closing the order if someone deletes the chat
+      systemMessage(message, orderData.getRoomName());
+      OrderService().updateVisibility(orderData, true);
+    } catch (e) {
+      print('Error deleting user: $e');
+      rethrow;
+    }
+  }
 }
