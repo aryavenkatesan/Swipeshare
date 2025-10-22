@@ -77,7 +77,7 @@ class OrderService extends ChangeNotifier {
         .snapshots();
   }
 
-  Future<void> updateVisibility(MealOrder orderData) async {
+  Future<void> updateVisibility(MealOrder orderData, bool deletedChat) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
 
     if (currentUserId == orderData.buyerId) {
@@ -90,11 +90,14 @@ class OrderService extends ChangeNotifier {
         {'sellerVisibility': false},
       );
     }
-    //send system message that the other person left
-    final UserModel? currentUser = await _userService.getUserData(
-      currentUserId,
-    );
-    final String message = "${currentUser?.name ?? 'User'} has left the chat.";
-    _chatService.systemMessage(message, orderData.getRoomName());
+    if (!deletedChat) {
+      //send system message that the other person left
+      final UserModel? currentUser = await _userService.getUserData(
+        currentUserId,
+      );
+      final String message =
+          "${currentUser?.name ?? 'User'} has left the chat.\nClick the checked button above to close the order.";
+      _chatService.systemMessage(message, orderData.getRoomName());
+    }
   }
 }

@@ -121,9 +121,47 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(
-                        "${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')} @ ${listing['diningHall']}",
-                        style: TextStyle(fontSize: 16),
+                      child: Row(
+                        children: [
+                          // Left section: dining hall + time range
+                          RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text:
+                                      "${listing['diningHall']}", // dining hall
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                TextSpan(
+                                  text:
+                                      " @ ${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')}",
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          Spacer(), // 👈 pushes the rating to the far right
+                          // Right section: rating
+                          RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                              children: [
+                                TextSpan(text: "⭑ "),
+                                TextSpan(
+                                  text: "${listing['sellerRating']}  ",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Icon(
@@ -133,60 +171,72 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                   ],
                 ),
               ),
+
               // Expandable dropdown content
-              if (isExpanded)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Divider(height: 1),
-                      SizedBox(height: 8),
-                      // Add more listing details here
-                      Text(
-                        "Seller ID: ${listing['sellerId']}",
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        "Price: \$${listing['price'] ?? 'N/A'}",
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
-                      // Add more fields as needed
-                      SizedBox(height: 12),
-                      // Action button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () =>
-                              _handleListingSelection(docId, listing),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(
-                              192,
-                              131,
-                              199,
-                              255,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Select This Listing",
-                            style: SubTextStyle,
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: isExpanded
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(8),
+                            bottomRight: Radius.circular(8),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Divider(height: 1),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Payment Types: ${listing['paymentTypes'].join(", ")}",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Price: \$${listing['price'] ?? '6'}",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () =>
+                                    _handleListingSelection(docId, listing),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color.fromARGB(
+                                    192,
+                                    131,
+                                    199,
+                                    255,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                child: Text(
+                                  "Select This Listing",
+                                  style: SubTextStyle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(), // invisible when collapsed
+              ),
             ],
           ),
         ),
