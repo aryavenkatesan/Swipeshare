@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/chat/chat_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';

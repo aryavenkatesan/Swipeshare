@@ -55,7 +55,7 @@ class MealOrder {
       buyerId: map['buyerId'] ?? '',
       buyerName: map['buyerName'] ?? '',
       buyerVisibility: map['buyerVisibility'] ?? true,
-      buyerStars: map['buyerStars'] ?? 5.0,
+      buyerStars: (map['buyerStars'] as num?)?.toDouble() ?? 5.0,
       diningHall: map['diningHall'] ?? '',
       displayTime: map['displayTime'] ?? "",
       transactionDate: DateTime.parse(map['transactionDate']),
