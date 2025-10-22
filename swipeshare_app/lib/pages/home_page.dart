@@ -6,6 +6,7 @@ import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
+import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
@@ -57,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
 
     _fadeAnimation = CurvedAnimation(
-      parent: _animationController!,
+      parent: _animationController,
       curve: Curves.easeIn,
     );
 
@@ -135,34 +136,8 @@ class _HomeScreenState extends State<HomeScreen>
           surfaceTintColor: Colors.transparent,
           scrolledUnderElevation: 0.0,
           actions: [
-            Container(
-              width: 70,
-              height: 24,
-              decoration: BoxDecoration(
-                color: const Color(0xBF98D2EB), // 75% opacity blue
-                borderRadius: BorderRadius.circular(30),
-              ),
-              alignment: Alignment.center,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SvgPicture.asset("assets/star.svg", width: 18, height: 18),
-                  const SizedBox(
-                    width: 5,
-                  ), // Add some spacing between star and text
-                  Text(
-                    userData?.stars.toStringAsFixed(2) ?? '5.00',
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 16,
-                      color: const Color.fromARGB(255, 27, 27, 27),
-                      fontWeight: FontWeight.w500,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            //star display
+            StarContainer(stars: userData?.stars),
             //signout button
             IconButton(onPressed: signOut, icon: const Icon(Icons.logout)),
           ],

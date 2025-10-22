@@ -207,6 +207,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         listing['diningHall'],
         widget.date,
         listing['sellerName'],
+        listing['sellerRating'],
       );
       Navigator.pop(context);
       Navigator.pop(context);

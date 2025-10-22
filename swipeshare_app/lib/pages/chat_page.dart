@@ -3,6 +3,7 @@ import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/components/my_text_field.dart'; // Add this import
+import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
@@ -89,67 +90,91 @@ class _ChatPageState extends State<ChatPage> {
         forceMaterialTransparency: true,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0.0,
-        title: Text("${widget.receiverUserName}"),
+        leadingWidth:
+            130, // This gives enough space for BackButton (48) + padding (4) + StarContainer (70)
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [SizedBox(width: 8), BackButton()],
+        ),
+        title: Column(
+          children: [
+            Text("${widget.receiverUserName}"),
+            SizedBox(height: 3),
+
+            Transform.translate(
+              offset: Offset(-2, 0), // Trust it looks off center without this
+              child: StarContainer(
+                stars:
+                    _firebaseAuth.currentUser!.uid != widget.orderData.buyerId
+                    ? widget.orderData.buyerStars
+                    : widget.orderData.sellerStars,
+                background: false,
+              ),
+            ),
+          ],
+        ),
         actions: <Widget>[
-          Container(
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Close Order'),
-                          content: const Text(
-                            'Are you sure you want to mark this order as complete? This action cannot be undone.',
+          // --- MODIFICATION START ---
+          // Remove the outer Container and the StarContainer from here
+          Row(
+            // The Row is still useful for grouping these two
+            children: [
+              IconButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Close Order'),
+                        content: const Text(
+                          'Are you sure you want to mark this order as complete? This action cannot be undone.',
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Close the dialog
+                            },
+                            child: const Text('No'),
                           ),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(); // Close the dialog
-                              },
-                              child: const Text('No'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RatingsPage(
-                                      recieverId: widget.receiverUserID,
-                                      orderData: widget.orderData,
-                                    ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RatingsPage(
+                                    recieverId: widget.receiverUserID,
+                                    orderData: widget.orderData,
                                   ),
-                                );
-                              },
-                              child: const Text(
-                                'Yes',
-                                style: TextStyle(
-                                  color: Color.fromARGB(177, 96, 125, 139),
                                 ),
+                              );
+                            },
+                            child: const Text(
+                              'Yes',
+                              style: TextStyle(
+                                color: Color.fromARGB(177, 96, 125, 139),
                               ),
                             ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.task_alt),
-                  tooltip: 'Close Order',
-                ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.task_alt),
+                tooltip: 'Close Order',
+              ),
 
-                ChatSettingsMenu(
-                  currentUserId: _firebaseAuth.currentUser!.uid,
-                  currentUserEmail: _firebaseAuth.currentUser!.email!,
-                  receiverUserId: widget.receiverUserID,
-                  receiverUserName: widget.receiverUserName,
-                  chatService: _chatService,
-                ),
-              ],
-            ),
+              ChatSettingsMenu(
+                currentUserId: _firebaseAuth.currentUser!.uid,
+                currentUserEmail: _firebaseAuth.currentUser!.email!,
+                receiverUserId: widget.receiverUserID,
+                receiverUserName: widget.receiverUserName,
+                chatService: _chatService,
+              ),
+            ],
           ),
+          // --- MODIFICATION END ---
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),

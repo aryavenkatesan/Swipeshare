@@ -20,11 +20,13 @@ class OrderService extends ChangeNotifier {
     String diningHall,
     DateTime transactionDate,
     String sellerName,
+    double sellerstars,
     // String buyerName, We'll do it here also
   ) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
     final user = await _userService.getUserData(currentUserId);
     final String currentUserName = user!.name;
+    final double currentUserStars = user.stars;
     MealOrder newOrder = MealOrder(
       sellerId: sellerId,
       buyerId: currentUserId,
@@ -34,6 +36,8 @@ class OrderService extends ChangeNotifier {
       buyerName: currentUserName,
       sellerVisibility: true,
       buyerVisibility: true,
+      sellerStars: sellerstars,
+      buyerStars: currentUserStars,
     );
 
     try {

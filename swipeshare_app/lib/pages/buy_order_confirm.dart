@@ -245,7 +245,9 @@ class _BuyOrderConfirmScreenState extends State<BuyOrderConfirmScreen> {
         widget.location,
         widget.date,
         widget.sellerName,
+        5.0,
       );
+      print("CAME TO THE BUY ORDER CONFIRM PAGE");
 
       // Show success message and navigate back
       _showSuccessDialog();

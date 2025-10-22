@@ -5,9 +5,11 @@ class MealOrder {
   final String sellerId;
   final String sellerName;
   final bool sellerVisibility;
+  final double sellerStars;
   final String buyerId;
   final String buyerName;
   final bool buyerVisibility;
+  final double buyerStars;
   final String diningHall;
   final String?
   displayTime; //TimeOfDay.toString() use the static methods in time_formatter.dart to convert
@@ -17,9 +19,11 @@ class MealOrder {
     required this.sellerId,
     required this.sellerName,
     required this.sellerVisibility,
+    required this.sellerStars,
     required this.buyerId,
     required this.buyerName,
     required this.buyerVisibility,
+    required this.buyerStars,
     required this.diningHall,
     this.displayTime,
     required this.transactionDate,
@@ -30,9 +34,11 @@ class MealOrder {
       'sellerId': sellerId,
       'sellerName': sellerName,
       'sellerVisibility': sellerVisibility,
+      'sellerStars': sellerStars,
       'buyerId': buyerId,
       'buyerName': buyerName,
       'buyerVisibility': buyerVisibility,
+      'buyerStars': buyerStars,
       'diningHall': diningHall,
       'displayTime': displayTime,
       'transactionDate': transactionDate
@@ -45,9 +51,11 @@ class MealOrder {
       sellerId: map['sellerId'] ?? '',
       sellerName: map['sellerName'] ?? '',
       sellerVisibility: map['sellerVisibility'] ?? true,
+      sellerStars: map['sellerStars'] ?? 5.0,
       buyerId: map['buyerId'] ?? '',
       buyerName: map['buyerName'] ?? '',
       buyerVisibility: map['buyerVisibility'] ?? true,
+      buyerStars: map['buyerStars'] ?? 5.0,
       diningHall: map['diningHall'] ?? '',
       displayTime: map['displayTime'] ?? "",
       transactionDate: DateTime.parse(map['transactionDate']),

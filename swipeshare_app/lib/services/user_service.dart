@@ -48,6 +48,7 @@ class UserService {
               incomingStar) /
           (userData['transactions_completed'] + 1);
       //this is the true raw score, the initial 5 is not considered
+      //also yes there are edge cases depending on who rates first,
       await _fireStore.collection('users').doc(uid).update({
         'stars': calculatedStarRating,
       });
