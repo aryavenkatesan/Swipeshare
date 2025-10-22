@@ -2,33 +2,64 @@ import 'package:flutter/material.dart';
 
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
-  final String? docId;
   final String sellerId;
+  final String sellerName;
+  final bool sellerVisibility;
+  final double sellerStars;
   final String buyerId;
-  final String location;
-  final TimeOfDay?
-  time; //will be set by the users, if not set just display as TBD
+  final String buyerName;
+  final bool buyerVisibility;
+  final double buyerStars;
+  final String diningHall;
+  final String?
+  displayTime; //TimeOfDay.toString() use the static methods in time_formatter.dart to convert
   final DateTime transactionDate;
 
   MealOrder({
-    this.docId,
     required this.sellerId,
+    required this.sellerName,
+    required this.sellerVisibility,
+    required this.sellerStars,
     required this.buyerId,
-    required this.location,
-    this.time,
+    required this.buyerName,
+    required this.buyerVisibility,
+    required this.buyerStars,
+    required this.diningHall,
+    this.displayTime,
     required this.transactionDate,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'docId': docId,
       'sellerId': sellerId,
+      'sellerName': sellerName,
+      'sellerVisibility': sellerVisibility,
+      'sellerStars': sellerStars,
       'buyerId': buyerId,
-      'location': location,
-      'time': time,
+      'buyerName': buyerName,
+      'buyerVisibility': buyerVisibility,
+      'buyerStars': buyerStars,
+      'diningHall': diningHall,
+      'displayTime': displayTime,
       'transactionDate': transactionDate
           .toIso8601String(), //better to have as string or no?
     };
+  }
+
+  factory MealOrder.fromMap(Map<String, dynamic> map) {
+    return MealOrder(
+      sellerId: map['sellerId'] ?? '',
+      sellerName: map['sellerName'] ?? '',
+      sellerVisibility: map['sellerVisibility'] ?? true,
+      sellerStars: map['sellerStars'].toDouble() ?? 5.0,
+      buyerId: map['buyerId'] ?? '',
+      buyerName: map['buyerName'] ?? '',
+      buyerVisibility: map['buyerVisibility'] ?? true,
+      buyerStars: map['buyerStars'].toDouble() ?? 5.0,
+      diningHall: map['diningHall'] ?? '',
+      displayTime: map['displayTime'] ?? "",
+      transactionDate: DateTime.parse(map['transactionDate']),
+    );
   }
 
   getRoomName() {

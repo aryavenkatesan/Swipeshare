@@ -7,10 +7,13 @@ class DiningHallsComponent extends StatelessWidget {
   final List<String> selectedLocations;
   final Function(String) onLocationToggle;
 
+  final String sellOrBuy;
+
   const DiningHallsComponent({
     super.key,
     required this.selectedLocations,
     required this.onLocationToggle,
+    required this.sellOrBuy,
   });
 
   @override
@@ -20,19 +23,42 @@ class DiningHallsComponent extends StatelessWidget {
         final isSelected = selectedLocations.contains(location);
         return Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: BuySwipesConstants.smallSpacing),
+            padding: const EdgeInsets.symmetric(
+              horizontal: BuySwipesConstants.smallSpacing,
+            ),
             child: GestureDetector(
-              onTap: () => onLocationToggle(location),
+              onTap: () {
+                // If "sell" mode and this location is already selected, allow deselection
+                // If "sell" mode and a different location is selected, this will replace it
+                // If "buy" mode, toggle normally (allow multiple)
+                if (sellOrBuy.toLowerCase() == "sell") {
+                  // Single selection mode for sell
+                  if (!isSelected) {
+                    // Only trigger if selecting a new location
+                    onLocationToggle(location);
+                  } else {
+                    // Allow deselection of current location
+                    onLocationToggle(location);
+                  }
+                } else {
+                  // Multiple selection mode for buy
+                  onLocationToggle(location);
+                }
+              },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: BuySwipesConstants.mediumSpacing),
+                padding: const EdgeInsets.symmetric(
+                  vertical: BuySwipesConstants.mediumSpacing,
+                ),
                 decoration: BoxDecoration(
-                  color: isSelected 
-                      ? AppColors.accentBlueLight 
+                  color: isSelected
+                      ? AppColors.accentBlueLight
                       : AppColors.whiteTransparent,
-                  borderRadius: BorderRadius.circular(BuySwipesConstants.borderRadius),
+                  borderRadius: BorderRadius.circular(
+                    BuySwipesConstants.borderRadius,
+                  ),
                   border: Border.all(
-                    color: isSelected 
-                        ? AppColors.accentBlue 
+                    color: isSelected
+                        ? AppColors.accentBlue
                         : AppColors.borderGrey,
                     width: 2,
                   ),
@@ -40,8 +66,8 @@ class DiningHallsComponent extends StatelessWidget {
                 child: Center(
                   child: Text(
                     location,
-                    style: isSelected 
-                        ? AppTextStyles.locationTextSelected 
+                    style: isSelected
+                        ? AppTextStyles.locationTextSelected
                         : AppTextStyles.locationText,
                   ),
                 ),

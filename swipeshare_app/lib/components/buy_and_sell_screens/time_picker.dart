@@ -42,8 +42,8 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
           AnimatedSize(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            child: (showStartPicker || showEndPicker) 
-                ? _buildTimePickers() 
+            child: (showStartPicker || showEndPicker)
+                ? _buildTimePickers()
                 : const SizedBox.shrink(),
           ),
         ],
@@ -63,18 +63,23 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
             children: [
               Expanded(
                 child: _buildTimeSelector(
-                  "Start at", 
-                  widget.startTime, 
-                  () => _setPickerState(start: true), 
+                  "Start at",
+                  widget.startTime,
+                  () => _setPickerState(start: true),
                   isHighlighted: showStartPicker,
                 ),
               ),
-              const SizedBox(width: BuySwipesConstants.mediumSpacing),
+              const SizedBox(width: 20),
+              GestureDetector(
+                onTap: _setTimesToNow,
+                child: Text("Now", style: AppTextStyles.subText),
+              ),
+              const SizedBox(width: 20),
               Expanded(
                 child: _buildTimeSelector(
-                  "End at", 
-                  widget.endTime, 
-                  () => _setPickerState(end: true), 
+                  "End at",
+                  widget.endTime,
+                  () => _setPickerState(end: true),
                   isHighlighted: showEndPicker,
                 ),
               ),
@@ -90,9 +95,7 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
     return AnimatedAlign(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOutCubic,
-      alignment: showStartPicker 
-          ? Alignment.centerLeft 
-          : Alignment.centerRight,
+      alignment: showStartPicker ? Alignment.centerLeft : Alignment.centerRight,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOutCubic,
@@ -171,15 +174,16 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
           use24hFormat: false,
           minuteInterval: 5,
           initialDateTime: DateTime(
-            2023, 1, 1, 
-            time?.hour ?? defaultHour, 
+            2023,
+            1,
+            1,
+            time?.hour ?? defaultHour,
             time?.minute ?? 0,
           ),
           onDateTimeChanged: (DateTime dateTime) {
-            onTimeChanged(TimeOfDay(
-              hour: dateTime.hour,
-              minute: dateTime.minute,
-            ));
+            onTimeChanged(
+              TimeOfDay(hour: dateTime.hour, minute: dateTime.minute),
+            );
           },
         ),
       ),
@@ -188,8 +192,8 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
 
   /// Builds an individual time selector with label and time display
   Widget _buildTimeSelector(
-    String label, 
-    TimeOfDay? time, 
+    String label,
+    TimeOfDay? time,
     VoidCallback onTap, {
     bool isHighlighted = false,
   }) {
@@ -198,7 +202,7 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(BuySwipesConstants.smallSpacing)
+          borderRadius: BorderRadius.circular(BuySwipesConstants.smallSpacing),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -226,6 +230,47 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
         showStartPicker = start;
         showEndPicker = end;
       }
+    });
+  }
+
+  /// Sets start time to one minute from now and end time to 30 minutes after start time
+  void _setTimesToNow() {
+    final now = DateTime.now();
+    final oneMinuteFromNow = now.add(const Duration(minutes: 1));
+
+    // Round to nearest 5-minute interval
+    final roundedMinute = ((oneMinuteFromNow.minute / 5).round() * 5) % 60;
+    final hourAdjustment = (oneMinuteFromNow.minute + 5) >= 60 ? 1 : 0;
+
+    final startTime = TimeOfDay(
+      hour: (oneMinuteFromNow.hour + hourAdjustment) % 24,
+      minute: roundedMinute,
+    );
+
+    // Add 30 minutes to the rounded start time
+    final startDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      startTime.hour,
+      startTime.minute,
+    );
+    final thirtyMinutesAfterStart = startDateTime.add(
+      const Duration(minutes: 30),
+    );
+
+    final endTime = TimeOfDay(
+      hour: thirtyMinutesAfterStart.hour,
+      minute: thirtyMinutesAfterStart.minute,
+    );
+
+    widget.onStartTimeChanged(startTime);
+    widget.onEndTimeChanged(endTime);
+
+    // Close any open pickers
+    setState(() {
+      showStartPicker = false;
+      showEndPicker = false;
     });
   }
 }

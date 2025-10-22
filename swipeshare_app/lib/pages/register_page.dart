@@ -19,21 +19,23 @@ class _RegisterPageState extends State<RegisterPage> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final nameController = TextEditingController();
-  final phoneController = TextEditingController();
+  final referralController = TextEditingController();
 
   //sign up user
   void signUp() async {
     // make it unc email only
-    // if (!emailController.text.trim().toLowerCase().endsWith('unc.edu')) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(
-    //       content: Text(
-    //         "Please use a valid UNC email address (ending with @unc.edu)",
-    //       ),
-    //     ),
-    //   );
-    //   return;
-    // }
+    if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
+        (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
+            referralController.text != '')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Please use a valid UNC email address (ending with @unc.edu)",
+          ),
+        ),
+      );
+      return;
+    }
 
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(
@@ -49,6 +51,8 @@ class _RegisterPageState extends State<RegisterPage> {
       await authService.signUpWithEmailandPassword(
         emailController.text,
         passwordController.text,
+        nameController.text,
+        referralController.text,
       );
     } catch (e) {
       ScaffoldMessenger.of(
@@ -132,34 +136,37 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextField(
                         controller: nameController,
                         decoration: const InputDecoration(
-                          hintText: 'Full Name',
+                          hintText: 'First Name*',
                         ),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: emailController,
-                        decoration: const InputDecoration(hintText: 'Email'),
+                        decoration: const InputDecoration(hintText: 'Email*'),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: phoneController,
-                        decoration: const InputDecoration(
-                          hintText: 'Phone Number',
-                        ),
-                      ),
+
                       const SizedBox(height: 16),
                       TextField(
                         controller: passwordController,
-                        decoration: const InputDecoration(hintText: 'Password'),
+                        decoration: const InputDecoration(
+                          hintText: 'Password*',
+                        ),
                         obscureText: true,
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: confirmPasswordController,
                         decoration: const InputDecoration(
-                          hintText: 'Confirm Password',
+                          hintText: 'Confirm Password*',
                         ),
                         obscureText: true,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: referralController,
+                        decoration: const InputDecoration(
+                          hintText: 'Referral Email',
+                        ),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
