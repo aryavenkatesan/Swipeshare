@@ -1,9 +1,9 @@
 import 'dart:ui';
 
-import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
+import 'package:swipeshare_app/services/auth/auth_services.dart';
 
 class RegisterPage extends StatefulWidget {
   final void Function()? onTap;
@@ -54,15 +54,19 @@ class _RegisterPageState extends State<RegisterPage> {
         nameController.text,
         referralController.text,
       );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => OnboardingCarousel()),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     }
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => OnboardingCarousel()),
-    );
   }
 
   @override
