@@ -1,16 +1,15 @@
-import 'package:swipeshare_app/pages/home_page.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:swipeshare_app/pages/home_page.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_1.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_2.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
-import 'package:provider/provider.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'dart:async';
-
-//TODO: Clean this code and conduct edge case checking
+import 'package:swipeshare_app/services/auth/auth_services.dart';
+import 'package:swipeshare_app/services/email_verification_service.dart';
 
 class OnboardingCarousel extends StatefulWidget {
   const OnboardingCarousel({super.key});
@@ -20,31 +19,26 @@ class OnboardingCarousel extends StatefulWidget {
 }
 
 class _OnboardingCarouselState extends State<OnboardingCarousel> {
-  PageController _controller = PageController();
-  bool onLastPage = false;
-  final auth = FirebaseAuth.instance;
-  late User user;
-  bool didSendEmail = false;
+  final PageController _controller = PageController();
+  final _verificationService = EmailVerificationService();
 
-  Timer? _emailVerificationTimer;
+  bool onLastPage = false;
   bool _isCheckingVerification = false;
 
   @override
+  void initState() {
+    super.initState();
+    _verificationService.sendVerificationEmail();
+  }
+
+  @override
   void dispose() {
-    // Cancel timer when widget is disposed
-    _emailVerificationTimer?.cancel();
+    _verificationService.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    user = auth.currentUser!;
-    if (!didSendEmail) {
-      print("=== INITIAL EMAIL SEND ===");
-      print("didSendEmail flag: $didSendEmail");
-      _sendVerificationEmail();
-      didSendEmail = true;
-    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[300],
@@ -63,8 +57,15 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
             child: PageView(
               controller: _controller,
               onPageChanged: (index) {
+                final newOnLastPage = (index == 3);
+                if (newOnLastPage && newOnLastPage != onLastPage) {
+                  _awaitEmailVerification();
+                } else {
+                  _stopEmailVerification();
+                }
+
                 setState(() {
-                  onLastPage = (index == 3);
+                  onLastPage = newOnLastPage;
                 });
               },
               children: [Page1(), Page2(), Page3(), Page4()],
@@ -87,7 +88,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                       )
                     : GestureDetector(
                         onTap: () {
-                          _sendVerificationEmail();
+                          _verificationService.sendVerificationEmail();
+                          _awaitEmailVerification();
                         },
                         child: Text("    resend "),
                       ),
@@ -111,12 +113,10 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                             curve: Curves.easeIn,
                           );
                         },
-                        child: Text("next"),
+                        child: const Text("next"),
                       )
                     : GestureDetector(
-                        onTap: () {
-                          checkEmailVerified();
-                        },
+                        onTap: () => _awaitEmailVerification(),
                         child: Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: 14,
@@ -128,13 +128,24 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                               30,
                             ), // Capsule shape
                           ),
-                          child: Text(
-                            "enter",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isCheckingVerification
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text(
+                                  "enter",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
               ],
@@ -146,158 +157,59 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
     );
   }
 
-  void _startEmailVerificationLoop() {
-    if (_isCheckingVerification) return; // Prevent multiple timers
+  Future<void> _awaitEmailVerification() async {
+    if (_isCheckingVerification) return;
 
-    setState(() {
-      _isCheckingVerification = true;
-    });
+    setState(() => _isCheckingVerification = true);
 
-    // Show snackbar to inform user
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Checking for email verification...'),
-        backgroundColor: Colors.blue,
-        duration: Duration(seconds: 2),
-      ),
-    );
-
-    // Check immediately first
-    checkEmailVerified();
-
-    // Then start the timer for periodic checks
-    _emailVerificationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (mounted) {
-        checkEmailVerified();
-      } else {
-        timer.cancel();
-      }
-    });
-
-    // Stop checking after 5 minutes (60 checks)
-    Timer(Duration(minutes: 2), () {
-      if (_emailVerificationTimer?.isActive == true) {
-        _emailVerificationTimer?.cancel();
-        if (mounted) {
-          setState(() {
-            _isCheckingVerification = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Verification check timed out. Please try again.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-      }
-    });
-  }
-
-  Future<void> checkEmailVerified() async {
     try {
-      final user = FirebaseAuth.instance.currentUser!;
-      await user.reload();
+      await _verificationService.awaitVerification();
 
-      print("Checking email verification status: ${user.emailVerified}");
-
-      if (user.emailVerified) {
-        // Cancel the timer
-        _emailVerificationTimer?.cancel();
-
-        if (mounted) {
-          setState(() {
-            _isCheckingVerification = false;
-          });
-
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Email verified successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Navigate to home screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-          );
-        }
-      }
-    } catch (e) {
-      print("Error checking email verification: $e");
+      // Email verified
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error checking verification: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _sendVerificationEmail() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser!;
-      print("=== SENDING VERIFICATION EMAIL ===");
-      print("Attempting to send email to: ${user.email}");
-      print("Current time: ${DateTime.now()}");
-
-      await user.sendEmailVerification();
-
-      print("✅ Email verification sent successfully!");
-      print("================================");
-
-      // Show success snackbar
-      if (mounted & onLastPage) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Verification email sent!'),
+            content: Text('Email verified successfully!'),
             backgroundColor: Colors.green,
           ),
         );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
       }
-    } catch (e, stackTrace) {
-      print("❌ ERROR SENDING VERIFICATION EMAIL");
-      print("Error Type: ${e.runtimeType}");
-      print("Error Message: $e");
-      print("Stack Trace: $stackTrace");
-
-      // Check for specific Firebase Auth errors
-      if (e is FirebaseAuthException) {
-        print("Firebase Auth Error Code: ${e.code}");
-        print("Firebase Auth Error Message: ${e.message}");
-
-        // Handle specific error codes
-        String userMessage = "Failed to send email";
-        switch (e.code) {
-          case 'too-many-requests':
-            userMessage = "Too many requests. Please try again later.";
-            break;
-          case 'user-not-found':
-            userMessage = "User not found.";
-            break;
-          case 'invalid-email':
-            userMessage = "Invalid email address.";
-            break;
-        }
-
-        // Show error snackbar
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(userMessage), backgroundColor: Colors.red),
-          );
-        }
+    } on TimeoutException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verification check timed out. Please try again.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
-      print("================================");
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingVerification = false);
+      }
     }
   }
 
-  void signOut() {
-    //get auth service
-    final authService = Provider.of<AuthServices>(context, listen: false);
+  void _stopEmailVerification() {
+    if (!_isCheckingVerification) return;
 
+    _verificationService.dispose();
+    setState(() => _isCheckingVerification = false);
+  }
+
+  void signOut() {
+    final authService = context.read<AuthServices>();
     authService.signOut();
   }
 }
