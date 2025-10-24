@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/services/notification_service.dart';
 
 class AuthServices extends ChangeNotifier {
   //instance of auth
@@ -71,6 +72,7 @@ class AuthServices extends ChangeNotifier {
 
   //sign user out
   Future<void> signOut() async {
+    await NotificationService.instance.removeTokenFromFirestore();
     return await FirebaseAuth.instance.signOut();
   }
 }

@@ -4,7 +4,7 @@ class Message {
   final String? documentId;
   final String senderId;
   final String senderName;
-  final String receiverID;
+  final String receiverId;
   final String message;
   final Timestamp timestamp;
   final String? status;
@@ -12,7 +12,7 @@ class Message {
   Message({
     this.documentId,
     required this.message,
-    required this.receiverID,
+    required this.receiverId,
     required this.senderName,
     required this.senderId,
     required this.timestamp,
@@ -23,7 +23,7 @@ class Message {
     return {
       'senderId': senderId,
       'senderName': senderName,
-      'receiverId': receiverID,
+      'receiverId': receiverId,
       'message': message,
       'timestamp': timestamp,
       if (status != null) 'status': status,
@@ -36,7 +36,7 @@ class Message {
       documentId: doc.id,
       senderId: data['senderId'],
       senderName: data['senderName'],
-      receiverID: data['receiverId'],
+      receiverId: data['receiverId'],
       message: data['message'],
       timestamp: data['timestamp'],
       status: data['status'],
