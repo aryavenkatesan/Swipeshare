@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
   final String sellerId;
@@ -13,6 +11,8 @@ class MealOrder {
   final String diningHall;
   final String?
   displayTime; //TimeOfDay.toString() use the static methods in time_formatter.dart to convert
+  final bool sellerHasNotifs;
+  final bool buyerHasNotifs;
   final DateTime transactionDate;
 
   MealOrder({
@@ -26,6 +26,8 @@ class MealOrder {
     required this.buyerStars,
     required this.diningHall,
     this.displayTime,
+    required this.sellerHasNotifs,
+    required this.buyerHasNotifs,
     required this.transactionDate,
   });
 
@@ -41,6 +43,8 @@ class MealOrder {
       'buyerStars': buyerStars,
       'diningHall': diningHall,
       'displayTime': displayTime,
+      'sellerHasNotifs': sellerHasNotifs,
+      'buyerHasNotifs': buyerHasNotifs,
       'transactionDate': transactionDate
           .toIso8601String(), //better to have as string or no?
     };
@@ -57,7 +61,9 @@ class MealOrder {
       buyerVisibility: map['buyerVisibility'] ?? true,
       buyerStars: (map['buyerStars'] as num?)?.toDouble() ?? 5.0,
       diningHall: map['diningHall'] ?? '',
-      displayTime: map['displayTime'] ?? "",
+      displayTime: map['displayTime'],
+      sellerHasNotifs: map['sellerHasNotifs'] ?? false,
+      buyerHasNotifs: map['buyerHasNotifs'] ?? false,
       transactionDate: DateTime.parse(map['transactionDate']),
     );
   }

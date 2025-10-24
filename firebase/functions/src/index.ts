@@ -1,34 +1,15 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import { Message, Order } from "./types";
+import {
+  getOrder,
+  getUser,
+  payloadWithNotifs,
+  timeOfDayStringToTime,
+  updateNotificationsStatus,
+} from "./utils";
 
 admin.initializeApp();
-
-type Message = {
-  senderId: string;
-  receiverId: string;
-  senderName: string;
-  message?: string;
-};
-
-type Order = {
-  buyerId: string;
-  sellerId: string;
-  // other fields aren't relevant
-};
-
-type User = {
-  fcmToken?: string;
-  // other fields aren't relevant
-};
-
-function minutesToTimeString(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  const period = hours >= 12 ? "PM" : "AM";
-  const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-  const displayMins = mins > 0 ? `:${mins.toString().padStart(2, "0")}` : "";
-  return `${displayHours}${displayMins} ${period}`;
-}
 
 export const sendMessageNotification = functions.firestore.onDocumentCreated(
   "orders/{orderId}/messages/{messageId}",
@@ -42,18 +23,13 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
     }
 
     try {
-      const db = admin.firestore();
-
-      const orderDoc = await db.collection("orders").doc(orderId).get();
-      const orderData = orderDoc.data() as Order | undefined;
-
-      if (!orderDoc.exists || !orderData) {
-        console.log(`Order ${orderId} does not exist.`);
+      const orderData = await getOrder(orderId);
+      if (!orderData) {
         return;
       }
 
       const messageType =
-        message.senderId === "time proposal"
+        message.senderId === "time widget"
           ? "proposal"
           : message.senderId === "system"
           ? "system"
@@ -64,22 +40,15 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
         return;
       }
 
+      // For time proposal, receiverId is actually the senderId
       const senderId =
         messageType === "proposal" ? message.receiverId : message.senderId;
 
       const recipientId =
         orderData.buyerId === senderId ? orderData.sellerId : orderData.buyerId;
 
-      const recipientDoc = await db.collection("users").doc(recipientId).get();
-      const recipientData = recipientDoc.data() as User | undefined;
-
-      if (!recipientDoc.exists || !recipientData) {
-        console.log(`User ${recipientId} does not exist.`);
-        return;
-      }
-
-      if (!recipientData.fcmToken) {
-        console.log(`User ${recipientId} does not have an FCM token.`);
+      const recipientData = await getUser(recipientId);
+      if (!recipientData) {
         return;
       }
 
@@ -91,9 +60,11 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
       const body =
         messageType === "text"
           ? message.message || ""
-          : minutesToTimeString(parseInt(message.message || "0", 10));
+          : timeOfDayStringToTime(message.message || "");
 
-      const payload: admin.messaging.Message = {
+      await updateNotificationsStatus(orderId, recipientId);
+
+      const payload = await payloadWithNotifs(recipientId, {
         notification: {
           title,
           body,
@@ -102,10 +73,11 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
           orderId,
           messageId,
           senderId: message.senderId,
+          senderName: message.senderName,
           type: "new_message",
         },
         token: recipientData.fcmToken,
-      };
+      });
 
       const response = await admin.messaging().send(payload);
       console.log(`Notification sent successfully: ${response}`);
@@ -115,3 +87,119 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
     }
   }
 );
+
+export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
+  "orders/{orderId}",
+  async (event) => {
+    const { orderId } = event.params;
+    const orderData = event.data?.data() as Order | undefined;
+
+    if (orderData == null) {
+      console.log("No order data found.");
+      return;
+    }
+
+    try {
+      const sellerData = await getUser(orderData.sellerId);
+      if (!sellerData) {
+        return;
+      }
+
+      const readableDate = new Date(
+        orderData.transactionDate
+      ).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+
+      await updateNotificationsStatus(orderId, orderData.sellerId);
+
+      const payload = await payloadWithNotifs(orderData.sellerId, {
+        notification: {
+          title: `Someone claimed your meal swipe for ${readableDate}`,
+          body: "Tap to coordinate a meeting time",
+        },
+        data: {
+          orderId,
+          buyerId: orderData.buyerId,
+          buyerName: orderData.buyerName,
+          type: "new_order",
+        },
+        token: sellerData.fcmToken,
+      });
+
+      const response = await admin.messaging().send(payload);
+      console.log(`Notification sent successfully: ${response}`);
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      throw error;
+    }
+  }
+);
+
+export const sendProposalUpdateNotification =
+  functions.firestore.onDocumentUpdated(
+    "orders/{orderId}/messages/{messageId}",
+    async (event) => {
+      const { orderId } = event.params;
+      const beforeData = event.data?.before.data() as Message | undefined;
+      const afterData = event.data?.after.data() as Message | undefined;
+
+      if (!beforeData || !afterData) {
+        console.log("Before or after data is missing.");
+        return;
+      }
+
+      if (beforeData.status === afterData.status) {
+        console.log("Message is not a time proposal or status did not change");
+        return;
+      }
+
+      if (!afterData.status) {
+        console.log("No status field in the updated message.");
+        return;
+      }
+
+      try {
+        const orderData = await getOrder(orderId);
+        if (!orderData) {
+          return;
+        }
+
+        // For time proposal, receiverId is actually the senderId
+        const senderId = afterData.receiverId;
+        const senderData = await getUser(senderId);
+        if (!senderData) {
+          return;
+        }
+
+        const receiverName =
+          senderId === orderData.buyerId
+            ? orderData.buyerName
+            : orderData.sellerId === senderId
+            ? orderData.sellerName
+            : "Someone";
+
+        const proposalTime = timeOfDayStringToTime(afterData.message || "");
+
+        await updateNotificationsStatus(orderId, senderId);
+
+        const payload = await payloadWithNotifs(senderId, {
+          notification: {
+            title: `${receiverName} ${afterData.status} your time proposal for ${proposalTime}!`,
+          },
+          data: {
+            orderId,
+            type: "time_proposal_update",
+          },
+          token: senderData.fcmToken,
+        });
+
+        const response = await admin.messaging().send(payload);
+        console.log(`Notification sent successfully: ${response}`);
+      } catch (error) {
+        console.error("Error sending notification:", error);
+        throw error;
+      }
+    }
+  );

@@ -167,4 +167,46 @@ class ChatService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> readNotifications(MealOrder orderData) async {
+    try {
+      final String currentUserId = _firebaseAuth.currentUser!.uid;
+
+      if (currentUserId == orderData.buyerId && orderData.buyerHasNotifs) {
+        await _fireStore
+            .collection('orders')
+            .doc(orderData.getRoomName())
+            .update({'buyerHasNotifs': false});
+      } else if (currentUserId == orderData.sellerId &&
+          orderData.sellerHasNotifs) {
+        await _fireStore
+            .collection('orders')
+            .doc(orderData.getRoomName())
+            .update({'sellerHasNotifs': false});
+      }
+    } catch (e) {
+      debugPrint('Error reading notifications: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> readNotificationsById(String orderId) async {
+    try {
+      DocumentSnapshot doc = await _fireStore
+          .collection('orders')
+          .doc(orderId)
+          .get();
+
+      if (doc.exists) {
+        MealOrder orderData = MealOrder.fromMap(
+          doc.data() as Map<String, dynamic>,
+        );
+
+        await readNotifications(orderData);
+      }
+    } catch (e) {
+      debugPrint('Error reading notifications by order id: $e');
+      rethrow;
+    }
+  }
 }
