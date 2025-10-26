@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
-import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/components/my_text_field.dart'; // Add this import
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';

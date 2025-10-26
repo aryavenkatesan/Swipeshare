@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 enum PaymentType {
@@ -43,6 +44,20 @@ class Listing {
     };
   }
 
+  factory Listing.fromMap(Map<String, dynamic> map) {
+    return Listing(
+      sellerId: map['sellerId'] ?? '',
+      sellerName: map['sellerName'] ?? '',
+      diningHall: map['diningHall'] ?? '',
+      timeStart: Listing.minutesToTOD(map['timeStart']),
+      timeEnd: Listing.minutesToTOD(map['timeEnd']),
+      transactionDate:
+          stringToDateTime(map['transactionDate']) ?? DateTime.now(),
+      sellerRating: map['sellerRating'],
+      paymentTypes: [for (var item in map['paymentTypes']) item as String],
+    );
+  }
+
   static int toMinutes(TimeOfDay time) {
     return time.hour * 60 + time.minute;
   }
@@ -52,5 +67,22 @@ class Listing {
     int minutes = totalMinutes % 60;
 
     return TimeOfDay(hour: hours, minute: minutes);
+  }
+
+  static DateTime? stringToDateTime(String dateString) {
+    // 1. Guard against null or empty strings
+    if (dateString.isEmpty) {
+      return null;
+    }
+
+    // 2. Use a try-catch block to handle parsing errors
+    try {
+      return DateTime.parse(dateString);
+    } on FormatException {
+      // 3. If parsing fails, log the error and return null
+      // Use debugPrint for better logging in Flutter's debug console
+      debugPrint('Error: Invalid date format for string: "$dateString"');
+      return null;
+    }
   }
 }

@@ -1,4 +1,4 @@
-import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

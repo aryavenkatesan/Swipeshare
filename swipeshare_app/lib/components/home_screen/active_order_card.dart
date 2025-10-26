@@ -32,7 +32,7 @@ class ActiveOrderCard extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => ChatPage(
                 receiverUserName:
-                    receiverName, // a bunch of other things need to be updated for this to work
+                    receiverName, 
                 receiverUserID: receiverUserID,
                 orderData: orderData,
               ),

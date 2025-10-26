@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
-import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
+import 'package:swipeshare_app/components/home_screen/active_listing_card.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
@@ -18,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
@@ -35,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen>
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final OrderService _orderService = OrderService();
   final UserService _userService = UserService();
+  final ListingService _listingService = ListingService();
 
   UserModel? userData;
   bool isLoading = true;
@@ -42,6 +46,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   late AnimationController _animationController;
   late Animation<double>? _fadeAnimation;
+
+  final ScrollController _scrollController = ScrollController();
 
   final RefreshController _refreshController = RefreshController(
     initialRefresh: false,
@@ -67,8 +73,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
-    _animationController?.dispose();
+    _animationController.dispose();
     _refreshController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -141,8 +148,17 @@ class _HomeScreenState extends State<HomeScreen>
             //signout button
             IconButton(onPressed: signOut, icon: const Icon(Icons.logout)),
           ],
+          // bottom: PreferredSize(
+          //   preferredSize: Size.fromHeight(1.0),
+          //   child: Container(
+          //     color: Colors.grey.withOpacity(0.3), // Customize color as needed
+          //     height: 1.0,
+          //   ),
+          // ),
+          //This is the grey bar below the header, only looks nice when scrolled
         ),
         body: SafeArea(
+          bottom: false,
           child: Padding(
             padding: const EdgeInsets.only(
               right: 30.0,
@@ -161,6 +177,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
 
               child: SingleChildScrollView(
+                controller: _scrollController,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -233,57 +250,16 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
 
                     SizedBox(height: 24),
+
                     Text("Active Listings", style: HeaderStyle),
 
                     SizedBox(height: 12),
 
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Active Listings Go Here",
-                            style: SubHeaderStyle,
-                          ),
-                          Text("Trust the process", style: SubTextStyle),
-                        ],
-                      ),
-                    ),
+                    _buildListingSection(),
 
                     SizedBox(height: 24),
-                    Text("Rewards", style: HeaderStyle),
+                    Text("Settings", style: HeaderStyle),
                     SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("50% off", style: SubHeaderStyle),
-                          Text(
-                            "After referring two friends",
-                            style: SubTextStyle,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 48),
                     PaymentOptionsComponent(
                       selectedPaymentOptions: _paymentTypes,
                       onPaymentOptionsChanged: (options) {
@@ -375,6 +351,56 @@ class _HomeScreenState extends State<HomeScreen>
           : data['sellerId'],
       orderData: order,
       receiverName: recieverName,
+    );
+  }
+
+  Widget _buildListingSection() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _listingService.getUserListings(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text('Loading..');
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        final hasOrders = docs.isNotEmpty;
+
+        if (!hasOrders) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              "Listings will show up here to keep track of when you're selling! Once placed, you can tap to delete :)",
+              style: SubTextStyle,
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        // Has orders -> show horizontally scrollable cards
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: docs.map((doc) => _buildListingCard(doc)).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListingCard(DocumentSnapshot document) {
+    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+    Listing currentlisting = Listing.fromMap(data);
+
+    return ActiveListingCard(
+      currentListing: currentlisting,
+      listingId: document.id,
     );
   }
 }

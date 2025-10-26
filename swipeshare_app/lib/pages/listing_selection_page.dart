@@ -1,4 +1,5 @@
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -138,7 +139,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                                 ),
                                 TextSpan(
                                   text:
-                                      " @ ${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')}",
+                                      " @ ${TimeFormatter.formatTimeOfDay(listingStartTime.toString())} to ${TimeFormatter.formatTimeOfDay(listingEndTime.toString())}",
                                 ),
                               ],
                             ),
@@ -155,7 +156,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                               children: [
                                 TextSpan(text: "⭑ "),
                                 TextSpan(
-                                  text: "${listing['sellerRating']}  ",
+                                  text:
+                                      "${listing['sellerRating'].toStringAsFixed(2)}  ",
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],

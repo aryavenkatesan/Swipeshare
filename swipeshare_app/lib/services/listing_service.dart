@@ -41,6 +41,18 @@ class ListingService extends ChangeNotifier {
     return _fireStore.collection('listings').snapshots();
   }
 
+  //GET USER'S LISTINGS
+  Stream<QuerySnapshot> getUserListings() {
+    final String currentUserId = _firebaseAuth.currentUser!.uid;
+
+    return _fireStore
+        .collection('listings')
+        .where(
+              Filter('sellerId', isEqualTo: currentUserId),
+        )
+        .snapshots();
+  }
+
   //DELETE LISTING
   Future<void> deleteListing(String docId) async {
     await _fireStore.collection('listings').doc(docId).delete();

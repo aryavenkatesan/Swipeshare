@@ -111,6 +111,13 @@ class AppTextStyles {
     color: AppColors.primaryText,
     decoration: TextDecoration.none,
   );
+
+  static final listingText = GoogleFonts.instrumentSans(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    color: const Color.fromARGB(171, 27, 27, 27),
+    decoration: TextDecoration.none,
+  );
 }
 
 // Legacy exports for backward compatibility
