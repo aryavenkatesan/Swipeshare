@@ -41,40 +41,6 @@ class NotificationService {
 
   static final NotificationService instance = NotificationService._();
 
-  /// Updates the app badge count based on order notification fields
-  Future<void> updateBadgeCount() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-
-    try {
-      if (!await AppBadgePlus.isSupported()) {
-        return;
-      }
-    } on Exception {
-      return;
-    }
-
-    final buyerOrders = _firestore
-        .collection('orders')
-        .where('buyerId', isEqualTo: user.uid)
-        .where('buyerHasNotifs', isEqualTo: true);
-
-    final sellerOrders = _firestore
-        .collection('orders')
-        .where('sellerId', isEqualTo: user.uid)
-        .where('sellerHasNotifs', isEqualTo: true);
-
-    final [buyerSnapshots, sellerSnapshots] = await Future.wait([
-      buyerOrders.get(),
-      sellerOrders.get(),
-    ]);
-
-    final totalUnread =
-        buyerSnapshots.docs.length + sellerSnapshots.docs.length;
-
-    AppBadgePlus.updateBadge(totalUnread);
-  }
-
   /// Configures notification service for app to funciton properly
   Future<void> initialize(GlobalKey<NavigatorState> navigatorKey) async {
     debugPrint("Initializing Notification Service");
@@ -92,26 +58,9 @@ class NotificationService {
       return;
     }
 
-    if (_auth.currentUser == null) {
-      debugPrint("No authenticated user found for notifications");
-      return;
-    }
+    _refreshFcmToken(_auth.currentUser);
 
-    try {
-      final token = await _messaging.getToken();
-      debugPrint("FCM Token: $token");
-      await _saveTokenToFirestore(token);
-    } catch (e) {
-      debugPrint("Error fetching FCM token: $e");
-      return;
-    }
-
-    _auth.authStateChanges().listen((user) async {
-      if (user != null) {
-        final token = await _messaging.getToken();
-        await _saveTokenToFirestore(token);
-      }
-    });
+    _auth.authStateChanges().listen(_refreshFcmToken);
 
     _messaging.onTokenRefresh.listen(_saveTokenToFirestore);
 
@@ -132,19 +81,25 @@ class NotificationService {
 
   /// Removes the FCM token from Firestore
   Future<void> removeTokenFromFirestore() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    await _saveTokenToFirestore(null);
+  }
 
-    await _firestore.collection('users').doc(user.uid).update({
-      'fcmToken': FieldValue.delete(),
-      'lastTokenUpdate': FieldValue.serverTimestamp(),
-    });
+  /// Refreshes the FCM token and saves it to Firestore
+  Future<void> _refreshFcmToken(User? currentUser) async {
+    if (currentUser == null) return;
+
+    try {
+      final token = await _messaging.getToken();
+      debugPrint("Refreshed FCM Token: $token");
+      await _saveTokenToFirestore(token);
+    } catch (e) {
+      await removeTokenFromFirestore();
+      debugPrint("Error refreshing FCM token: $e");
+    }
   }
 
   /// Saves the FCM token to Firestore under the user's document
   Future<void> _saveTokenToFirestore(String? token) async {
-    if (token == null) return;
-
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -152,7 +107,7 @@ class NotificationService {
       'fcmToken': token,
       'lastTokenUpdate': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
-    debugPrint("Saved FCM token to firestore");
+    debugPrint("Updated Firestore FCM token to $token");
   }
 
   /// Handles incoming messages when the app is in the foreground
@@ -183,7 +138,7 @@ class NotificationService {
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.blue,
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 5),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
             label: 'View',
@@ -239,5 +194,39 @@ class NotificationService {
     _navigatorKey!.currentState!.push(
       MaterialPageRoute(builder: (context) => ChatPage(orderData: orderData)),
     );
+  }
+
+  /// Updates the app badge count based on order notification fields
+  Future<void> updateBadgeCount() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      if (!await AppBadgePlus.isSupported()) {
+        return;
+      }
+    } on Exception {
+      return;
+    }
+
+    final buyerOrders = _firestore
+        .collection('orders')
+        .where('buyerId', isEqualTo: user.uid)
+        .where('buyerHasNotifs', isEqualTo: true);
+
+    final sellerOrders = _firestore
+        .collection('orders')
+        .where('sellerId', isEqualTo: user.uid)
+        .where('sellerHasNotifs', isEqualTo: true);
+
+    final [buyerSnapshots, sellerSnapshots] = await Future.wait([
+      buyerOrders.get(),
+      sellerOrders.get(),
+    ]);
+
+    final totalUnread =
+        buyerSnapshots.docs.length + sellerSnapshots.docs.length;
+
+    AppBadgePlus.updateBadge(totalUnread);
   }
 }
