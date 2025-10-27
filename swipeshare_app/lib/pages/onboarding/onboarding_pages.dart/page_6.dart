@@ -1,39 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 
-class Page2 extends StatelessWidget {
-  const Page2({super.key});
+class Page6 extends StatelessWidget {
+  final bool tutorial;
+  const Page6({super.key, required this.tutorial});
 
   @override
   Widget build(BuildContext context) {
     final double vh = MediaQuery.of(context).size.height;
+    final double vw = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: (vh * 0.1)),
-          // The Row is no longer needed
+          SizedBox(height: vh > 767 ? (vh * 0.09) : (vh * 0.04)),
           Image.asset(
-            'assets/onboarding2.png',
-            // 1. Set the width to the full screen width
-            width: vh,
-
-            // 2. Tell the image to scale to fill that width,
-            // maintaining its aspect ratio.
+            'assets/onboarding6.png',
+            width: vw * 0.8,
             fit: BoxFit.fitWidth,
           ),
 
-          SizedBox(height: vh > 767 ? 100 : 50),
+          SizedBox(height: vh > 767 ? 100 : 40),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
             child: Column(
               children: [
-                Text("Buy Swipes", style: AppTextStyles.subHeaderStyle),
-                SizedBox(height: vh * 0.02),
                 Text(
-                  "If you want to be swiped in, select your availability and connect with a seller!",
+                  tutorial ? "Don't Forget!" : "Let's get started!",
+                  style: AppTextStyles.subHeaderStyle,
+                ),
+
+                SizedBox(height: vh * 0.02),
+
+                Text(
+                  tutorial
+                      ? "Whenever using the app, always make sure to be courteous and respectful!"
+                      : "Please check your email inbox for the verification email- it may have gone to spam if you don't see it initially!",
                   style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),

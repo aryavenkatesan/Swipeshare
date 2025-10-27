@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
 

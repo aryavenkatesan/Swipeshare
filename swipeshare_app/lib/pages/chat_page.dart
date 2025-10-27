@@ -5,7 +5,6 @@ import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/components/my_text_field.dart';
-import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/components/my_text_field.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/models/meal_order.dart';

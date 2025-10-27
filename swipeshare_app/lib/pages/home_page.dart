@@ -8,11 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
-<<<<<<< HEAD
 import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/components/home_screen/active_listing_card.dart';
-=======
->>>>>>> main
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
