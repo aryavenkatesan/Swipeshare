@@ -14,7 +14,7 @@ class Page1 extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: (vh * 0.03)),
+          SizedBox(height: vh > 767 ? (vh * 0.03) : 0),
           // The Row is no longer needed
           Image.asset(
             'assets/onboarding1.png',
