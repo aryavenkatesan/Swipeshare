@@ -50,8 +50,7 @@ class Listing {
       diningHall: map['diningHall'] ?? '',
       timeStart: Listing.minutesToTOD(map['timeStart']),
       timeEnd: Listing.minutesToTOD(map['timeEnd']),
-      transactionDate:
-          stringToDateTime(map['transactionDate']) ?? DateTime.now(),
+      transactionDate: map['transactionDate'].toDate(),
       sellerRating: map['sellerRating'],
       paymentTypes: [for (var item in map['paymentTypes']) item as String],
     );

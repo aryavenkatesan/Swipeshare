@@ -51,7 +51,7 @@ class OrderService extends ChangeNotifier {
 
       //send message from system
       final String message =
-          'system message \n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
+          "Welcome to the chat room! Feel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) \n Remember swipes are \$6 and should be paid before the seller swipes you in. \n Happy Swiping!";
       _chatService.systemMessage(message, customDocId);
     } catch (e, s) {
       // Handle the error and stack trace

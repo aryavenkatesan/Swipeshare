@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
@@ -147,7 +148,10 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   }
 
   /// Navigates to listing selection page with current selections
-  void _navigateToListingSelection() {
+  void _navigateToListingSelection() async {
+    if (await Haptics.canVibrate()) {
+      Haptics.vibrate(HapticsType.heavy);
+    }
     Navigator.push(
       context,
       MaterialPageRoute(

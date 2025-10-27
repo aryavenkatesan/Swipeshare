@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
@@ -27,6 +28,9 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
         (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
             referralController.text != '')) {
+      if (await Haptics.canVibrate()) {
+        Haptics.vibrate(HapticsType.error);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -38,6 +42,9 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (passwordController.text != confirmPasswordController.text) {
+      if (await Haptics.canVibrate()) {
+        Haptics.vibrate(HapticsType.error);
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Passwords don't match")));
@@ -55,6 +62,9 @@ class _RegisterPageState extends State<RegisterPage> {
         referralController.text,
       );
       if (mounted) {
+        if (await Haptics.canVibrate()) {
+          Haptics.vibrate(HapticsType.medium);
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => OnboardingCarousel()),

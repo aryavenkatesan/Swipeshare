@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
@@ -27,7 +28,10 @@ class DiningHallsComponent extends StatelessWidget {
               horizontal: BuySwipesConstants.smallSpacing,
             ),
             child: GestureDetector(
-              onTap: () {
+              onTap: () async {
+                if (await Haptics.canVibrate()) {
+                  Haptics.vibrate(HapticsType.selection);
+                }
                 // If "sell" mode and this location is already selected, allow deselection
                 // If "sell" mode and a different location is selected, this will replace it
                 // If "buy" mode, toggle normally (allow multiple)

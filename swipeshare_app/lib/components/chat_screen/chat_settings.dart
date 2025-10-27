@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat/chat_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -80,7 +81,7 @@ class ChatSettingsMenu extends StatelessWidget {
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (reportController.text.isNotEmpty) {
                   chatService.reportUser(
                     currentUserId,
@@ -89,6 +90,9 @@ class ChatSettingsMenu extends StatelessWidget {
                     receiverUserName,
                     reportController.text,
                   );
+                  if (await Haptics.canVibrate()) {
+                    Haptics.vibrate(HapticsType.heavy);
+                  }
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -129,7 +133,10 @@ class ChatSettingsMenu extends StatelessWidget {
           content: const Text('Are you sure you want to block this User?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                if (await Haptics.canVibrate()) {
+                  Haptics.vibrate(HapticsType.heavy);
+                }
                 UserService().blockUser(orderData);
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -161,7 +168,10 @@ class ChatSettingsMenu extends StatelessWidget {
           content: const Text('Are you sure you want to Delete the Chat?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                if (await Haptics.canVibrate()) {
+                  Haptics.vibrate(HapticsType.heavy);
+                }
                 chatService.deleteChat(orderData);
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();

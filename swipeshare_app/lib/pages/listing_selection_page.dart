@@ -1,3 +1,4 @@
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -90,16 +91,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     final bool isExpanded = _expandedListingId == docId;
 
     // display all listings with a selection location
-    // TODO: add PaymentType filtering here
-    // TODO: add a date selector and only display the listings on that date
-    // TODO: add a filter to stop people from seeing their own posts (compare uid of current user to listing sellerID)
-    if (widget.locations.contains(listing['diningHall']) &&
-        _auth.currentUser!.uid != listing['sellerId'] &&
-        widget.date.toIso8601String() != listing['transactionDate']) {
+    if (true) {
       return GestureDetector(
-        // change this from a listTile to a custom componenent that will take arguments and spit out smth beautiful
-        // need to add ratings somehow, probably easiest to do it through the listing itself with another content field
-        // TODO: find overlap% between the buyer and possible sellers
         onTap: () {
           setState(() {
             // Toggle expansion - if it's already expanded, collapse it
@@ -131,7 +124,6 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                     Expanded(
                       child: Row(
                         children: [
-                          // Left section: dining hall + time range
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -152,8 +144,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                             ),
                           ),
 
-                          Spacer(), // 👈 pushes the rating to the far right
-                          // Right section: rating
+                          Spacer(),
+
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -221,8 +213,12 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: () =>
-                                    _handleListingSelection(docId, listing),
+                                onPressed: () async {
+                                  if (await Haptics.canVibrate()) {
+                                    Haptics.vibrate(HapticsType.success);
+                                  }
+                                  _handleListingSelection(docId, listing);
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color.fromARGB(
                                     192,
@@ -267,12 +263,12 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         listing['sellerName'],
         listing['sellerRating'],
       );
-      if (mounted){
-        ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Order was placed successfully!')));
-      Navigator.pop(context);
-      Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Order was placed successfully!')),
+        );
+        Navigator.pop(context);
+        Navigator.pop(context);
       }
     } catch (e, s) {
       // Handle the error and stack trace
@@ -280,12 +276,13 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       print('Stack: $s');
       // You might want to show a SnackBar or dialog to inform the user
       if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to process order: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to process order: $e')));
       }
     }
   }
+
   Filter _buildListingsFilter() {
     final startDate = DateTime(
       widget.date.year,

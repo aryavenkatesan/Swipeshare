@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
@@ -178,7 +179,10 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
     );
   }
 
-  void _togglePaymentOption(String option) {
+  void _togglePaymentOption(String option) async {
+    if (await Haptics.canVibrate()) {
+      Haptics.vibrate(HapticsType.selection);
+    }
     final currentOptions = List<String>.from(widget.selectedPaymentOptions);
     if (currentOptions.contains(option)) {
       currentOptions.remove(option);

@@ -1,3 +1,4 @@
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
@@ -321,7 +322,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: PostListingButton(
-        onPressed: () {
+        onPressed: () async {
           listingService.postListing(
             widget.location,
             widget.startTime,
@@ -329,6 +330,9 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
             widget.date,
             widget.paymentOptions,
           );
+          if (await Haptics.canVibrate()) {
+            Haptics.vibrate(HapticsType.success);
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Sucessfully Placed Listing!')),
           );

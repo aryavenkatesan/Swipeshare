@@ -1,3 +1,4 @@
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,8 +24,11 @@ class ActiveListingCard extends StatelessWidget {
       padding: const EdgeInsets.only(right: 12),
       child: CupertinoButton(
         padding: EdgeInsets.zero,
-        onPressed: () {
+        onPressed: () async {
           //popup for delete
+          if (await Haptics.canVibrate()) {
+            Haptics.vibrate(HapticsType.light);
+          }
           _showDeleteDialog(context);
         },
         child: Container(
@@ -65,8 +69,11 @@ class ActiveListingCard extends StatelessWidget {
           content: const Text('Are you sure you want to Delete this Listing?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 _listingService.deleteListing(listingId);
+                if (await Haptics.canVibrate()) {
+                  Haptics.vibrate(HapticsType.heavy);
+                }
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

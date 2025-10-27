@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -121,6 +122,11 @@ class _RatingsPageState extends State<RatingsPage> {
 
                     //do something with the feedback text
 
+                    //haptic feedback
+                    if (await Haptics.canVibrate()) {
+                      Haptics.vibrate(HapticsType.success);
+                    }
+
                     //navigate back to the homescreen
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
@@ -152,7 +158,10 @@ class _RatingsPageState extends State<RatingsPage> {
     final isSelected = selectedFace == value;
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        if (await Haptics.canVibrate()) {
+          Haptics.vibrate(HapticsType.light);
+        }
         setState(() {
           selectedFace = value;
         });

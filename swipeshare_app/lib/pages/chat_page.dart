@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/components/time_formatter.dart';
@@ -72,6 +73,9 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void sendMessage() async {
+    if (await Haptics.canVibrate()) {
+      Haptics.vibrate(HapticsType.medium);
+    }
     if (_messageController.text.isNotEmpty) {
       await _chatService.sendMessage(
         widget.receiverUserID,
@@ -443,6 +447,7 @@ class _ChatPageState extends State<ChatPage> {
             Text(data['senderName']),
             const SizedBox(height: 5),
             ChatBubble(message: (data['message']), alignment: alignment),
+            SizedBox(height: 5),
           ],
         ),
       ),

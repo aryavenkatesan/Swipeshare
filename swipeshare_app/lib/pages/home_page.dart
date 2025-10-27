@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
@@ -131,6 +132,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final double vh = MediaQuery.of(context).size.height;
+    final double vw = MediaQuery.of(context).size.width;
+
     // Show logo while loading
     if (isLoading) {
       return Scaffold(
@@ -165,9 +169,9 @@ class _HomeScreenState extends State<HomeScreen>
         body: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.only(
-              right: 30.0,
-              left: 30.0,
+            padding: EdgeInsets.only(
+              right: vw > 400 ? 30.0 : 18.0,
+              left: vw > 400 ? 30.0 : 18.0,
               bottom: 12.0,
             ),
             child: SmartRefresher(
@@ -224,7 +228,10 @@ class _HomeScreenState extends State<HomeScreen>
                           child: PlaceOrderCard(
                             label: "Buy",
                             iconPath: "assets/fork_and_knife.svg",
-                            onTap: () {
+                            onTap: () async {
+                              if (await Haptics.canVibrate()) {
+                                Haptics.vibrate(HapticsType.light);
+                              }
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -239,7 +246,10 @@ class _HomeScreenState extends State<HomeScreen>
                           child: PlaceOrderCard(
                             label: "Sell",
                             iconPath: "assets/wallet.svg",
-                            onTap: () {
+                            onTap: () async {
+                              if (await Haptics.canVibrate()) {
+                                Haptics.vibrate(HapticsType.light);
+                              }
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

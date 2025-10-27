@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:provider/provider.dart';
 
@@ -28,7 +29,13 @@ class _LoginPageState extends State<LoginPage> {
         emailController.text,
         passwordController.text,
       );
+      if (await Haptics.canVibrate()) {
+        Haptics.vibrate(HapticsType.medium);
+      }
     } catch (e) {
+      if (await Haptics.canVibrate()) {
+        Haptics.vibrate(HapticsType.error);
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -152,7 +159,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton(
-                            onPressed: () => signIn(),
+                            onPressed: () async {
+                              signIn();
+                            },
                             child: const Center(child: Text("Log In")),
                           ),
                           const SizedBox(height: 8),
