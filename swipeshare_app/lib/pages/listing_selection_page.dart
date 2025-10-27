@@ -5,6 +5,7 @@ import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 
@@ -35,10 +36,15 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
 
   String? _expandedListingId;
 
-  // ⭐ Cache the listings data in state
+  // Cache the listings data in state
   List<DocumentSnapshot>? _cachedListings;
   bool _isLoading = true;
   String? _error;
+
+  // Pull to refresh controller
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
 
   @override
   void initState() {
@@ -46,7 +52,13 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     _loadListings();
   }
 
-  // ⭐ Load listings once on init
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  // Load listings once on init
   Future<void> _loadListings() async {
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -58,6 +70,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         setState(() {
           _cachedListings = snapshot.docs;
           _isLoading = false;
+          _error = null;
         });
         debugPrint("Fetched ${snapshot.docs.length} listings");
       }
@@ -72,15 +85,42 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     }
   }
 
+  // Pull to refresh handler
+  void _onRefresh() async {
+    // Add a small delay for better UX
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Reload listings
+    await _loadListings();
+
+    // Complete the refresh
+    if (mounted) {
+      _refreshController.refreshCompleted();
+    }
+  }
+
+  void _onLoading() async {
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 500));
+    // if failed,use loadFailed(),if no data return,use LoadNodata()
+    _refreshController.loadComplete();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("View Listings")),
+      appBar: AppBar(
+        title: const Text("View Listings"),
+        forceMaterialTransparency: true,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0.0,
+      ),
+
       body: _buildBody(),
     );
   }
 
-  // ⭐ Build body based on cached state (no StreamBuilder rebuilds)
+  // Build body based on cached state (no StreamBuilder rebuilds)
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -91,23 +131,75 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     }
 
     if (_cachedListings == null || _cachedListings!.isEmpty) {
-      return const Center(child: Text('No listings found'));
+      return SmartRefresher(
+        controller: _refreshController,
+        onRefresh: _onRefresh,
+        onLoading: _onLoading,
+        header: const WaterDropHeader(),
+        footer: CustomFooter(
+          builder: (BuildContext context, LoadStatus? mode) {
+            return const Text("");
+          },
+        ),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No listings found',
+                        style: HeaderStyle.copyWith(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Pull down to refresh',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return GestureDetector(
-      onTap: () {
-        if (_expandedListingId != null) {
-          setState(() {
-            _expandedListingId = null;
-          });
-        }
-      },
+    return SmartRefresher(
+      controller: _refreshController,
+      onRefresh: _onRefresh,
+      onLoading: _onLoading,
+      header: const WaterDropHeader(),
+      footer: CustomFooter(
+        builder: (BuildContext context, LoadStatus? mode) {
+          return const Text("");
+        },
+      ),
       child: ListView.builder(
         itemCount: _cachedListings!.length,
-        physics: const ClampingScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         itemBuilder: (context, index) {
           final doc = _cachedListings![index];
-          return _buildListingItem(doc, ValueKey(doc.id));
+          return GestureDetector(
+            // Move the collapse-on-tap to each item
+            onTap: () {
+              if (_expandedListingId != null && _expandedListingId != doc.id) {
+                setState(() {
+                  _expandedListingId = null;
+                });
+              }
+            },
+            behavior: HitTestBehavior.translucent,
+            child: _buildListingItem(doc, ValueKey(doc.id)),
+          );
         },
       ),
     );
@@ -289,19 +381,11 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                               }
                               _handleListingSelection(docId, listing);
                             },
-                            child: Flexible(
-                              child: Text(
-                                "Select This Listing",
-                                style: AppTextStyles.viewListingSubText
-                                    .copyWith(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        61,
-                                        61,
-                                        61,
-                                      ),
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                            child: Text(
+                              "Select This Listing",
+                              style: AppTextStyles.viewListingSubText.copyWith(
+                                color: const Color.fromARGB(255, 61, 61, 61),
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ),
