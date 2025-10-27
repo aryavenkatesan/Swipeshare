@@ -29,26 +29,32 @@ class SwipeCountComponent extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Number of Swipes',
-                style: AppTextStyles.bodyText.copyWith(
-                  fontWeight: FontWeight.w600,
+          // By wrapping the Column in Expanded, it fills the available space
+          // and forces the Text widgets inside it to wrap.
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Number of Swipes',
+                  style: AppTextStyles.bodyText.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                enabled
-                    ? 'How many swipes to sell?'
-                    : 'Feature under construction :)',
-                style: AppTextStyles.validationText.copyWith(
-                  color: AppColors.subText,
+                const SizedBox(height: 2),
+                Text(
+                  enabled
+                      ? 'How many swipes to sell?'
+                      : 'Feature under construction :)',
+                  style: AppTextStyles.validationText.copyWith(
+                    color: AppColors.subText,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+
+          // This Row takes only the space it needs for the buttons.
           Row(
             children: [
               IconButton(

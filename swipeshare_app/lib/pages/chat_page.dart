@@ -227,6 +227,8 @@ class _ChatPageState extends State<ChatPage> {
   //build message item
   Widget _buildMessageItem(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double horizontalPadding = screenWidth * 0.10;
 
     //check if it's a system message
     if (data['senderId'] == "system") {
@@ -234,7 +236,7 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           SizedBox(height: 20),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 80.0),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Container(
               alignment: Alignment.center,
               child: Text(

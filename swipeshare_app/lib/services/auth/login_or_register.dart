@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/pages/onboarding/login_page.dart';
-import 'package:swipeshare_app/pages/register_page.dart';
+import 'package:swipeshare_app/pages/onboarding/signup_page.dart';
 
 class LoginOrRegister extends StatefulWidget {
   const LoginOrRegister({super.key});

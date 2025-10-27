@@ -115,7 +115,6 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
           ),
           child: Column(
             children: [
-              // Main list tile content
               Padding(
                 padding: EdgeInsets.all(16),
                 child: Row(
@@ -124,7 +123,6 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                     Expanded(
                       child: Row(
                         children: [
-                          // Left section: dining hall + time range
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -133,8 +131,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                               ),
                               children: [
                                 TextSpan(
-                                  text:
-                                      "${listing['diningHall']}", // dining hall
+                                  text: "${listing['diningHall']}",
                                   style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 TextSpan(
@@ -145,8 +142,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                             ),
                           ),
 
-                          Spacer(), // 👈 pushes the rating to the far right
-                          // Right section: rating
+                          Spacer(),
+
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -174,9 +171,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                 ),
               ),
 
-              // Expandable dropdown content
               AnimatedSize(
-                duration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 1000),
                 curve: Curves.easeInOut,
                 child: isExpanded
                     ? Container(
@@ -261,13 +257,16 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         listing['sellerName'],
         listing['sellerRating'],
       );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Order was placed successfully!')));
+
       Navigator.pop(context);
       Navigator.pop(context);
     } catch (e, s) {
-      // Handle the error and stack trace
       print('Error: $e');
       print('Stack: $s');
-      // You might want to show a SnackBar or dialog to inform the user
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to process order: $e')));

@@ -38,9 +38,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // This property is true by default, which is what we want
+      // when using a SingleChildScrollView.
+      // resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Gradient background
+          // Gradient background (remains fixed)
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -57,95 +60,117 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // Frosted Glass Card
+          // This makes the card scrollable when the keyboard appears
           Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                child: Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.symmetric(horizontal: 24),
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Login",
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
+            child: SingleChildScrollView(
+              //scrollview is important so when the onscreen keyboard comes up, the app doesn't blow up
+              padding: const EdgeInsets.symmetric(vertical: 40.0),
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                    child: Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.symmetric(horizontal: 24),
+                      padding: EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Enter your email and password to log in.",
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                      const SizedBox(height: 24),
-                      TextField(
-                        controller: emailController,
-                        decoration: const InputDecoration(hintText: 'Email'),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: passwordController,
-                        decoration: const InputDecoration(hintText: 'Password'),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    rememberMe = value ?? false;
-                                  });
-                                },
-                              ),
-                              const Text("Remember me"),
-                            ],
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              //TODO: Forgot Password
-                            },
-                            child: const Text("Forgot Password?"),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () => signIn(),
-                        child: const Center(child: Text("Log In")),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Login",
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Enter your email and password to log in.",
+                            style: TextStyle(color: Colors.black87),
+                            textAlign: TextAlign.center, // Good for aesthetics
+                          ),
+                          const SizedBox(height: 24),
+                          TextField(
+                            controller: emailController,
+                            decoration: const InputDecoration(
+                              hintText: 'Email',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: passwordController,
+                            decoration: const InputDecoration(
+                              hintText: 'Password',
+                            ),
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: rememberMe,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        rememberMe = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                  const Text("Remember me"),
+                                ],
+                              ),
+                              Flexible(
+                                // Using Flexible is better here
+                                child: TextButton(
+                                  onPressed: () {
+                                    //TODO: Forgot Password
+                                  },
+                                  child: const Text(
+                                    "Forgot Password?",
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () => signIn(),
+                            child: const Center(child: Text("Log In")),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Or",
+                            style: TextStyle(color: Colors.black45),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: widget.onTap,
+                            child: const Text(
+                              "Register Now",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      const Text("Or", style: TextStyle(color: Colors.black45)),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: widget.onTap,
-                        child: const Text(
-                          "Register Now",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
