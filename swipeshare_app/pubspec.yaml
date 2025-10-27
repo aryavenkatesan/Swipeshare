@@ -45,6 +45,7 @@ dependencies:
   firebase_messaging: ^15.0.0
   app_badge_plus: ^1.2.3
   haptic_feedback: ^0.5.1+1
+  profanity_filter: ^2.0.0
 
 dev_dependencies:
   flutter_test:

@@ -13,20 +13,33 @@ class AuthGate extends StatelessWidget {
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // user is logged in
-          if (snapshot.hasData) {
-            if (FirebaseAuth.instance.currentUser!.emailVerified) {
-              return const HomeScreen();
-            } else {
-              return const OnboardingCarousel();
-            }
+          // Show loading while checking auth state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
           }
-          //user is NOT logged in
-          else {
-            return const LoginOrRegister();
-          }
+
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: _buildCurrentScreen(snapshot.data),
+          );
         },
       ),
     );
+  }
+
+  Widget _buildCurrentScreen(User? user) {
+    if (user != null) {
+      if (user.emailVerified) {
+        return const HomeScreen(key: ValueKey('home'));
+      } else {
+        return const OnboardingCarousel(key: ValueKey('onboarding'));
+      }
+    }
+    return const LoginOrRegister(key: ValueKey('auth'));
   }
 }

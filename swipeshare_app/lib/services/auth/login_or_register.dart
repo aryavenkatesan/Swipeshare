@@ -10,10 +10,8 @@ class LoginOrRegister extends StatefulWidget {
 }
 
 class _LoginOrRegisterState extends State<LoginOrRegister> {
-  // initially show the login page
   bool showLoginPage = true;
 
-  // toggle between login and register pages
   void togglePages() {
     setState(() {
       showLoginPage = !showLoginPage;
@@ -22,10 +20,13 @@ class _LoginOrRegisterState extends State<LoginOrRegister> {
 
   @override
   Widget build(BuildContext context) {
-    if (showLoginPage) {
-      return LoginPage(onTap: togglePages);
-    } else {
-      return RegisterPage(onTap: togglePages);
-    }
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      switchInCurve: Curves.easeInOutCubic,
+      switchOutCurve: Curves.easeInOutCubic,
+      child: showLoginPage
+          ? LoginPage(key: const ValueKey('login'), onTap: togglePages)
+          : RegisterPage(key: const ValueKey('register'), onTap: togglePages),
+    );
   }
 }

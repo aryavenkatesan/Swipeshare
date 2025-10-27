@@ -10,6 +10,7 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
+import 'package:swipeshare_app/pages/onboarding/signup_page.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/email_verification_service.dart';
 
@@ -43,6 +44,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Color(0xFFFEF8FF),
         title: Text("Hello!"),
         actions: [

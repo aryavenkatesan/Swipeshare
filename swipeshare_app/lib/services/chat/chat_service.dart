@@ -1,3 +1,4 @@
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
@@ -8,6 +9,7 @@ import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/profanity_utils.dart';
 
 class ChatService extends ChangeNotifier {
   //get instance of auth and firestore
