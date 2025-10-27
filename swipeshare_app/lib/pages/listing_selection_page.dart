@@ -1,18 +1,19 @@
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
-import 'package:swipeshare_app/services/user_service.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
   final DateTime date;
   final TimeOfDay startTime;
   final TimeOfDay endTime;
+  final List<String> paymentTypes;
 
   const ListingSelectionPage({
     super.key,
@@ -20,6 +21,7 @@ class ListingSelectionPage extends StatefulWidget {
     required this.date,
     required this.startTime,
     required this.endTime,
+    required this.paymentTypes,
   });
 
   @override
@@ -27,7 +29,6 @@ class ListingSelectionPage extends StatefulWidget {
 }
 
 class _ListingSelectionPageState extends State<ListingSelectionPage> {
-  // instance of auth
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final _listingService = ListingService();
   final _orderService = OrderService();
@@ -45,35 +46,41 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
             _expandedListingId = null;
           });
         },
-        child: _buildUserList(),
+        child: _buildItemList(),
       ),
     );
   }
 
-  // build a list of users except for the current logged in user
-  Widget _buildUserList() {
+  // build a list of listings except for the current logged in user
+  Widget _buildItemList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('listings').snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('listings')
+          .where(_buildListingsFilter())
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Text('error');
+          debugPrint("Error fetching listings: ${snapshot.error}");
+          return Text('Error: ${snapshot.error}');
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text('loading..');
         }
 
+        debugPrint("Fetched ${snapshot.data!.docs.length} listings");
+
         return ListView(
           children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildUserListItem(doc))
+              .map<Widget>((doc) => _buildListingItem(doc))
               .toList(),
         );
       },
     );
   }
 
-  // build individual user list items
-  Widget _buildUserListItem(DocumentSnapshot document) {
+  // build individual listing items
+  Widget _buildListingItem(DocumentSnapshot document) {
     Map<String, dynamic> listing = document.data()! as Map<String, dynamic>;
     final TimeOfDay listingStartTime = Listing.minutesToTOD(
       listing['timeStart'],
@@ -115,6 +122,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
           ),
           child: Column(
             children: [
+              // Main list tile content
               Padding(
                 padding: EdgeInsets.all(16),
                 child: Row(
@@ -123,6 +131,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                     Expanded(
                       child: Row(
                         children: [
+                          // Left section: dining hall + time range
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -131,19 +140,20 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                               ),
                               children: [
                                 TextSpan(
-                                  text: "${listing['diningHall']}",
+                                  text:
+                                      "${listing['diningHall']}", // dining hall
                                   style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 TextSpan(
                                   text:
-                                      " @ ${TimeFormatter.formatTimeOfDay(listingStartTime.toString())} to ${TimeFormatter.formatTimeOfDay(listingEndTime.toString())}",
+                                      " @ ${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')}",
                                 ),
                               ],
                             ),
                           ),
 
-                          Spacer(),
-
+                          Spacer(), // 👈 pushes the rating to the far right
+                          // Right section: rating
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -153,8 +163,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                               children: [
                                 TextSpan(text: "⭑ "),
                                 TextSpan(
-                                  text:
-                                      "${listing['sellerRating'].toStringAsFixed(2)}  ",
+                                  text: "${listing['sellerRating']}  ",
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -171,8 +180,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                 ),
               ),
 
+              // Expandable dropdown content
               AnimatedSize(
-                duration: const Duration(milliseconds: 1000),
+                duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
                 child: isExpanded
                     ? Container(
@@ -257,19 +267,64 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         listing['sellerName'],
         listing['sellerRating'],
       );
-      ScaffoldMessenger.of(
+      if (mounted){
+        ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Order was placed successfully!')));
-
       Navigator.pop(context);
       Navigator.pop(context);
+      }
     } catch (e, s) {
+      // Handle the error and stack trace
       print('Error: $e');
       print('Stack: $s');
-
+      // You might want to show a SnackBar or dialog to inform the user
+      if (mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to process order: $e')));
+      }
     }
+  }
+  Filter _buildListingsFilter() {
+    final startDate = DateTime(
+      widget.date.year,
+      widget.date.month,
+      widget.date.day,
+    );
+
+    final endDate = DateTime(
+      widget.date.year,
+      widget.date.month,
+      widget.date.day + 1,
+    );
+
+    return Filter.and(
+      Filter('diningHall', whereIn: widget.locations),
+      Filter('sellerId', isNotEqualTo: _auth.currentUser!.uid),
+      // Filter('paymentTypes', arrayContainsAny: widget.paymentTypes),
+      // Date filtering
+      Filter(
+        'transactionDate',
+        isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+      ),
+      Filter('transactionDate', isLessThan: Timestamp.fromDate(endDate)),
+      // Time overlap filtering
+      Filter(
+        'timeStart',
+        isLessThanOrEqualTo: Listing.toMinutes(widget.endTime),
+      ),
+      Filter(
+        'timeEnd',
+        isGreaterThanOrEqualTo: Listing.toMinutes(widget.startTime),
+      ),
+    );
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
   }
 }

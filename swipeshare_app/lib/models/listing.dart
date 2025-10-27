@@ -37,8 +37,7 @@ class Listing {
       'diningHall': diningHall,
       'timeStart': Listing.toMinutes(timeStart),
       'timeEnd': Listing.toMinutes(timeEnd),
-      'transactionDate': transactionDate
-          .toIso8601String(), //better to have as string or no?
+      'transactionDate': Timestamp.fromDate(transactionDate),
       'sellerRating': sellerRating,
       'paymentTypes': paymentTypes,
     };

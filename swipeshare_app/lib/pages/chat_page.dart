@@ -1,28 +1,33 @@
-import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/components/time_formatter.dart';
-import 'package:swipeshare_app/components/my_text_field.dart'; // Add this import
+import 'package:swipeshare_app/components/my_text_field.dart';
+import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
+import 'package:swipeshare_app/components/my_text_field.dart';
 import 'package:swipeshare_app/components/star_container.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/pages/ratings_page.dart';
 import 'package:swipeshare_app/services/chat/chat_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:swipeshare_app/services/notification_service.dart';
 
 class ChatPage extends StatefulWidget {
-  final String receiverUserName;
-  final String receiverUserID;
   final MealOrder orderData;
-  const ChatPage({
-    super.key,
-    required this.receiverUserName,
-    required this.receiverUserID,
-    required this.orderData,
-  });
+
+  const ChatPage({super.key, required this.orderData});
+
+  String get receiverUserName =>
+      orderData.sellerId == FirebaseAuth.instance.currentUser!.uid
+      ? orderData.buyerName
+      : orderData.sellerName;
+
+  String get receiverUserID =>
+      orderData.sellerId == FirebaseAuth.instance.currentUser!.uid
+      ? orderData.buyerId
+      : orderData.sellerId;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -32,6 +37,40 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final NotificationService _notifService = NotificationService.instance;
+  final ScrollController _scrollController = ScrollController();
+  bool _isFirstLoad = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _notifService.activeChatId = widget.orderData.getRoomName();
+    _chatService
+        .readNotifications(widget.orderData)
+        .then((_) => _notifService.updateBadgeCount());
+  }
+
+  @override
+  void dispose() {
+    _notifService.activeChatId = null;
+    _scrollController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom({bool animate = true}) {
+    if (_scrollController.hasClients) {
+      if (animate) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      } else {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    }
+  }
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -41,6 +80,7 @@ class _ChatPageState extends State<ChatPage> {
         widget.orderData,
       );
       _messageController.clear();
+      _scrollToBottom();
     }
   }
 
@@ -208,14 +248,25 @@ class _ChatPageState extends State<ChatPage> {
       ),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Text("Error" + snapshot.error.toString());
+          return Text("Error: ${snapshot.error}");
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Text("Loading..");
         }
 
+        // Scroll to bottom after messages are loaded
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_isFirstLoad) {
+            _scrollToBottom(animate: false);
+            _isFirstLoad = false;
+          } else {
+            _scrollToBottom(animate: true);
+          }
+        });
+
         return ListView(
+          controller: _scrollController,
           children: snapshot.data!.docs
               .map((document) => _buildMessageItem(document))
               .toList(),
@@ -257,10 +308,7 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
 
-    //check if its a time widget proposal
     if (data['senderId'] == 'time widget') {
-      //use factory method here
-
       Message messageWithDocId = Message.fromFirestore(document);
 
       String statusString = '';
