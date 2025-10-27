@@ -24,15 +24,12 @@ import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
-<<<<<<< HEAD
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
-=======
->>>>>>> main
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
