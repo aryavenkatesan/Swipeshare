@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
@@ -11,7 +12,8 @@ import 'package:swipeshare_app/pages/listing_selection_page.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class BuySwipeScreen extends StatefulWidget {
-  const BuySwipeScreen({super.key});
+  List<String> paymentOptions;
+  BuySwipeScreen({super.key, required this.paymentOptions});
 
   @override
   State<BuySwipeScreen> createState() => _BuySwipeScreenState();
@@ -22,17 +24,6 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay? startTime;
   TimeOfDay? endTime;
-  List<String>? paymentTypes;
-
-  @override
-  void initState() {
-    super.initState();
-    UserService().getCurrentUser().then((userData) {
-      setState(() {
-        paymentTypes = userData?.paymentTypes ?? [];
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,34 +32,52 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
       body: BuySwipesConstants.wrapWithContainer(
         context: context,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            const SizedBox(height: BuySwipesConstants.largeSpacing),
-            DiningHallsComponent(
-              selectedLocations: selectedLocations,
-              onLocationToggle: _toggleLocationSelection,
-              sellOrBuy: "buy",
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: BuySwipesConstants.largeSpacing),
+                    DiningHallsComponent(
+                      selectedLocations: selectedLocations,
+                      onLocationToggle: _toggleLocationSelection,
+                      sellOrBuy: "buy",
+                    ),
+                    const SizedBox(height: BuySwipesConstants.mediumSpacing),
+                    DateSelectorComponent(
+                      selectedDate: selectedDate,
+                      onDateSelected: (date) =>
+                          setState(() => selectedDate = date),
+                    ),
+                    const SizedBox(height: BuySwipesConstants.largeSpacing),
+                    TimePickerComponent(
+                      startTime: startTime,
+                      endTime: endTime,
+                      onStartTimeChanged: (time) =>
+                          setState(() => startTime = time),
+                      onEndTimeChanged: (time) =>
+                          setState(() => endTime = time),
+                    ),
+
+                    const SizedBox(height: BuySwipesConstants.largeSpacing),
+                    PaymentOptionsComponent(
+                      selectedPaymentOptions: widget.paymentOptions,
+                      onPaymentOptionsChanged: (options) =>
+                          setState(() => widget.paymentOptions = options),
+                      fromHomeScreen: false,
+                    ),
+                    const SizedBox(height: BuySwipesConstants.mediumSpacing),
+                    TimePickerValidationComponent(
+                      selectedLocations: selectedLocations,
+                      startTime: startTime,
+                      endTime: endTime,
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: BuySwipesConstants.mediumSpacing),
-            DateSelectorComponent(
-              selectedDate: selectedDate,
-              onDateSelected: (date) => setState(() => selectedDate = date),
-            ),
-            const SizedBox(height: BuySwipesConstants.largeSpacing),
-            TimePickerComponent(
-              startTime: startTime,
-              endTime: endTime,
-              onStartTimeChanged: (time) => setState(() => startTime = time),
-              onEndTimeChanged: (time) => setState(() => endTime = time),
-            ),
-            const SizedBox(height: BuySwipesConstants.mediumSpacing),
-            TimePickerValidationComponent(
-              selectedLocations: selectedLocations,
-              startTime: startTime,
-              endTime: endTime,
-            ),
-            const Spacer(),
             Center(child: _buildFindSellerButton()),
             const SizedBox(height: BuySwipesConstants.mediumSpacing),
           ],
@@ -142,7 +151,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   bool _canProceedToNextScreen() {
     return startTime != null &&
         endTime != null &&
-        paymentTypes != null &&
+        widget.paymentOptions != null &&
         selectedLocations.isNotEmpty &&
         !_isEndTimeBeforeStartTime();
   }
@@ -160,7 +169,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
           date: selectedDate,
           startTime: startTime!,
           endTime: endTime!,
-          paymentTypes: paymentTypes!,
+          paymentTypes: widget.paymentOptions,
         ),
       ),
     );

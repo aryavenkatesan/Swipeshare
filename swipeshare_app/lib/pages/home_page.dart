@@ -235,7 +235,9 @@ class _HomeScreenState extends State<HomeScreen>
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BuySwipeScreen(),
+                                  builder: (context) => BuySwipeScreen(
+                                    paymentOptions: _paymentTypes,
+                                  ),
                                 ),
                               );
                             },
