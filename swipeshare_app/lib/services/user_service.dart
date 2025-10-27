@@ -5,6 +5,7 @@ import 'package:swipeshare_app/models/user.dart';
 
 class UserService {
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   // Get user data once (static)
   Future<UserModel?> getUserData(String uid) async {
@@ -19,6 +20,14 @@ class UserService {
       print('Error fetching user data: $e');
       return null;
     }
+  }
+
+  // Get current logged-in user
+  Future<UserModel?> getCurrentUser() async {
+    final currentUser = _firebaseAuth.currentUser;
+    if (currentUser == null) return null;
+
+    return await getUserData(currentUser.uid);
   }
 
   // Optional: Update user data

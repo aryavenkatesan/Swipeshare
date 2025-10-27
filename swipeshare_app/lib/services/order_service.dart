@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/chat/chat_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -38,6 +37,8 @@ class OrderService extends ChangeNotifier {
       buyerVisibility: true,
       sellerStars: sellerstars,
       buyerStars: currentUserStars,
+      sellerHasNotifs: false,
+      buyerHasNotifs: false,
     );
 
     try {
@@ -77,17 +78,36 @@ class OrderService extends ChangeNotifier {
         .snapshots();
   }
 
+  Future<MealOrder?> getOrderById(String orderId) async {
+    try {
+      DocumentSnapshot doc = await _fireStore
+          .collection('orders')
+          .doc(orderId)
+          .get();
+
+      if (doc.exists) {
+        return MealOrder.fromMap(doc.data() as Map<String, dynamic>);
+      } else {
+        debugPrint('No such order with id: $orderId');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Error fetching order by id: $e');
+      return null;
+    }
+  }
+
   Future<void> updateVisibility(MealOrder orderData, bool deletedChat) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
 
     if (currentUserId == orderData.buyerId) {
       //set buyer visibility to false
       await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
-        {'buyerVisibility': false},
+        {'buyerVisibility': false, 'buyerHasNotifs': false},
       );
     } else {
       await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
-        {'sellerVisibility': false},
+        {'sellerVisibility': false, 'sellerHasNotifs': false},
       );
     }
     if (!deletedChat) {

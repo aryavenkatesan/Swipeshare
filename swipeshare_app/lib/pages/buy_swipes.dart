@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
+import 'package:swipeshare_app/components/colors.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/pages/listing_selection_page.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 
 class BuySwipeScreen extends StatefulWidget {
   const BuySwipeScreen({super.key});
@@ -20,6 +21,17 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay? startTime;
   TimeOfDay? endTime;
+  List<String>? paymentTypes;
+
+  @override
+  void initState() {
+    super.initState();
+    UserService().getCurrentUser().then((userData) {
+      setState(() {
+        paymentTypes = userData?.paymentTypes ?? [];
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +141,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   bool _canProceedToNextScreen() {
     return startTime != null &&
         endTime != null &&
+        paymentTypes != null &&
         selectedLocations.isNotEmpty &&
         !_isEndTimeBeforeStartTime();
   }
@@ -143,6 +156,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
           date: selectedDate,
           startTime: startTime!,
           endTime: endTime!,
+          paymentTypes: paymentTypes!,
         ),
       ),
     );

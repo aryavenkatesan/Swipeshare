@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
-import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
@@ -13,14 +18,8 @@ import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
-import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -67,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
-    _animationController?.dispose();
+    _animationController.dispose();
     _refreshController.dispose();
     super.dispose();
   }
@@ -350,6 +349,7 @@ class _HomeScreenState extends State<HomeScreen>
         // Has orders -> show horizontally scrollable cards
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
           child: Row(
             children: docs.map((doc) => _buildOrderCard(doc)).toList(),
           ),
@@ -361,20 +361,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildOrderCard(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
     MealOrder order = MealOrder.fromMap(data);
-    final String recieverName = userData?.name != order.buyerName
-        ? order.buyerName
-        : order.sellerName;
 
-    return ActiveOrderCard(
-      title: data['diningHall'],
-      time: data['displayTime'] != null
-          ? TimeFormatter.formatTimeOfDay(data['displayTime'])
-          : "TBD",
-      receiverUserID: _auth.currentUser!.uid == data['sellerId']
-          ? data['buyerId']
-          : data['sellerId'],
-      orderData: order,
-      receiverName: recieverName,
-    );
+    return ActiveOrderCard(orderData: order);
   }
 }

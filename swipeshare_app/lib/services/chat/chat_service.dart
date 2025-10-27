@@ -1,9 +1,8 @@
-import 'package:swipeshare_app/components/chat_screen/time_formatter.dart';
-import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
@@ -29,7 +28,7 @@ class ChatService extends ChangeNotifier {
     Message newMessage = Message(
       senderId: currentUserId,
       senderName: currentUserName,
-      receiverID: receiverId,
+      receiverId: receiverId,
       timestamp: timeStamp,
       message: message,
     );
@@ -69,7 +68,7 @@ class ChatService extends ChangeNotifier {
       final String currentUserName = user!.name;
       Message systemMessage = Message(
         message: pickedTimeToString,
-        receiverID: currentUserId, //THIS IS THE SENDER ID!!!
+        receiverId: currentUserId, //THIS IS THE SENDER ID!!!
         senderName: currentUserName,
         senderId: 'time widget',
         timestamp: timeStamp,
@@ -143,7 +142,7 @@ class ChatService extends ChangeNotifier {
     final Timestamp timeStamp = Timestamp.now();
     Message systemMessage = Message(
       message: messageContent,
-      receiverID: 'system',
+      receiverId: 'system',
       senderName: 'system',
       senderId: 'system',
       timestamp: timeStamp,
@@ -165,6 +164,48 @@ class ChatService extends ChangeNotifier {
       OrderService().updateVisibility(orderData, true);
     } catch (e) {
       print('Error deleting user: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> readNotifications(MealOrder orderData) async {
+    try {
+      final String currentUserId = _firebaseAuth.currentUser!.uid;
+
+      if (currentUserId == orderData.buyerId && orderData.buyerHasNotifs) {
+        await _fireStore
+            .collection('orders')
+            .doc(orderData.getRoomName())
+            .update({'buyerHasNotifs': false});
+      } else if (currentUserId == orderData.sellerId &&
+          orderData.sellerHasNotifs) {
+        await _fireStore
+            .collection('orders')
+            .doc(orderData.getRoomName())
+            .update({'sellerHasNotifs': false});
+      }
+    } catch (e) {
+      debugPrint('Error reading notifications: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> readNotificationsById(String orderId) async {
+    try {
+      DocumentSnapshot doc = await _fireStore
+          .collection('orders')
+          .doc(orderId)
+          .get();
+
+      if (doc.exists) {
+        MealOrder orderData = MealOrder.fromMap(
+          doc.data() as Map<String, dynamic>,
+        );
+
+        await readNotifications(orderData);
+      }
+    } catch (e) {
+      debugPrint('Error reading notifications by order id: $e');
       rethrow;
     }
   }
