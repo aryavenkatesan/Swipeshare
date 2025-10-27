@@ -1,11 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 
@@ -36,52 +35,85 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
 
   String? _expandedListingId;
 
+  // ⭐ Cache the listings data in state
+  List<DocumentSnapshot>? _cachedListings;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadListings();
+  }
+
+  // ⭐ Load listings once on init
+  Future<void> _loadListings() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('listings')
+          .where(_buildListingsFilter())
+          .get();
+
+      if (mounted) {
+        setState(() {
+          _cachedListings = snapshot.docs;
+          _isLoading = false;
+        });
+        debugPrint("Fetched ${snapshot.docs.length} listings");
+      }
+    } catch (e) {
+      debugPrint("Error fetching listings: $e");
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("View Listings")),
-      body: GestureDetector(
-        // This will close the dropdown when tapping outside
-        onTap: () {
+      appBar: AppBar(title: const Text("View Listings")),
+      body: _buildBody(),
+    );
+  }
+
+  // ⭐ Build body based on cached state (no StreamBuilder rebuilds)
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(child: Text('Error: $_error'));
+    }
+
+    if (_cachedListings == null || _cachedListings!.isEmpty) {
+      return const Center(child: Text('No listings found'));
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (_expandedListingId != null) {
           setState(() {
             _expandedListingId = null;
           });
+        }
+      },
+      child: ListView.builder(
+        itemCount: _cachedListings!.length,
+        physics: const ClampingScrollPhysics(),
+        itemBuilder: (context, index) {
+          final doc = _cachedListings![index];
+          return _buildListingItem(doc, ValueKey(doc.id));
         },
-        child: _buildItemList(),
       ),
     );
   }
 
-  // build a list of listings except for the current logged in user
-  Widget _buildItemList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('listings')
-          .where(_buildListingsFilter())
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          debugPrint("Error fetching listings: ${snapshot.error}");
-          return Text('Error: ${snapshot.error}');
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text('loading..');
-        }
-
-        debugPrint("Fetched ${snapshot.data!.docs.length} listings");
-
-        return ListView(
-          children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildListingItem(doc))
-              .toList(),
-        );
-      },
-    );
-  }
-
-  // build individual listing items
-  Widget _buildListingItem(DocumentSnapshot document) {
+  Widget _buildListingItem(DocumentSnapshot document, Key key) {
     Map<String, dynamic> listing = document.data()! as Map<String, dynamic>;
     final TimeOfDay listingStartTime = Listing.minutesToTOD(
       listing['timeStart'],
@@ -90,138 +122,187 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     final docId = document.id;
     final bool isExpanded = _expandedListingId == docId;
 
-    // This structure now EXACTLY matches the PaymentOptionsComponent.
-    // 1. The root is an AnimatedContainer.
     return AnimatedContainer(
+      key: key,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: isExpanded ? 2 : 1,
-            blurRadius: isExpanded ? 6 : 3,
-            offset: Offset(0, isExpanded ? 2 : 1),
-          ),
-        ],
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isExpanded ? Colors.black26 : Colors.black12,
+          width: 1,
+        ),
       ),
-      // 2. Its child is a Column containing the header and the expandable content.
       child: Column(
         children: [
-          // 3. The TAPPABLE HEADER is a GestureDetector.
+          // ========== CARD FRONT (Always Visible) ==========
           GestureDetector(
             onTap: () {
               setState(() {
                 _expandedListingId = isExpanded ? null : docId;
               });
             },
-            // This makes the entire padded area tappable, including whitespace.
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black,
+                  // Dining Hall and Star Rating
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "${listing['diningHall']}",
+                          style: HeaderStyle.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        children: [
-                          TextSpan(
-                            text: "${listing['diningHall']}",
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          TextSpan(
-                            text:
-                                " @ ${_formatTime(listingStartTime)} to ${_formatTime(listingEndTime)}",
-                          ),
-                        ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(fontSize: 16, color: Colors.black),
-                      children: [
-                        const TextSpan(text: "⭑ "),
-                        TextSpan(
-                          text:
-                              "${listing['sellerRating'].toStringAsFixed(2)}  ",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          children: [
+                            const TextSpan(text: "⭑ "),
+                            TextSpan(
+                              text: listing['sellerRating'].toStringAsFixed(2),
+                              style: const TextStyle(
+                                color: Color.fromARGB(198, 0, 0, 0),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  // The rotating arrow is inside the tappable header.
-                  AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: const Icon(Icons.expand_more, color: Colors.grey),
+                  const SizedBox(height: 8),
+                  // Time Range
+                  Row(
+                    children: [
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: AppTextStyles.listingText,
+                            children: [
+                              const TextSpan(text: "From  "),
+                              TextSpan(
+                                text: _formatTime(listingStartTime),
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 65, 137, 200),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const TextSpan(text: "  to  "),
+                              TextSpan(
+                                text: _formatTime(listingEndTime),
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 65, 137, 200),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: isExpanded ? 0.5 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          Icons.expand_more,
+                          color: Colors.grey[600],
+                          size: 20,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
+
+          // ========== EXPANDABLE CONTENT (Inside Card) ==========
           AnimatedSize(
-            duration: const Duration(milliseconds: 1000),
+            duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             alignment: Alignment.topCenter,
-            clipBehavior: Clip.hardEdge,
             child: isExpanded
                 ? Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Divider(height: 1),
+                        Divider(height: 1, thickness: 1, color: Colors.black12),
                         const SizedBox(height: 12),
+
+                        // Payment Types
                         Text(
-                          "Payment Types: ${listing['paymentTypes'].join(", ")}",
+                          "Payment Types:",
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                             color: Colors.grey[700],
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
-                          "Price: \$${listing['price'] ?? '6'}",
+                          "${listing['paymentTypes'].join(", ")}",
+                          style: AppTextStyles.viewListingSubText,
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Price
+                        Text(
+                          "Price:",
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                             color: Colors.grey[700],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 6),
+                        Text(
+                          "\$${listing['price'] ?? '6'}",
+                          style: AppTextStyles.viewListingSubText,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Select Button
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
+                          child: CupertinoButton(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            color: const Color.fromARGB(192, 131, 199, 255),
+                            borderRadius: BorderRadius.circular(8),
                             onPressed: () async {
                               if (await Haptics.canVibrate()) {
                                 Haptics.vibrate(HapticsType.success);
                               }
                               _handleListingSelection(docId, listing);
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(
-                                192,
-                                131,
-                                199,
-                                255,
+                            child: Flexible(
+                              child: Text(
+                                "Select This Listing",
+                                style: AppTextStyles.viewListingSubText
+                                    .copyWith(
+                                      color: const Color.fromARGB(
+                                        255,
+                                        61,
+                                        61,
+                                        61,
+                                      ),
+                                      fontWeight: FontWeight.w400,
+                                    ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            child: Text(
-                              "Select This Listing",
-                              style: SubTextStyle,
                             ),
                           ),
                         ),
@@ -250,16 +331,14 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order was placed successfully!')),
+          const SnackBar(content: Text('Order was placed successfully!')),
         );
         Navigator.pop(context);
         Navigator.pop(context);
       }
     } catch (e, s) {
-      // Handle the error and stack trace
       print('Error: $e');
       print('Stack: $s');
-      // You might want to show a SnackBar or dialog to inform the user
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -284,14 +363,11 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     return Filter.and(
       Filter('diningHall', whereIn: widget.locations),
       Filter('sellerId', isNotEqualTo: _auth.currentUser!.uid),
-      // Filter('paymentTypes', arrayContainsAny: widget.paymentTypes),
-      // Date filtering
       Filter(
         'transactionDate',
         isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
       ),
       Filter('transactionDate', isLessThan: Timestamp.fromDate(endDate)),
-      // Time overlap filtering
       Filter(
         'timeStart',
         isLessThanOrEqualTo: Listing.toMinutes(widget.endTime),

@@ -118,6 +118,13 @@ class AppTextStyles {
     color: const Color.fromARGB(171, 27, 27, 27),
     decoration: TextDecoration.none,
   );
+
+  static final viewListingSubText = GoogleFonts.instrumentSans(
+    fontSize: 18,
+    fontWeight: FontWeight.w500,
+    color: const Color.fromARGB(221, 54, 54, 54),
+    decoration: TextDecoration.none,
+  );
 }
 
 // Legacy exports for backward compatibility
