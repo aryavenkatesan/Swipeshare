@@ -42,13 +42,34 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   bool _isFirstLoad = true;
 
+  bool _isChatDeleted = false;
+
   @override
   void initState() {
     super.initState();
+    _isChatDeleted = widget.orderData.isChatDeleted;
     _notifService.activeChatId = widget.orderData.getRoomName();
     _chatService
         .readNotifications(widget.orderData)
         .then((_) => _notifService.updateBadgeCount());
+    _listenToOrderChanges();
+  }
+
+  void _listenToOrderChanges() {
+    FirebaseFirestore.instance
+        .collection('orders')
+        .doc(widget.orderData.getRoomName())
+        .snapshots()
+        .listen((snapshot) {
+          if (snapshot.exists && mounted) {
+            final data = snapshot.data();
+            if (data != null && data['isChatDeleted'] != null) {
+              setState(() {
+                _isChatDeleted = data['isChatDeleted'];
+              });
+            }
+          }
+        });
   }
 
   @override
@@ -146,8 +167,7 @@ class _ChatPageState extends State<ChatPage> {
         forceMaterialTransparency: true,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0.0,
-        leadingWidth:
-            130, // This gives enough space for BackButton (48) + padding (4) + StarContainer (70)
+        leadingWidth: 130,
         leading: Row(
           mainAxisSize: MainAxisSize.min,
           children: [SizedBox(width: 8), BackButton()],
@@ -156,9 +176,8 @@ class _ChatPageState extends State<ChatPage> {
           children: [
             Text("${widget.receiverUserName}"),
             SizedBox(height: 3),
-
             Transform.translate(
-              offset: Offset(-2, 0), // Trust it looks off center without this
+              offset: Offset(-2, 0),
               child: StarContainer(
                 stars:
                     _firebaseAuth.currentUser!.uid != widget.orderData.buyerId
@@ -171,54 +190,64 @@ class _ChatPageState extends State<ChatPage> {
         ),
         actions: <Widget>[
           Row(
-            // The Row is still useful for grouping these two
             children: [
               IconButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Close Order'),
-                        content: const Text(
-                          'Are you sure you want to mark this order as complete? This action cannot be undone.',
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(); // Close the dialog
-                            },
-                            child: const Text('No'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RatingsPage(
-                                    recieverId: widget.receiverUserID,
-                                    orderData: widget.orderData,
+                onPressed:
+                    _isChatDeleted // ⭐ Use the state variable instead
+                    ? null
+                    : () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Close Order'),
+                              content: const Text(
+                                'Are you sure you want to mark this order as complete? This action cannot be undone.',
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('No'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => RatingsPage(
+                                          recieverId: widget.receiverUserID,
+                                          orderData: widget.orderData,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    'Yes',
+                                    style: TextStyle(
+                                      color: Color.fromARGB(177, 96, 125, 139),
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
-                            child: const Text(
-                              'Yes',
-                              style: TextStyle(
-                                color: Color.fromARGB(177, 96, 125, 139),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-                icon: const Icon(Icons.task_alt),
-                tooltip: 'Close Order',
+                              ],
+                            );
+                          },
+                        );
+                      },
+                icon: Icon(
+                  Icons.task_alt,
+                  color:
+                      _isChatDeleted // ⭐ Use the state variable instead
+                      ? Colors.grey
+                      : null,
+                ),
+                tooltip:
+                    _isChatDeleted // ⭐ Use the state variable instead
+                    ? 'Order already closed'
+                    : 'Close Order',
               ),
-
               ChatSettingsMenu(
                 currentUserId: _firebaseAuth.currentUser!.uid,
                 currentUserEmail: _firebaseAuth.currentUser!.email!,

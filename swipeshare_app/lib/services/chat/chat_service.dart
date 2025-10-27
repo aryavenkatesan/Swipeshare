@@ -163,7 +163,7 @@ class ChatService extends ChangeNotifier {
   Future<void> deleteChat(MealOrder orderData) async {
     try {
       final String message =
-          "${_firebaseAuth.currentUser!.uid == orderData.buyerId ? orderData.buyerName : orderData.sellerName} has deleted the chat.";
+          "${_firebaseAuth.currentUser!.uid == orderData.buyerId ? orderData.buyerName : orderData.sellerName} has deleted the chat and left.\nPlease click the menu options above to delete the chat.";
       //TODO: Have to stop the other user from closing the order if someone deletes the chat
       systemMessage(message, orderData.getRoomName());
       OrderService().updateVisibility(orderData, true);

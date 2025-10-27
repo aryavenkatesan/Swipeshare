@@ -39,6 +39,7 @@ class OrderService extends ChangeNotifier {
       buyerStars: currentUserStars,
       sellerHasNotifs: false,
       buyerHasNotifs: false,
+      isChatDeleted: false,
     );
 
     try {
@@ -51,7 +52,7 @@ class OrderService extends ChangeNotifier {
 
       //send message from system
       final String message =
-          "Welcome to the chat room!\nFeel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) \n Remember swipes are \$6 and should be paid before the seller swipes you in. \n\n Happy Swiping!";
+          "Welcome to the chat room!\n\nFeel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) \n\n Remember swipes are \$6 and should be paid before the seller swipes you in. \n\n Happy Swiping!";
       _chatService.systemMessage(message, customDocId);
     } catch (e, s) {
       // Handle the error and stack trace
@@ -116,8 +117,12 @@ class OrderService extends ChangeNotifier {
         currentUserId,
       );
       final String message =
-          "${currentUser?.name ?? 'User'} has left the chat.\nClick the checked button above to close the order.";
+          "${currentUser?.name ?? 'User'} has closed the order and left the chat.\nClick the check button above to close the order :)";
       _chatService.systemMessage(message, orderData.getRoomName());
+    } else {
+      await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
+        {'isChatDeleted': true},
+      );
     }
   }
 }
