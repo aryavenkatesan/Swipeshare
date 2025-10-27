@@ -150,7 +150,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   /// Navigates to listing selection page with current selections
   void _navigateToListingSelection() async {
     if (await Haptics.canVibrate()) {
-      Haptics.vibrate(HapticsType.heavy);
+      Haptics.vibrate(HapticsType.medium);
     }
     Navigator.push(
       context,

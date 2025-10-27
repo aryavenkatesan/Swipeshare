@@ -253,26 +253,25 @@ class _ChatPageState extends State<ChatPage> {
         if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
         }
-
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Text("Loading..");
+          return const Center(child: CircularProgressIndicator());
         }
 
-        // Scroll to bottom after messages are loaded
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_isFirstLoad) {
-            _scrollToBottom(animate: false);
-            _isFirstLoad = false;
-          } else {
-            _scrollToBottom(animate: true);
-          }
-        });
+        final reversedDocs = snapshot.data!.docs.reversed.toList();
 
-        return ListView(
+        return ListView.builder(
           controller: _scrollController,
-          children: snapshot.data!.docs
-              .map((document) => _buildMessageItem(document))
-              .toList(),
+          reverse: true, // to add padding for last message
+          itemCount: reversedDocs.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return const SizedBox(height: 14);
+              //adding padding for the very last message
+            }
+
+            final doc = reversedDocs[index - 1];
+            return _buildMessageItem(doc);
+          },
         );
       },
     );

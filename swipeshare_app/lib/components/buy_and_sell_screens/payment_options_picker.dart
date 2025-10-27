@@ -50,6 +50,7 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
         children: [
           GestureDetector(
             onTap: () => setState(() => isExpanded = !isExpanded),
+            behavior: HitTestBehavior.opaque,
             child: Container(
               padding: BuySwipesConstants.containerPadding,
               child: Row(

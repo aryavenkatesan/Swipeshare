@@ -154,7 +154,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
 
   void _navigateToConfirmation() async {
     if (await Haptics.canVibrate()) {
-      Haptics.vibrate(HapticsType.heavy);
+      Haptics.vibrate(HapticsType.medium);
     }
     Navigator.push(
       context,

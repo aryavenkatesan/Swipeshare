@@ -90,164 +90,149 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     final docId = document.id;
     final bool isExpanded = _expandedListingId == docId;
 
-    // display all listings with a selection location
-    if (true) {
-      return GestureDetector(
-        onTap: () {
-          setState(() {
-            // Toggle expansion - if it's already expanded, collapse it
-            _expandedListingId = isExpanded ? null : docId;
-          });
-        },
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: Offset(0, 1),
-              ),
-            ],
+    // This structure now EXACTLY matches the PaymentOptionsComponent.
+    // 1. The root is an AnimatedContainer.
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: isExpanded ? 2 : 1,
+            blurRadius: isExpanded ? 6 : 3,
+            offset: Offset(0, isExpanded ? 2 : 1),
           ),
-          child: Column(
-            children: [
-              // Main list tile content
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
+        ],
+      ),
+      // 2. Its child is a Column containing the header and the expandable content.
+      child: Column(
+        children: [
+          // 3. The TAPPABLE HEADER is a GestureDetector.
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _expandedListingId = isExpanded ? null : docId;
+              });
+            },
+            // This makes the entire padded area tappable, including whitespace.
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black,
+                        ),
                         children: [
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text:
-                                      "${listing['diningHall']}", // dining hall
-                                  style: TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                TextSpan(
-                                  text:
-                                      " @ ${listingStartTime.hour}:${listingStartTime.minute.toString().padLeft(2, '0')} to ${listingEndTime.hour}:${listingEndTime.minute.toString().padLeft(2, '0')}",
-                                ),
-                              ],
-                            ),
+                          TextSpan(
+                            text: "${listing['diningHall']}",
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-
-                          Spacer(),
-
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              children: [
-                                TextSpan(text: "⭑ "),
-                                TextSpan(
-                                  text: "${listing['sellerRating']}  ",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
+                          TextSpan(
+                            text:
+                                " @ ${_formatTime(listingStartTime)} to ${_formatTime(listingEndTime)}",
                           ),
                         ],
                       ),
                     ),
-                    Icon(
-                      isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: Colors.grey,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Expandable dropdown content
-              AnimatedSize(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                child: isExpanded
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                  ),
+                  const SizedBox(width: 8),
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 16, color: Colors.black),
+                      children: [
+                        const TextSpan(text: "⭑ "),
+                        TextSpan(
+                          text:
+                              "${listing['sellerRating'].toStringAsFixed(2)}  ",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(8),
-                            bottomRight: Radius.circular(8),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // The rotating arrow is inside the tappable header.
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: const Icon(Icons.expand_more, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.hardEdge,
+            child: isExpanded
+                ? Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Divider(height: 1),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Payment Types: ${listing['paymentTypes'].join(", ")}",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Divider(height: 1),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Payment Types: ${listing['paymentTypes'].join(", ")}",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "Price: \$${listing['price'] ?? '6'}",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  if (await Haptics.canVibrate()) {
-                                    Haptics.vibrate(HapticsType.success);
-                                  }
-                                  _handleListingSelection(docId, listing);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromARGB(
-                                    192,
-                                    131,
-                                    199,
-                                    255,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                child: Text(
-                                  "Select This Listing",
-                                  style: SubTextStyle,
-                                ),
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 4),
+                        Text(
+                          "Price: \$${listing['price'] ?? '6'}",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
                         ),
-                      )
-                    : const SizedBox.shrink(), // invisible when collapsed
-              ),
-            ],
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (await Haptics.canVibrate()) {
+                                Haptics.vibrate(HapticsType.success);
+                              }
+                              _handleListingSelection(docId, listing);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(
+                                192,
+                                131,
+                                199,
+                                255,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            child: Text(
+                              "Select This Listing",
+                              style: SubTextStyle,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
-        ),
-      );
-    } else {
-      return Container();
-    }
+        ],
+      ),
+    );
   }
 
   Future<void> _handleListingSelection(
