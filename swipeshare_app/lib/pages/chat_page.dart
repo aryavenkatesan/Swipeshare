@@ -455,8 +455,9 @@ class _ChatPageState extends State<ChatPage> {
 
   //build message input
   Widget _buildMessageInput() {
+    final double vw = MediaQuery.of(context).size.width;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+      padding: EdgeInsets.symmetric(horizontal: vw * 0.01),
       child: Row(
         children: [
           //time widget
