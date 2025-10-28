@@ -36,7 +36,8 @@ class SwipeCountComponent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Number of Swipes',
+                  // 'Number of Swipes',
+                  'Swipe Price',
                   style: AppTextStyles.bodyText.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

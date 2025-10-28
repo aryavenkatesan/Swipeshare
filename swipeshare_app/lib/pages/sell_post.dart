@@ -26,7 +26,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay? startTime;
   TimeOfDay? endTime;
-  int swipeCount = 1;
+  int swipeCount = 7;
 
   @override
   Widget build(BuildContext context) {

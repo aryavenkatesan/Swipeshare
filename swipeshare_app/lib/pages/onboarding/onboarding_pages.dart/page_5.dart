@@ -29,7 +29,7 @@ class Page5 extends StatelessWidget {
                 Text("Cost", style: AppTextStyles.subHeaderStyle),
                 SizedBox(height: vh * 0.02),
                 Text(
-                  "All swipes cost \$6, buyers will pay before sellers swipe them in.",
+                  "All swipes cost \$7, buyers will pay before sellers swipe them in.",
                   style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),

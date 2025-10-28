@@ -52,7 +52,7 @@ class OrderService extends ChangeNotifier {
 
       //send message from system
       final String message =
-          "Welcome to the chat room!\n\nFeel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) \n\n Remember swipes are \$6 and should be paid before the seller swipes you in. \n\n Happy Swiping!";
+          "Welcome to the chat room!\n\nFeel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) \n\n Remember swipes are \$7 and should be paid before the seller swipes you in. \n\n Happy Swiping!";
       _chatService.systemMessage(message, customDocId);
     } catch (e, s) {
       // Handle the error and stack trace

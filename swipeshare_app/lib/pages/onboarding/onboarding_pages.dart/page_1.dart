@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 
 class Page1 extends StatelessWidget {

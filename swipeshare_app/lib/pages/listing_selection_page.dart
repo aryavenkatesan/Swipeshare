@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
@@ -88,7 +89,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
   // Pull to refresh handler
   void _onRefresh() async {
     // Add a small delay for better UX
-    await Future.delayed(const Duration(milliseconds: 300));
+    var random = Random();
+    int sheaintevenknowit = 100 + random.nextInt(1200);
+    await Future.delayed(Duration(milliseconds: sheaintevenknowit));
 
     // Reload listings
     await _loadListings();
@@ -114,6 +117,13 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         forceMaterialTransparency: true,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0.0,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey.withOpacity(0.3), // Customize color as needed
+            height: 1.0,
+          ),
+        ),
       ),
 
       body: _buildBody(),
