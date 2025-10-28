@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
@@ -48,6 +50,7 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
         children: [
           GestureDetector(
             onTap: () => setState(() => isExpanded = !isExpanded),
+            behavior: HitTestBehavior.opaque,
             child: Container(
               padding: BuySwipesConstants.containerPadding,
               child: Row(
@@ -159,18 +162,28 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
           minimumSize: const Size(double.infinity, 48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: Text(
-          'Update Preferred Payment Methods',
-          style: AppTextStyles.bodyText.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'Update Preferences',
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.fade,
+            style: GoogleFonts.instrumentSans(
+              fontSize: 18,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
     );
   }
 
-  void _togglePaymentOption(String option) {
+  void _togglePaymentOption(String option) async {
+    if (await Haptics.canVibrate()) {
+      Haptics.vibrate(HapticsType.selection);
+    }
     final currentOptions = List<String>.from(widget.selectedPaymentOptions);
     if (currentOptions.contains(option)) {
       currentOptions.remove(option);

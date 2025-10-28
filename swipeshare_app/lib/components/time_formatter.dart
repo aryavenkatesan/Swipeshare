@@ -30,4 +30,11 @@ class TimeFormatter {
     final dateTime = DateTime(now.year, now.month, now.day, hour, minute);
     return DateFormat('h:mm a').format(dateTime);
   }
+
+  static String formatToMMDD(DateTime dateTime) {
+    final DateFormat formatter = DateFormat('MM/dd');
+
+    final String formatted = formatter.format(dateTime);
+    return formatted;
+  }
 }

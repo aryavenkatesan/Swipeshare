@@ -92,6 +92,19 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
 
   /// Builds the animated sliding indicator for active time picker
   Widget _buildTimeIndicator() {
+    final double vw = MediaQuery.of(context).size.width;
+
+    const double minWidth = 375.0;
+    const double maxWidth = 430.0;
+    const double minMultiplier = 0.25;
+    const double maxMultiplier = 0.28;
+
+    // Calculate slope
+    final slope = (maxMultiplier - minMultiplier) / (maxWidth - minWidth);
+
+    // Linear function: y = mx + b
+    final multiplier = minMultiplier + slope * (vw - minWidth);
+
     return AnimatedAlign(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOutCubic,
@@ -99,7 +112,7 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOutCubic,
-        width: 120, // Fixed width for consistent sizing
+        width: vw * multiplier,
         height: 48,
         margin: EdgeInsets.only(
           left: showStartPicker ? 8 : 0,

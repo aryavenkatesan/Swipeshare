@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
@@ -151,7 +152,10 @@ class _SellPostScreenState extends State<SellPostScreen> {
         !_isEndTimeBeforeStartTime();
   }
 
-  void _navigateToConfirmation() {
+  void _navigateToConfirmation() async {
+    if (await Haptics.canVibrate()) {
+      Haptics.vibrate(HapticsType.medium);
+    }
     Navigator.push(
       context,
       MaterialPageRoute(

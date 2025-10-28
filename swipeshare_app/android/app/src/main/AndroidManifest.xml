@@ -17,7 +17,7 @@
     </intent>
     </queries>
     <application
-        android:label="swipeshare_app"
+        android:label="Swipeshare"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -1,23 +1,35 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
+import 'package:swipeshare_app/components/home_screen/active_listing_card.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/tutorial_carousel.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
@@ -34,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen>
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final OrderService _orderService = OrderService();
   final UserService _userService = UserService();
+  final ListingService _listingService = ListingService();
 
   UserModel? userData;
   bool isLoading = true;
@@ -41,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   late AnimationController _animationController;
   late Animation<double>? _fadeAnimation;
+
+  final ScrollController _scrollController = ScrollController();
 
   final RefreshController _refreshController = RefreshController(
     initialRefresh: false,
@@ -68,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _animationController.dispose();
     _refreshController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -118,6 +134,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final double vh = MediaQuery.of(context).size.height;
+    final double vw = MediaQuery.of(context).size.width;
+
     // Show logo while loading
     if (isLoading) {
       return Scaffold(
@@ -140,12 +159,21 @@ class _HomeScreenState extends State<HomeScreen>
             //signout button
             IconButton(onPressed: signOut, icon: const Icon(Icons.logout)),
           ],
+          // bottom: PreferredSize(
+          //   preferredSize: Size.fromHeight(1.0),
+          //   child: Container(
+          //     color: Colors.grey.withOpacity(0.3), // Customize color as needed
+          //     height: 1.0,
+          //   ),
+          // ),
+          //This is the grey bar below the header, only looks nice when scrolled
         ),
         body: SafeArea(
+          bottom: false,
           child: Padding(
-            padding: const EdgeInsets.only(
-              right: 30.0,
-              left: 30.0,
+            padding: EdgeInsets.only(
+              right: vw > 400 ? 30.0 : 18.0,
+              left: vw > 400 ? 30.0 : 18.0,
               bottom: 12.0,
             ),
             child: SmartRefresher(
@@ -160,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
 
               child: SingleChildScrollView(
+                controller: _scrollController,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -201,11 +230,16 @@ class _HomeScreenState extends State<HomeScreen>
                           child: PlaceOrderCard(
                             label: "Buy",
                             iconPath: "assets/fork_and_knife.svg",
-                            onTap: () {
+                            onTap: () async {
+                              if (await Haptics.canVibrate()) {
+                                Haptics.vibrate(HapticsType.light);
+                              }
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BuySwipeScreen(),
+                                  builder: (context) => BuySwipeScreen(
+                                    paymentOptions: _paymentTypes,
+                                  ),
                                 ),
                               );
                             },
@@ -216,7 +250,10 @@ class _HomeScreenState extends State<HomeScreen>
                           child: PlaceOrderCard(
                             label: "Sell",
                             iconPath: "assets/wallet.svg",
-                            onTap: () {
+                            onTap: () async {
+                              if (await Haptics.canVibrate()) {
+                                Haptics.vibrate(HapticsType.light);
+                              }
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -232,57 +269,19 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
 
                     SizedBox(height: 24),
+
                     Text("Active Listings", style: HeaderStyle),
 
                     SizedBox(height: 12),
 
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Active Listings Go Here",
-                            style: SubHeaderStyle,
-                          ),
-                          Text("Trust the process", style: SubTextStyle),
-                        ],
-                      ),
-                    ),
+                    _buildListingSection(),
 
                     SizedBox(height: 24),
-                    Text("Rewards", style: HeaderStyle),
+
+                    Text("Settings", style: HeaderStyle),
+
                     SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("50% off", style: SubHeaderStyle),
-                          Text(
-                            "After referring two friends",
-                            style: SubTextStyle,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 48),
+
                     PaymentOptionsComponent(
                       selectedPaymentOptions: _paymentTypes,
                       onPaymentOptionsChanged: (options) {
@@ -302,6 +301,56 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         );
                       },
+                    ),
+
+                    SizedBox(height: 24),
+
+                    Text(
+                      "Replay Tutorial",
+                      style: HeaderStyle,
+                      textAlign: TextAlign.left,
+                    ),
+                    SizedBox(height: 12),
+
+                    //tutorial widget
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TutorialCarousel(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(105, 255, 255, 255),
+                          border: Border.all(
+                            color: const Color(0x6998D2EB),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Swipeology 101",
+                              // "Replay Tutorial",
+                              style: SubHeaderStyle.copyWith(fontSize: 20),
+                              textAlign: TextAlign.left,
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "Help yourself or a friend learn the ropes!",
+                              style: SubTextStyle,
+                              textAlign: TextAlign.left,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
 
                     SizedBox(height: 48),
@@ -363,5 +412,55 @@ class _HomeScreenState extends State<HomeScreen>
     MealOrder order = MealOrder.fromMap(data);
 
     return ActiveOrderCard(orderData: order);
+  }
+
+  Widget _buildListingSection() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _listingService.getUserListings(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text('Loading..');
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        final hasOrders = docs.isNotEmpty;
+
+        if (!hasOrders) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              "Listings will show up here to keep track of when you're selling! Once placed, you can tap to delete :)",
+              style: SubTextStyle,
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        // Has orders -> show horizontally scrollable cards
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: docs.map((doc) => _buildListingCard(doc)).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListingCard(DocumentSnapshot document) {
+    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+    Listing currentlisting = Listing.fromMap(data);
+
+    return ActiveListingCard(
+      currentListing: currentlisting,
+      listingId: document.id,
+    );
   }
 }

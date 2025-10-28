@@ -14,6 +14,7 @@ class MealOrder {
   final bool sellerHasNotifs;
   final bool buyerHasNotifs;
   final DateTime transactionDate;
+  final bool isChatDeleted;
 
   MealOrder({
     required this.sellerId,
@@ -29,6 +30,7 @@ class MealOrder {
     required this.sellerHasNotifs,
     required this.buyerHasNotifs,
     required this.transactionDate,
+    required this.isChatDeleted,
   });
 
   Map<String, dynamic> toMap() {
@@ -47,6 +49,7 @@ class MealOrder {
       'buyerHasNotifs': buyerHasNotifs,
       'transactionDate': transactionDate
           .toIso8601String(), //better to have as string or no?
+      'isChatDeleted': isChatDeleted,
     };
   }
 
@@ -65,6 +68,7 @@ class MealOrder {
       sellerHasNotifs: map['sellerHasNotifs'] ?? false,
       buyerHasNotifs: map['buyerHasNotifs'] ?? false,
       transactionDate: DateTime.parse(map['transactionDate']),
+      isChatDeleted: map['isChatDeleted'] ?? false,
     );
   }
 

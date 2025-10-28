@@ -45,6 +45,7 @@ dependencies:
   firebase_messaging: ^15.0.0
   app_badge_plus: ^1.2.3
   haptic_feedback: ^0.5.1+1
+  profanity_filter: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +57,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+  rename: ^3.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -74,7 +77,19 @@ flutter:
     - assets/fork_and_knife.svg
     - assets/star.svg
     - assets/logo.png
+    - assets/onboarding1.png
+    - assets/onboarding2.png
+    - assets/onboarding3.png
+    - assets/onboarding4.png
+    - assets/onboarding5.png
+    - assets/onboarding6.png
       #   - images/a_dot_ham.jpeg
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+  remove_alpha_ios: true
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
@@ -35,29 +36,31 @@ class DateSelectorComponent extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.only(right: BuySwipesConstants.mediumSpacing),
         child: GestureDetector(
-          onTap: () => onDateSelected(date),
+          onTap: () async {
+            if (await Haptics.canVibrate()) {
+              Haptics.vibrate(HapticsType.selection);
+            }
+            onDateSelected(date);
+          },
           child: Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: BuySwipesConstants.mediumSpacing, 
-              vertical: BuySwipesConstants.smallSpacing
+              horizontal: BuySwipesConstants.mediumSpacing,
+              vertical: BuySwipesConstants.smallSpacing,
             ),
             decoration: BoxDecoration(
-              color: isSelected 
-                  ? AppColors.accentBlueMedium 
+              color: isSelected
+                  ? AppColors.accentBlueMedium
                   : AppColors.whiteTransparent,
-              borderRadius: BorderRadius.circular(BuySwipesConstants.borderRadius),
+              borderRadius: BorderRadius.circular(
+                BuySwipesConstants.borderRadius,
+              ),
               border: Border.all(
-                color: isSelected 
-                    ? AppColors.accentBlue 
-                    : AppColors.borderGrey,
+                color: isSelected ? AppColors.accentBlue : AppColors.borderGrey,
                 width: isSelected ? 2 : 1,
               ),
             ),
             child: Center(
-              child: Text(
-                label,
-                style: AppTextStyles.datePillText,
-              ),
+              child: Text(label, style: AppTextStyles.datePillText),
             ),
           ),
         ),
@@ -68,8 +71,8 @@ class DateSelectorComponent extends StatelessWidget {
   /// Checks if two DateTime objects represent the same date
   bool _isSameDate(DateTime date1, DateTime date2) {
     return date1.day == date2.day &&
-           date1.month == date2.month &&
-           date1.year == date2.year;
+        date1.month == date2.month &&
+        date1.year == date2.year;
   }
 
   /// Returns formatted label for date pill based on day index

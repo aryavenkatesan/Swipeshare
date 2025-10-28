@@ -1,3 +1,7 @@
+import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +9,7 @@ import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/profanity_utils.dart';
 
 class ChatService extends ChangeNotifier {
   //get instance of auth and firestore
@@ -158,7 +163,7 @@ class ChatService extends ChangeNotifier {
   Future<void> deleteChat(MealOrder orderData) async {
     try {
       final String message =
-          "${_firebaseAuth.currentUser!.uid == orderData.buyerId ? orderData.buyerName : orderData.sellerName} has deleted the chat.";
+          "${_firebaseAuth.currentUser!.uid == orderData.buyerId ? orderData.buyerName : orderData.sellerName} has deleted the chat and left.\nPlease click the menu options above to delete the chat.";
       //TODO: Have to stop the other user from closing the order if someone deletes the chat
       systemMessage(message, orderData.getRoomName());
       OrderService().updateVisibility(orderData, true);

@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/listing.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 
@@ -33,52 +36,176 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
 
   String? _expandedListingId;
 
+  // Cache the listings data in state
+  List<DocumentSnapshot>? _cachedListings;
+  bool _isLoading = true;
+  String? _error;
+
+  // Pull to refresh controller
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadListings();
+  }
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  // Load listings once on init
+  Future<void> _loadListings() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('listings')
+          .where(_buildListingsFilter())
+          .get();
+
+      if (mounted) {
+        setState(() {
+          _cachedListings = snapshot.docs;
+          _isLoading = false;
+          _error = null;
+        });
+        debugPrint("Fetched ${snapshot.docs.length} listings");
+      }
+    } catch (e) {
+      debugPrint("Error fetching listings: $e");
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Pull to refresh handler
+  void _onRefresh() async {
+    // Add a small delay for better UX
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Reload listings
+    await _loadListings();
+
+    // Complete the refresh
+    if (mounted) {
+      _refreshController.refreshCompleted();
+    }
+  }
+
+  void _onLoading() async {
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 500));
+    // if failed,use loadFailed(),if no data return,use LoadNodata()
+    _refreshController.loadComplete();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("View Listings")),
-      body: GestureDetector(
-        // This will close the dropdown when tapping outside
-        onTap: () {
-          setState(() {
-            _expandedListingId = null;
-          });
+      appBar: AppBar(
+        title: const Text("View Listings"),
+        forceMaterialTransparency: true,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0.0,
+      ),
+
+      body: _buildBody(),
+    );
+  }
+
+  // Build body based on cached state (no StreamBuilder rebuilds)
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(child: Text('Error: $_error'));
+    }
+
+    if (_cachedListings == null || _cachedListings!.isEmpty) {
+      return SmartRefresher(
+        controller: _refreshController,
+        onRefresh: _onRefresh,
+        onLoading: _onLoading,
+        header: const WaterDropHeader(),
+        footer: CustomFooter(
+          builder: (BuildContext context, LoadStatus? mode) {
+            return const Text("");
+          },
+        ),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No listings found',
+                        style: HeaderStyle.copyWith(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Pull down to refresh',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SmartRefresher(
+      controller: _refreshController,
+      onRefresh: _onRefresh,
+      onLoading: _onLoading,
+      header: const WaterDropHeader(),
+      footer: CustomFooter(
+        builder: (BuildContext context, LoadStatus? mode) {
+          return const Text("");
         },
-        child: _buildItemList(),
+      ),
+      child: ListView.builder(
+        itemCount: _cachedListings!.length,
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemBuilder: (context, index) {
+          final doc = _cachedListings![index];
+          return GestureDetector(
+            // Move the collapse-on-tap to each item
+            onTap: () {
+              if (_expandedListingId != null && _expandedListingId != doc.id) {
+                setState(() {
+                  _expandedListingId = null;
+                });
+              }
+            },
+            behavior: HitTestBehavior.translucent,
+            child: _buildListingItem(doc, ValueKey(doc.id)),
+          );
+        },
       ),
     );
   }
 
-  // build a list of listings except for the current logged in user
-  Widget _buildItemList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('listings')
-          .where(_buildListingsFilter())
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          debugPrint("Error fetching listings: ${snapshot.error}");
-          return Text('Error: ${snapshot.error}');
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text('loading..');
-        }
-
-        debugPrint("Fetched ${snapshot.data!.docs.length} listings");
-
-        return ListView(
-          children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildListingItem(doc))
-              .toList(),
-        );
-      },
-    );
-  }
-
-  // build individual listing items
-  Widget _buildListingItem(DocumentSnapshot document) {
+  Widget _buildListingItem(DocumentSnapshot document, Key key) {
     Map<String, dynamic> listing = document.data()! as Map<String, dynamic>;
     final TimeOfDay listingStartTime = Listing.minutesToTOD(
       listing['timeStart'],
@@ -87,150 +214,188 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     final docId = document.id;
     final bool isExpanded = _expandedListingId == docId;
 
-    return GestureDetector(
-      // change this from a listTile to a custom componenent that will take arguments and spit out smth beautiful
-      // need to add ratings somehow, probably easiest to do it through the listing itself with another content field
-      // TODO: find overlap% between the buyer and possible sellers
-      onTap: () {
-        setState(() {
-          // Toggle expansion - if it's already expanded, collapse it
-          _expandedListingId = isExpanded ? null : docId;
-        });
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: Offset(0, 1),
-            ),
-          ],
+    return AnimatedContainer(
+      key: key,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isExpanded ? Colors.black26 : Colors.black12,
+          width: 1,
         ),
-        child: Column(
-          children: [
-            // Main list tile content
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
+      child: Column(
+        children: [
+          // ========== CARD FRONT (Always Visible) ==========
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _expandedListingId = isExpanded ? null : docId;
+              });
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        // Left section: dining hall + time range
-                        RichText(
-                          text: TextSpan(
-                            style: TextStyle(fontSize: 16, color: Colors.black),
-                            children: [
-                              TextSpan(
-                                text: "${listing['diningHall']}", // dining hall
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              TextSpan(
-                                text:
-                                    " @ ${_formatTime(listingStartTime)} to ${_formatTime(listingEndTime)}",
-                              ),
-                            ],
+                  // Dining Hall and Star Rating
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "${listing['diningHall']}",
+                          style: HeaderStyle.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-
-                        Spacer(), // 👈 pushes the rating to the far right
-                        // Right section: rating
-                        RichText(
-                          text: TextSpan(
-                            style: TextStyle(fontSize: 16, color: Colors.black),
-                            children: [
-                              TextSpan(text: "⭑ "),
-                              TextSpan(
-                                text: "${listing['sellerRating']}  ",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ],
+                      ),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
+                          children: [
+                            const TextSpan(text: "⭑ "),
+                            TextSpan(
+                              text: listing['sellerRating'].toStringAsFixed(2),
+                              style: const TextStyle(
+                                color: Color.fromARGB(198, 0, 0, 0),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.grey,
+                  const SizedBox(height: 8),
+                  // Time Range
+                  Row(
+                    children: [
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: AppTextStyles.listingText,
+                            children: [
+                              const TextSpan(text: "From  "),
+                              TextSpan(
+                                text: _formatTime(listingStartTime),
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 65, 137, 200),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const TextSpan(text: "  to  "),
+                              TextSpan(
+                                text: _formatTime(listingEndTime),
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 65, 137, 200),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: isExpanded ? 0.5 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          Icons.expand_more,
+                          color: Colors.grey[600],
+                          size: 20,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+          ),
 
-            // Expandable dropdown content
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              child: isExpanded
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(8),
-                          bottomRight: Radius.circular(8),
+          // ========== EXPANDABLE CONTENT (Inside Card) ==========
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: isExpanded
+                ? Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Divider(height: 1, thickness: 1, color: Colors.black12),
+                        const SizedBox(height: 12),
+
+                        // Payment Types
+                        Text(
+                          "Payment Types:",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Divider(height: 1),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Payment Types: ${listing['paymentTypes'].join(", ")}",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
-                            ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "${listing['paymentTypes'].join(", ")}",
+                          style: AppTextStyles.viewListingSubText,
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Price
+                        Text(
+                          "Price:",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Price: \$${listing['price'] ?? '6'}",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () =>
-                                  _handleListingSelection(docId, listing),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(
-                                  192,
-                                  131,
-                                  199,
-                                  255,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "\$${listing['price'] ?? '6'}",
+                          style: AppTextStyles.viewListingSubText,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Select Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: CupertinoButton(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            color: const Color.fromARGB(192, 131, 199, 255),
+                            borderRadius: BorderRadius.circular(8),
+                            onPressed: () async {
+                              if (await Haptics.canVibrate()) {
+                                Haptics.vibrate(HapticsType.success);
+                              }
+                              _handleListingSelection(docId, listing);
+                            },
+                            child: Text(
+                              "Select This Listing",
+                              style: AppTextStyles.viewListingSubText.copyWith(
+                                color: const Color.fromARGB(255, 61, 61, 61),
+                                fontWeight: FontWeight.w400,
                               ),
-                              child: Text(
-                                "Select This Listing",
-                                style: SubTextStyle,
-                              ),
                             ),
                           ),
-                        ],
-                      ),
-                    )
-                  : const SizedBox.shrink(), // invisible when collapsed
-            ),
-          ],
-        ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
@@ -249,14 +414,15 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         listing['sellerRating'],
       );
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Order was placed successfully!')),
+        );
         Navigator.pop(context);
         Navigator.pop(context);
       }
     } catch (e, s) {
-      // Handle the error and stack trace
-      debugPrint('Error: $e');
-      debugPrint('Stack: $s');
-      // You might want to show a SnackBar or dialog to inform the user
+      print('Error: $e');
+      print('Stack: $s');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -281,14 +447,11 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     return Filter.and(
       Filter('diningHall', whereIn: widget.locations),
       Filter('sellerId', isNotEqualTo: _auth.currentUser!.uid),
-      // Filter('paymentTypes', arrayContainsAny: widget.paymentTypes),
-      // Date filtering
       Filter(
         'transactionDate',
         isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
       ),
       Filter('transactionDate', isLessThan: Timestamp.fromDate(endDate)),
-      // Time overlap filtering
       Filter(
         'timeStart',
         isLessThanOrEqualTo: Listing.toMinutes(widget.endTime),
