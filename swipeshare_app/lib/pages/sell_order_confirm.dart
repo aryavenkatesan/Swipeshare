@@ -333,13 +333,40 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
           if (await Haptics.canVibrate()) {
             Haptics.vibrate(HapticsType.success);
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sucessfully Placed Listing!')),
-          );
           Navigator.pop(context);
           Navigator.pop(context);
+
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(content: Text('Sucessfully Placed Listing!')),
+          // );
+          showConfirmationDialog(context);
         },
       ),
+    );
+  }
+
+  void showConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: Text("Successfully Placed Listing!"),
+          content: Text(
+            "Check back again soon once someone contacts you for the order!",
+          ),
+          actions: <Widget>[
+            // usually buttons at the bottom of the dialog
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                // This closes the dialog
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

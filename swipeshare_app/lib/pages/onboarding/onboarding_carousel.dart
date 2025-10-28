@@ -74,7 +74,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                 });
               },
               children: [
-                Page1(),
+                Page1(tutorial: false),
                 Page2(),
                 Page3(),
                 Page4(),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,6 +21,7 @@ import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/tutorial_carousel.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -275,8 +277,11 @@ class _HomeScreenState extends State<HomeScreen>
                     _buildListingSection(),
 
                     SizedBox(height: 24),
+
                     Text("Settings", style: HeaderStyle),
+
                     SizedBox(height: 12),
+
                     PaymentOptionsComponent(
                       selectedPaymentOptions: _paymentTypes,
                       onPaymentOptionsChanged: (options) {
@@ -296,6 +301,56 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         );
                       },
+                    ),
+
+                    SizedBox(height: 24),
+
+                    Text(
+                      "Replay Tutorial",
+                      style: HeaderStyle,
+                      textAlign: TextAlign.left,
+                    ),
+                    SizedBox(height: 12),
+
+                    //tutorial widget
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TutorialCarousel(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(105, 255, 255, 255),
+                          border: Border.all(
+                            color: const Color(0x6998D2EB),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Swipeology 101",
+                              // "Replay Tutorial",
+                              style: SubHeaderStyle.copyWith(fontSize: 20),
+                              textAlign: TextAlign.left,
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "Help yourself or a friend learn the ropes!",
+                              style: SubTextStyle,
+                              textAlign: TextAlign.left,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
 
                     SizedBox(height: 48),
