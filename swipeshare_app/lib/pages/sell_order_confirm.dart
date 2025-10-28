@@ -306,7 +306,8 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
           Icon(Icons.restaurant, color: AppColors.accentBlue, size: 24),
           const SizedBox(width: 10),
           Text(
-            widget.swipeCount == 1 ? '1 Swipe' : '${widget.swipeCount} Swipes',
+            // widget.swipeCount == 1 ? '1 Swipe' : '${widget.swipeCount} Swipes',
+            '1 Swipe',
             style: AppTextStyles.bodyText.copyWith(
               fontSize: 20,
               fontWeight: FontWeight.w600,

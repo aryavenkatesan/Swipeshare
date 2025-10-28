@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final double vh = MediaQuery.of(context).size.height;
+    // final double vh = MediaQuery.of(context).size.height;
     final double vw = MediaQuery.of(context).size.width;
 
     // Show logo while loading

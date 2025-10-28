@@ -372,7 +372,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          "\$${listing['price'] ?? '6'}",
+                          "\$${listing['price'] ?? '7'}",
                           style: AppTextStyles.viewListingSubText,
                         ),
 
