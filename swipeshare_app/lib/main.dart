@@ -5,6 +5,8 @@ import 'package:swipeshare_app/firebase_options.dart';
 import 'package:swipeshare_app/services/auth/auth_gate.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
+// Import splash screen 
+import 'package:swipeshare_app/components/splash_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -31,7 +33,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      home: AuthGate(),
+      // Show splash screen first
+      home: const SplashScreen(),
     );
   }
 }
