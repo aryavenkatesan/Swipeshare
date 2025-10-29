@@ -284,7 +284,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
 
   Widget _buildSwipeCountSection() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(22),
@@ -303,11 +303,15 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.restaurant, color: AppColors.accentBlue, size: 24),
-          const SizedBox(width: 10),
+          Icon(
+            Icons.attach_money_rounded,
+            color: AppColors.accentBlue,
+            size: 24,
+          ),
+          const SizedBox(width: 2),
           Text(
             // widget.swipeCount == 1 ? '1 Swipe' : '${widget.swipeCount} Swipes',
-            '1 Swipe',
+            '7',
             style: AppTextStyles.bodyText.copyWith(
               fontSize: 20,
               fontWeight: FontWeight.w600,

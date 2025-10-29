@@ -37,4 +37,14 @@ class TimeFormatter {
     final String formatted = formatter.format(dateTime);
     return formatted;
   }
+
+  static String productionToString(TimeOfDay time) {
+    // Pad the hour with a leading zero if it's less than 10
+    final String hour = time.hour.toString().padLeft(2, '0');
+    // Pad the minute with a leading zero if it's less than 10
+    final String minute = time.minute.toString().padLeft(2, '0');
+
+    // Combine into the desired format
+    return 'TimeOfDay($hour:$minute)';
+  }
 }
