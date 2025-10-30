@@ -152,7 +152,7 @@ class _ChatPageState extends State<ChatPage> {
     if (pickedTime != null) {
       await _chatService.timeWidget(
         widget.orderData.getRoomName(),
-        pickedTime.toString(),
+        TimeFormatter.productionToString(pickedTime),
       );
     }
   }

@@ -18,7 +18,7 @@ import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy_swipes.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/tutorial_carousel.dart';
+import 'package:swipeshare_app/pages/onboarding/tutorial_carousel.dart';
 import 'package:swipeshare_app/pages/sell_post.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/listing_service.dart';

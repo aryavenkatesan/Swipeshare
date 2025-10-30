@@ -49,7 +49,7 @@ class ActiveListingCard extends StatelessWidget {
               const SizedBox(height: 7),
               FittedBox(
                 child: Text(
-                  "From  ${TimeFormatter.formatTimeOfDay(currentListing.timeStart.toString())}  to  ${TimeFormatter.formatTimeOfDay(currentListing.timeEnd.toString())}",
+                  "From  ${TimeFormatter.formatTimeOfDay(TimeFormatter.productionToString(currentListing.timeStart))}  to  ${TimeFormatter.formatTimeOfDay(TimeFormatter.productionToString(currentListing.timeEnd))}",
                   style: AppTextStyles.listingText,
                 ),
               ),
