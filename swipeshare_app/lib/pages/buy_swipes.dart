@@ -107,7 +107,8 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
         const SizedBox(height: BuySwipesConstants.smallSpacing),
         Text(
           'Select a dining hall, date, and time to find available swipes',
-          style: AppTextStyles.bodyText, //TODO: center allign later
+          style: AppTextStyles.bodyText,
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -159,18 +160,20 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
     if (await Haptics.canVibrate()) {
       Haptics.vibrate(HapticsType.medium);
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ListingSelectionPage(
-          locations: selectedLocations,
-          date: selectedDate,
-          startTime: startTime!,
-          endTime: endTime!,
-          paymentTypes: widget.paymentOptions,
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ListingSelectionPage(
+            locations: selectedLocations,
+            date: selectedDate,
+            startTime: startTime!,
+            endTime: endTime!,
+            paymentTypes: widget.paymentOptions,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   /// Validates if end time is before start time

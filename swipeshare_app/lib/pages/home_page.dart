@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -81,15 +82,21 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _loadUserData() async {
     final user = await _userService.getUserData(_auth.currentUser!.uid);
-    setState(() {
-      userData = user;
-      isLoading = false;
-    });
 
-    _paymentTypes = user!.paymentTypes;
+    print('DEBUG: User data loaded: ${user?.name}, ${user?.email}');
 
-    // Start fade-in animation after data is loaded
-    _animationController.forward();
+    if (user != null) {
+      setState(() {
+        userData = user;
+        _paymentTypes = user.paymentTypes;
+        isLoading = false;
+      });
+
+      print('DEBUG: State updated, userData.name: ${userData?.name}');
+
+      // Start fade-in animation after data is loaded
+      _animationController.forward();
+    }
   }
 
   void signOut() {
@@ -197,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen>
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          "Hi, ${userData?.name ?? ''}",
+                          "Hi, ${userData?.name ?? 'null'}",
                           style: GoogleFonts.instrumentSans(
                             fontSize: 48,
                             fontWeight: FontWeight.w600,

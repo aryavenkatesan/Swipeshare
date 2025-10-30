@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
-import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/components/my_text_field.dart';
 import 'package:swipeshare_app/components/star_container.dart';
+import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/pages/ratings_page.dart';
@@ -24,7 +24,7 @@ class ChatPage extends StatefulWidget {
       ? orderData.buyerName
       : orderData.sellerName;
 
-  String get receiverUserID =>
+  String get receiverUserId =>
       orderData.sellerId == FirebaseAuth.instance.currentUser!.uid
       ? orderData.buyerId
       : orderData.sellerId;
@@ -39,7 +39,6 @@ class _ChatPageState extends State<ChatPage> {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final NotificationService _notifService = NotificationService.instance;
   final ScrollController _scrollController = ScrollController();
-  bool _isFirstLoad = true;
 
   bool _isChatDeleted = false;
 
@@ -79,17 +78,13 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  void _scrollToBottom({bool animate = true}) {
+  void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      if (animate) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      } else {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -99,9 +94,11 @@ class _ChatPageState extends State<ChatPage> {
       if (await Haptics.canVibrate()) {
         Haptics.vibrate(HapticsType.error);
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Message contains profanity, please change.")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Message contains profanity, please change.")),
+        );
+      }
       return;
     }
 
@@ -111,7 +108,7 @@ class _ChatPageState extends State<ChatPage> {
         Haptics.vibrate(HapticsType.medium);
       }
       await _chatService.sendMessage(
-        widget.receiverUserID,
+        widget.receiverUserId,
         _messageController.text,
         widget.orderData,
       );
@@ -173,7 +170,7 @@ class _ChatPageState extends State<ChatPage> {
         ),
         title: Column(
           children: [
-            Text("${widget.receiverUserName}"),
+            Text(widget.receiverUserName),
             SizedBox(height: 3),
             Transform.translate(
               offset: Offset(-2, 0),
@@ -191,8 +188,7 @@ class _ChatPageState extends State<ChatPage> {
           Row(
             children: [
               IconButton(
-                onPressed:
-                    _isChatDeleted // ⭐ Use the state variable instead
+                onPressed: _isChatDeleted
                     ? null
                     : () {
                         showDialog(
@@ -217,7 +213,7 @@ class _ChatPageState extends State<ChatPage> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => RatingsPage(
-                                          recieverId: widget.receiverUserID,
+                                          recieverId: widget.receiverUserId,
                                           orderData: widget.orderData,
                                         ),
                                       ),
@@ -250,7 +246,7 @@ class _ChatPageState extends State<ChatPage> {
               ChatSettingsMenu(
                 currentUserId: _firebaseAuth.currentUser!.uid,
                 currentUserEmail: _firebaseAuth.currentUser!.email!,
-                receiverUserId: widget.receiverUserID,
+                receiverUserId: widget.receiverUserId,
                 receiverUserName: widget.receiverUserName,
                 chatService: _chatService,
                 orderData: widget.orderData,
@@ -286,7 +282,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageList() {
     return StreamBuilder(
       stream: _chatService.getMessages(
-        widget.receiverUserID,
+        widget.receiverUserId,
         _firebaseAuth.currentUser!.uid,
         widget.orderData,
       ),
@@ -396,7 +392,7 @@ class _ChatPageState extends State<ChatPage> {
                       )
                     :
                       // Decline and Accept buttons
-                      data['receiverId'] == widget.receiverUserID
+                      data['receiverId'] == widget.receiverUserId
                     // data['receiverID'] is the sender's id of the time widget
                     //ik its confusing
                     //if the sender id != the receiver id

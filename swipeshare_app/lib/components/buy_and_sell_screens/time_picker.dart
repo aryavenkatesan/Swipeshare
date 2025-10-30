@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 
 class TimePickerComponent extends StatefulWidget {
   final TimeOfDay? startTime;
@@ -123,7 +123,7 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
           borderRadius: BorderRadius.circular(BuySwipesConstants.smallSpacing),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentBlue.withOpacity(0.2),
+              color: AppColors.accentBlue.withValues(alpha: (0.2 * 255)),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -240,6 +240,15 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
         showStartPicker = false;
         showEndPicker = false;
       } else {
+        // If opening start picker and start time is null, set it to default (9 AM)
+        if (start && widget.startTime == null) {
+          widget.onStartTimeChanged(const TimeOfDay(hour: 9, minute: 0));
+        }
+        // If opening end picker and end time is null, set it to default (5 PM)
+        if (end && widget.endTime == null) {
+          widget.onEndTimeChanged(const TimeOfDay(hour: 17, minute: 0));
+        }
+        
         showStartPicker = start;
         showEndPicker = end;
       }

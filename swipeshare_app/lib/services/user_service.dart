@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 
@@ -11,6 +12,7 @@ class UserService {
   Future<UserModel?> getUserData(String uid) async {
     try {
       final doc = await _fireStore.collection('users').doc(uid).get();
+      debugPrint('Fetched user data for UID $uid: ${doc.data()}');
 
       if (doc.exists) {
         return UserModel.fromFirestore(doc.data()!);
