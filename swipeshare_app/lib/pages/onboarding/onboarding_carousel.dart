@@ -10,7 +10,7 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
-import 'package:swipeshare_app/services/email_verification_service.dart';
+import 'package:swipeshare_app/services/auth/email_verification_service.dart';
 
 class OnboardingCarousel extends StatefulWidget {
   const OnboardingCarousel({super.key});

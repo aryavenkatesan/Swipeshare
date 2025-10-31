@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
-import 'package:swipeshare_app/components/time_formatter.dart';
-import 'package:swipeshare_app/components/my_text_field.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/pages/ratings_page.dart';
-import 'package:swipeshare_app/services/chat/chat_service.dart';
+import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
 
@@ -509,10 +508,21 @@ class _ChatPageState extends State<ChatPage> {
 
           //textfield
           Expanded(
-            child: MyTextField(
+            child: TextField(
               controller: _messageController,
-              hintText: "Enter Message",
               obscureText: false,
+              decoration: InputDecoration(
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                fillColor: const Color.fromARGB(11, 3, 168, 244),
+                filled: true,
+                hintText: "Enter Message",
+                hintStyle: const TextStyle(color: Colors.grey),
+              ),
             ),
           ),
 

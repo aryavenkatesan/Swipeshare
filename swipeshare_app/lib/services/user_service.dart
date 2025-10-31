@@ -105,4 +105,98 @@ class UserService {
       rethrow;
     }
   }
+
+  Future<void> deleteAccount() async {
+    try {
+      final User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser == null) {
+        throw Exception('No user is currently signed in');
+      }
+
+      final String currentUserId = currentUser.uid;
+
+      // 1. Delete listings
+      final QuerySnapshot listingsSnapshot = await _fireStore
+          .collection('listings')
+          .where('sellerId', isEqualTo: currentUserId)
+          .get();
+
+      if (listingsSnapshot.docs.isNotEmpty) {
+        final WriteBatch listingsBatch = _fireStore.batch();
+        for (final DocumentSnapshot doc in listingsSnapshot.docs) {
+          listingsBatch.delete(doc.reference);
+        }
+        await listingsBatch.commit();
+      }
+
+      // 2. Delete orders as seller (with messages)
+      final QuerySnapshot ordersAsSellerSnapshot = await _fireStore
+          .collection('orders')
+          .where('sellerId', isEqualTo: currentUserId)
+          .get();
+
+      for (final DocumentSnapshot doc in ordersAsSellerSnapshot.docs) {
+        // Delete messages subcollection
+        final messagesSnapshot = await doc.reference
+            .collection('messages')
+            .get();
+
+        if (messagesSnapshot.docs.isNotEmpty) {
+          final messagesBatch = _fireStore.batch();
+          for (final msgDoc in messagesSnapshot.docs) {
+            messagesBatch.delete(msgDoc.reference);
+          }
+          await messagesBatch.commit();
+        }
+
+        // Delete the order
+        await doc.reference.delete();
+      }
+
+      // 3. Delete orders as buyer (with messages)
+      final QuerySnapshot ordersAsBuyerSnapshot = await _fireStore
+          .collection('orders')
+          .where('buyerId', isEqualTo: currentUserId)
+          .get();
+
+      for (final DocumentSnapshot doc in ordersAsBuyerSnapshot.docs) {
+        // Delete messages subcollection
+        final messagesSnapshot = await doc.reference
+            .collection('messages')
+            .get();
+
+        if (messagesSnapshot.docs.isNotEmpty) {
+          final messagesBatch = _fireStore.batch();
+          for (final msgDoc in messagesSnapshot.docs) {
+            messagesBatch.delete(msgDoc.reference);
+          }
+          await messagesBatch.commit();
+        }
+
+        // Delete the order
+        await doc.reference.delete();
+      }
+
+      // 4. Delete user document (second to last)
+      await _fireStore.collection('users').doc(currentUserId).delete();
+
+      // 5. Delete Firebase Auth user (absolute last)
+      await currentUser.delete();
+
+      print('Account successfully deleted');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw Exception('Please sign in again before deleting your account');
+      }
+      print('Firebase Auth Error: ${e.code} - ${e.message}');
+      throw Exception('Authentication error: ${e.message}');
+    } on FirebaseException catch (e) {
+      print('Firestore Error: ${e.code} - ${e.message}');
+      throw Exception('Database error: ${e.message}');
+    } catch (e) {
+      print('Error deleting account: $e');
+      throw Exception('Failed to delete account: $e');
+    }
+  }
 }

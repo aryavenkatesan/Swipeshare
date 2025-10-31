@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/firebase_options.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
-import 'package:swipeshare_app/services/chat/chat_service.dart';
+import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 
 @pragma('vm:entry-point')
