@@ -72,7 +72,15 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
               const SizedBox(width: 20),
               GestureDetector(
                 onTap: _setTimesToNow,
-                child: Text("Now", style: AppTextStyles.subText),
+                child: Text(
+                  "Now",
+                  style: AppTextStyles.subText.copyWith(
+                    color: Color.fromARGB(255, 111, 169, 195),
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color(0x8F98D2EB),
+                    decorationThickness: 1.0,
+                  ),
+                ),
               ),
               const SizedBox(width: 20),
               Expanded(

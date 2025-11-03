@@ -21,12 +21,17 @@ class _RegisterPageState extends State<RegisterPage> {
   final nameController = TextEditingController();
   final referralController = TextEditingController();
 
+  // State variables for password visibility
+  bool _isPasswordObscured = true;
+  bool _isConfirmPasswordObscured = true;
+
   //sign up user
   void signUp() async {
     // make it unc email only
     if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
         (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
-            referralController.text != '')) {
+            referralController.text.isNotEmpty)) {
+      // Changed from != ''
       if (await Haptics.canVibrate()) {
         Haptics.vibrate(HapticsType.error);
       }
@@ -51,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    //make sure name isn't too long (13 characters or less)
+    //make sure name isn't too long (14 characters or less)
     if (nameController.text.length > 14) {
       if (await Haptics.canVibrate()) {
         Haptics.vibrate(HapticsType.error);
@@ -62,7 +67,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    //make sure name is apropriate
+    //make sure name is appropriate
     if (ProfanityUtils.hasProfanityWord(nameController.text)) {
       if (await Haptics.canVibrate()) {
         Haptics.vibrate(HapticsType.error);
@@ -111,10 +116,10 @@ class _RegisterPageState extends State<RegisterPage> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFF98D2EB),
-                  Color(0xFFDCEAFF),
-                  Color(0xFFDCEAFF),
-                  Color(0xFFA2A0DD),
+                  Color(0xFFB8E1F5),
+                  Color(0xFFE8F2FF),
+                  Color(0xFFE8F2FF),
+                  Color(0xFFC4C1ED),
                 ],
                 stops: [0.0, 0.3, 0.75, 1.0],
                 begin: Alignment.topLeft,
@@ -126,6 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
           // Frosted glass card
           Center(
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
                 child: ClipRRect(
@@ -154,7 +160,21 @@ class _RegisterPageState extends State<RegisterPage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // child: Image.asset(
+                              Image.asset(
+                                'assets/logo.png',
+                                width: 60,
+                                height: 60,
+                              ),
+                              // SizedBox(width: 8),
+                              // Text("Swipeshare", style: SubHeaderStyle),
+                            ],
+                          ),
+                          // const SizedBox(height: 24),
+                          const SizedBox(height: 12),
                           Center(
                             child: Column(
                               children: const [
@@ -174,41 +194,149 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                           ),
                           const SizedBox(height: 24),
+
+                          // --- Name Field ---
                           TextField(
                             controller: nameController,
-                            decoration: const InputDecoration(
-                              hintText: 'First Name*',
+                            decoration: InputDecoration(
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color.fromARGB(255, 30, 88, 181),
+                                ),
+                              ),
+                              fillColor: const Color.fromARGB(0, 3, 168, 244),
+                              filled: true,
+                              hintText: "First Name*",
+                              hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
                           const SizedBox(height: 16),
+
+                          // --- Email Field ---
                           TextField(
                             controller: emailController,
-                            decoration: const InputDecoration(
-                              hintText: 'Email*',
+                            keyboardType:
+                                TextInputType.emailAddress, // Email keyboard
+                            decoration: InputDecoration(
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color.fromARGB(255, 30, 88, 181),
+                                ),
+                              ),
+                              fillColor: const Color.fromARGB(0, 3, 168, 244),
+                              filled: true,
+                              hintText: "Email*",
+                              hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
 
                           const SizedBox(height: 16),
+
+                          // --- Password Field ---
                           TextField(
                             controller: passwordController,
-                            decoration: const InputDecoration(
-                              hintText: 'Password*',
+                            obscureText:
+                                _isPasswordObscured, // Use state variable
+                            decoration: InputDecoration(
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color.fromARGB(255, 30, 88, 181),
+                                ),
+                              ),
+                              fillColor: const Color.fromARGB(0, 3, 168, 244),
+                              filled: true,
+                              hintText: "Password*",
+                              hintStyle: const TextStyle(color: Colors.grey),
+                              // Eye Icon Toggle
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isPasswordObscured
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordObscured = !_isPasswordObscured;
+                                  });
+                                },
+                              ),
                             ),
-                            obscureText: true,
                           ),
                           const SizedBox(height: 16),
+
+                          // --- Confirm Password Field ---
                           TextField(
                             controller: confirmPasswordController,
-                            decoration: const InputDecoration(
-                              hintText: 'Confirm Password*',
+                            obscureText:
+                                _isConfirmPasswordObscured, // Use state variable
+                            decoration: InputDecoration(
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color.fromARGB(255, 30, 88, 181),
+                                ),
+                              ),
+                              fillColor: const Color.fromARGB(0, 3, 168, 244),
+                              filled: true,
+                              hintText: "Confirm Password*",
+                              hintStyle: const TextStyle(color: Colors.grey),
+                              // Eye Icon Toggle
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isConfirmPasswordObscured
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isConfirmPasswordObscured =
+                                        !_isConfirmPasswordObscured;
+                                  });
+                                },
+                              ),
                             ),
-                            obscureText: true,
                           ),
                           const SizedBox(height: 16),
+
+                          // --- Referral Field ---
                           TextField(
                             controller: referralController,
-                            decoration: const InputDecoration(
-                              hintText: 'Referral Email',
+                            keyboardType:
+                                TextInputType.emailAddress, // Email keyboard
+                            decoration: InputDecoration(
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color.fromARGB(255, 30, 88, 181),
+                                ),
+                              ),
+                              fillColor: const Color.fromARGB(0, 3, 168, 244),
+                              filled: true,
+                              hintText: "Referral Email (Optional)",
+                              hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
                           const SizedBox(height: 24),

@@ -35,9 +35,9 @@ class ActiveListingCard extends StatelessWidget {
           width: 225,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.transparent,
+            color: const Color.fromARGB(107, 255, 255, 255),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black12, width: 1),
+            border: Border.all(color: Color(0x6F98D2EB), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
