@@ -470,18 +470,15 @@ class _HomeScreenState extends State<HomeScreen>
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children: docs.map((doc) => _buildOrderCard(doc)).toList(),
+            children: (docs
+                .map(MealOrder.fromFirestore)
+                .toList()..sort(MealOrder.bySoonest))
+                .map((order) => ActiveOrderCard(orderData: order))
+                .toList(),
           ),
         );
       },
     );
-  }
-
-  Widget _buildOrderCard(DocumentSnapshot document) {
-    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-    MealOrder order = MealOrder.fromMap(data);
-
-    return ActiveOrderCard(orderData: order);
   }
 
   Widget _buildListingSection() {

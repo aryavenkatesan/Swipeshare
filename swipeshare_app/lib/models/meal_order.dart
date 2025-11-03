@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
   final String sellerId;
@@ -32,6 +34,16 @@ class MealOrder {
     required this.transactionDate,
     required this.isChatDeleted,
   });
+
+  DateTime get datetime => DateTime(
+    transactionDate.year,
+    transactionDate.month,
+    transactionDate.day,
+    displayTime != null ? int.parse(displayTime!.split(':')[0]) : 12,
+    displayTime != null
+        ? int.parse(displayTime!.split(':')[1].split(' ')[0])
+        : 0,
+  );
 
   Map<String, dynamic> toMap() {
     return {
@@ -72,8 +84,37 @@ class MealOrder {
     );
   }
 
+  factory MealOrder.fromFirestore(DocumentSnapshot doc) {
+    final docData = doc.data() as Map<String, dynamic>;
+    if (!doc.exists || docData.isEmpty) {
+      throw Exception('Document does not exist or has no data');
+    }
+    return MealOrder.fromMap(docData);
+  }
+
   getRoomName() {
     //something unique between the two people and their specific interaction, it will never be repeated
     return '${sellerId}_${buyerId}_${transactionDate.toIso8601String()}';
+  }
+
+  /// Comparator to sort MealOrders by soonest transaction date
+  static int bySoonest(MealOrder a, MealOrder b) {
+    final now = DateTime.now();
+
+    final aIsFuture = a.datetime.isAfter(now);
+    final bIsFuture = b.datetime.isAfter(now);
+
+    // Both future: soonest first
+    if (aIsFuture && bIsFuture) {
+      return a.datetime.compareTo(b.datetime);
+    }
+
+    // Both past: most recent first
+    if (!aIsFuture && !bIsFuture) {
+      return b.datetime.compareTo(a.datetime);
+    }
+
+    // One future, one past: future comes first
+    return aIsFuture ? -1 : 1;
   }
 }
