@@ -20,18 +20,13 @@ class AuthServices extends ChangeNotifier {
           .signInWithEmailAndPassword(email: email, password: password);
 
       //add a new document for the user in users collection if it doesn't already exist
-      _fireStore.collection('users').doc(userCredential.user!.uid).set({
+      await _fireStore.collection('users').doc(userCredential.user!.uid).set({
         'uid': userCredential.user!.uid,
         'email': email,
       }, SetOptions(merge: true));
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      //catch errors
-      // print('Error code: ${e.code}');
-      // print('Error message: ${e.message}');
-      // print('Error details: ${e.stackTrace}');
-
       throw Exception(e.code);
     }
   }

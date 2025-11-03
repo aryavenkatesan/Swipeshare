@@ -43,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   UserModel? userData;
   bool isLoading = true;
+  String? error;
   List<String> _paymentTypes = [];
 
   late AnimationController _animationController;
@@ -81,21 +82,59 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _loadUserData() async {
-    final user = await _userService.getUserData(_auth.currentUser!.uid);
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
 
-    print('DEBUG: User data loaded: ${user?.name}, ${user?.email}');
+    try {
+      UserModel? user = await _userService.getCurrentUser();
 
-    if (user != null) {
+      if (user == null) {
+        setState(() {
+          error =
+              'Unable to load your profile. Please check your connection and try again.';
+          isLoading = false;
+        });
+        return;
+      }
+
+      final deadline = DateTime.now().add(Duration(seconds: 5));
+
+      // Retry fetching to address post login delay issues
+      while (user!.name.isEmpty && DateTime.now().isBefore(deadline)) {
+        debugPrint('DEBUG: User name is empty, retrying...');
+        user = await _userService.getCurrentUser();
+
+        if (user == null) break;
+
+        await Future.delayed(Duration(milliseconds: 500));
+      }
+
+      if (user == null || user.name.isEmpty) {
+        debugPrint('DEBUG: User name is still empty after retries.');
+        setState(() {
+          error =
+              'Unable to load your profile details. Please try again later.';
+          isLoading = false;
+        });
+        return;
+      }
+
       setState(() {
         userData = user;
-        _paymentTypes = user.paymentTypes;
+        _paymentTypes = user!.paymentTypes;
         isLoading = false;
       });
 
-      print('DEBUG: State updated, userData.name: ${userData?.name}');
-
       // Start fade-in animation after data is loaded
       _animationController.forward();
+    } catch (e) {
+      debugPrint('ERROR loading user data: $e');
+      setState(() {
+        error = 'Something went wrong. Please try again.';
+        isLoading = false;
+      });
     }
   }
 
@@ -113,10 +152,6 @@ class _HomeScreenState extends State<HomeScreen>
     await Future.delayed(Duration(milliseconds: sheaintevenknowit));
 
     // Reset animation and reload data
-    setState(() {
-      isLoading = true;
-    });
-
     _animationController.reset();
     await _loadUserData();
 
@@ -136,10 +171,38 @@ class _HomeScreenState extends State<HomeScreen>
     // final double vh = MediaQuery.of(context).size.height;
     final double vw = MediaQuery.of(context).size.width;
 
+    if (error != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+              SizedBox(height: 16),
+              Text(error!, style: SubTextStyle),
+              SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await _loadUserData();
+                },
+                icon: Icon(Icons.refresh),
+                label: Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // Show logo while loading
     if (isLoading) {
       return Scaffold(
         body: Center(
+          child: SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(),
+          ),
           // child: Image.asset('assets/logo.png', width: 150, height: 150),
         ),
       );
@@ -230,11 +293,15 @@ class _HomeScreenState extends State<HomeScreen>
                             label: "Buy",
                             iconPath: "assets/fork_and_knife.svg",
                             onTap: () async {
+                              final navigator = Navigator.of(context);
+
                               if (await Haptics.canVibrate()) {
-                                Haptics.vibrate(HapticsType.light);
+                                await Haptics.vibrate(HapticsType.light);
                               }
-                              Navigator.push(
-                                context,
+
+                              if (!mounted) return;
+
+                              navigator.push(
                                 MaterialPageRoute(
                                   builder: (context) => BuySwipeScreen(
                                     paymentOptions: _paymentTypes,
@@ -250,11 +317,15 @@ class _HomeScreenState extends State<HomeScreen>
                             label: "Sell",
                             iconPath: "assets/wallet.svg",
                             onTap: () async {
+                              final navigator = Navigator.of(context);
+
                               if (await Haptics.canVibrate()) {
-                                Haptics.vibrate(HapticsType.light);
+                                await Haptics.vibrate(HapticsType.light);
                               }
-                              Navigator.push(
-                                context,
+
+                              if (!mounted) return;
+
+                              navigator.push(
                                 MaterialPageRoute(
                                   builder: (context) => SellPostScreen(
                                     paymentOptions: _paymentTypes,
@@ -454,8 +525,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildListingCard(DocumentSnapshot document) {
-    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-    Listing currentlisting = Listing.fromMap(data);
+    Listing currentlisting = Listing.fromFirestore(document);
 
     return ActiveListingCard(
       currentListing: currentlisting,

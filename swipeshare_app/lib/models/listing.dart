@@ -10,6 +10,7 @@ enum PaymentType {
 //survey says.. enum is not it, just use List<String> lmao
 
 class Listing {
+  final String id;
   final String sellerId;
   final String sellerName;
   final String diningHall;
@@ -18,8 +19,10 @@ class Listing {
   final DateTime transactionDate;
   final double sellerRating;
   final List<String> paymentTypes;
+  final double? price;
 
   Listing({
+    required this.id,
     required this.sellerId,
     required this.sellerName,
     required this.diningHall,
@@ -28,6 +31,7 @@ class Listing {
     required this.transactionDate,
     required this.sellerRating,
     required this.paymentTypes,
+    this.price,
   });
 
   Map<String, dynamic> toMap() {
@@ -40,11 +44,21 @@ class Listing {
       'transactionDate': Timestamp.fromDate(transactionDate),
       'sellerRating': sellerRating,
       'paymentTypes': paymentTypes,
+      'price': price,
     };
   }
 
-  factory Listing.fromMap(Map<String, dynamic> map) {
+  factory Listing.fromFirestore(DocumentSnapshot doc) {
+    final docData = doc.data() as Map<String, dynamic>;
+    if (!doc.exists || docData.isEmpty) {
+      throw Exception('Document does not exist or has no data');
+    }
+    return Listing.fromMap(doc.id, docData);
+  }
+
+  factory Listing.fromMap(String id, Map<String, dynamic> map) {
     return Listing(
+      id: id,
       sellerId: map['sellerId'] ?? '',
       sellerName: map['sellerName'] ?? '',
       diningHall: map['diningHall'] ?? '',
@@ -53,6 +67,7 @@ class Listing {
       transactionDate: map['transactionDate'].toDate(),
       sellerRating: map['sellerRating'],
       paymentTypes: [for (var item in map['paymentTypes']) item as String],
+      price: map['price'] != null ? (map['price'] as num).toDouble() : null,
     );
   }
 

@@ -1,14 +1,18 @@
 import 'dart:math';
-import 'package:flutter/cupertino.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/listing.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:swipeshare_app/components/colors.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/listing.dart';
+import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
@@ -38,7 +42,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
   String? _expandedListingId;
 
   // Cache the listings data in state
-  List<DocumentSnapshot>? _cachedListings;
+  List<Listing>? _cachedPerfectMatches;
+  List<Listing>? _cachedImperfectMatches;
   bool _isLoading = true;
   String? _error;
 
@@ -62,18 +67,42 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
   // Load listings once on init
   Future<void> _loadListings() async {
     try {
-      final snapshot = await FirebaseFirestore.instance
+      final listingsQuery = FirebaseFirestore.instance
           .collection('listings')
-          .where(_buildListingsFilter())
-          .get();
+          .where(_buildListingsFilter());
+
+      final [
+        snapshot as QuerySnapshot<Map<String, dynamic>>,
+        currentUser as UserModel?,
+      ] = await Future.wait([
+        listingsQuery.get(),
+        UserService().getCurrentUser(),
+      ]);
+
+      if (currentUser == null) {
+        setState(() {
+          _error = "Failed to load user data.";
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final (perfectMatches, imperfectMatches) = sortListingsByRelevance(
+        snapshot.docs
+            .map((doc) => Listing.fromFirestore(doc))
+            .where(
+              (listing) => !currentUser.blockedUsers.contains(listing.sellerId),
+            )
+            .toList(),
+      );
 
       if (mounted) {
         setState(() {
-          _cachedListings = snapshot.docs;
+          _cachedPerfectMatches = perfectMatches;
+          _cachedImperfectMatches = imperfectMatches;
           _isLoading = false;
           _error = null;
         });
-        debugPrint("Fetched ${snapshot.docs.length} listings");
       }
     } catch (e) {
       debugPrint("Error fetching listings: $e");
@@ -120,7 +149,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey.withOpacity(0.3), // Customize color as needed
+            color: Colors.grey.withValues(
+              alpha: 0.3,
+            ), // Customize color as needed
             height: 1.0,
           ),
         ),
@@ -140,7 +171,11 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       return Center(child: Text('Error: $_error'));
     }
 
-    if (_cachedListings == null || _cachedListings!.isEmpty) {
+    final hasNoListings =
+        (_cachedPerfectMatches == null || _cachedPerfectMatches!.isEmpty) &&
+        (_cachedImperfectMatches == null || _cachedImperfectMatches!.isEmpty);
+
+    if (hasNoListings) {
       return SmartRefresher(
         controller: _refreshController,
         onRefresh: _onRefresh,
@@ -183,6 +218,11 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       );
     }
 
+    final perfectMatches = _cachedPerfectMatches ?? [];
+    final imperfectMatches = _cachedImperfectMatches ?? [];
+    final totalCount = perfectMatches.length + imperfectMatches.length;
+    final hasDivider = perfectMatches.isNotEmpty && imperfectMatches.isNotEmpty;
+
     return SmartRefresher(
       controller: _refreshController,
       onRefresh: _onRefresh,
@@ -194,10 +234,30 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         },
       ),
       child: ListView.builder(
-        itemCount: _cachedListings!.length,
+        padding: const EdgeInsets.only(top: 6),
+        itemCount: totalCount + (hasDivider ? 1 : 0),
         physics: const AlwaysScrollableScrollPhysics(),
         itemBuilder: (context, index) {
-          final doc = _cachedListings![index];
+          // Check if this is the divider position
+          if (hasDivider && index == perfectMatches.length) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Divider(height: 1, thickness: 1, color: Colors.grey[300]),
+            );
+          }
+
+          // Determine which listing to show
+          final Listing doc;
+          if (index < perfectMatches.length) {
+            doc = perfectMatches[index];
+          } else {
+            // Adjust index for imperfect matches (account for divider)
+            final adjustedIndex = hasDivider
+                ? index - perfectMatches.length - 1
+                : index - perfectMatches.length;
+            doc = imperfectMatches[adjustedIndex];
+          }
+
           return GestureDetector(
             // Move the collapse-on-tap to each item
             onTap: () {
@@ -215,14 +275,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     );
   }
 
-  Widget _buildListingItem(DocumentSnapshot document, Key key) {
-    Map<String, dynamic> listing = document.data()! as Map<String, dynamic>;
-    final TimeOfDay listingStartTime = Listing.minutesToTOD(
-      listing['timeStart'],
-    );
-    final TimeOfDay listingEndTime = Listing.minutesToTOD(listing['timeEnd']);
-    final docId = document.id;
-    final bool isExpanded = _expandedListingId == docId;
+  Widget _buildListingItem(Listing listing, Key key) {
+    final bool isExpanded = _expandedListingId == listing.id;
 
     return AnimatedContainer(
       key: key,
@@ -230,7 +284,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       curve: Curves.easeInOut,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isExpanded ? Colors.black26 : Colors.black12,
@@ -243,7 +297,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
           GestureDetector(
             onTap: () {
               setState(() {
-                _expandedListingId = isExpanded ? null : docId;
+                _expandedListingId = isExpanded ? null : listing.id;
               });
             },
             behavior: HitTestBehavior.opaque,
@@ -257,7 +311,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          "${listing['diningHall']}",
+                          listing.diningHall,
                           style: HeaderStyle.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -273,7 +327,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                           children: [
                             const TextSpan(text: "⭑ "),
                             TextSpan(
-                              text: listing['sellerRating'].toStringAsFixed(2),
+                              text: listing.sellerRating.toStringAsFixed(2),
                               style: const TextStyle(
                                 color: Color.fromARGB(198, 0, 0, 0),
                               ),
@@ -294,7 +348,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                             children: [
                               const TextSpan(text: "From  "),
                               TextSpan(
-                                text: _formatTime(listingStartTime),
+                                text: _formatTime(listing.timeStart),
                                 style: const TextStyle(
                                   color: Color.fromARGB(255, 65, 137, 200),
                                   fontWeight: FontWeight.w500,
@@ -302,7 +356,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                               ),
                               const TextSpan(text: "  to  "),
                               TextSpan(
-                                text: _formatTime(listingEndTime),
+                                text: _formatTime(listing.timeEnd),
                                 style: const TextStyle(
                                   color: Color.fromARGB(255, 65, 137, 200),
                                   fontWeight: FontWeight.w500,
@@ -355,7 +409,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          "${listing['paymentTypes'].join(", ")}",
+                          listing.paymentTypes.join(", "),
                           style: AppTextStyles.viewListingSubText,
                         ),
 
@@ -372,7 +426,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          "\$${listing['price'] ?? '7'}",
+                          "\$${listing.price ?? '7'}",
                           style: AppTextStyles.viewListingSubText,
                         ),
 
@@ -389,7 +443,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                               if (await Haptics.canVibrate()) {
                                 Haptics.vibrate(HapticsType.success);
                               }
-                              _handleListingSelection(docId, listing);
+                              _handleListingSelection(listing);
                             },
                             child: Text(
                               "Select This Listing",
@@ -410,18 +464,15 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     );
   }
 
-  Future<void> _handleListingSelection(
-    String docId,
-    Map<String, dynamic> listing,
-  ) async {
+  Future<void> _handleListingSelection(Listing listing) async {
     try {
-      await _listingService.deleteListing(docId);
+      await _listingService.deleteListing(listing.id);
       await _orderService.postOrder(
-        listing['sellerId'],
-        listing['diningHall'],
+        listing.sellerId,
+        listing.diningHall,
         widget.date,
-        listing['sellerName'],
-        listing['sellerRating'],
+        listing.sellerName,
+        listing.sellerRating,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -431,8 +482,8 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
         Navigator.pop(context);
       }
     } catch (e, s) {
-      print('Error: $e');
-      print('Stack: $s');
+      debugPrint('Error: $e');
+      debugPrint('Stack: $s');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -455,22 +506,96 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     );
 
     return Filter.and(
-      Filter('diningHall', whereIn: widget.locations),
+      // Exclude current user's listings
       Filter('sellerId', isNotEqualTo: _auth.currentUser!.uid),
+
+      // Get listings only on the selected date
       Filter(
         'transactionDate',
         isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
       ),
       Filter('transactionDate', isLessThan: Timestamp.fromDate(endDate)),
-      Filter(
-        'timeStart',
-        isLessThanOrEqualTo: Listing.toMinutes(widget.endTime),
-      ),
-      Filter(
-        'timeEnd',
-        isGreaterThanOrEqualTo: Listing.toMinutes(widget.startTime),
-      ),
+
+      // Get listings only with payment type overlap
+      Filter('paymentTypes', arrayContainsAny: widget.paymentTypes),
     );
+  }
+
+  (List<Listing>, List<Listing>) sortListingsByRelevance(
+    List<Listing> allListings,
+  ) {
+    // Helper function to check time overlap
+    bool hasTimeOverlap(Listing listing) {
+      final listingStart = Listing.toMinutes(listing.timeStart);
+      final listingEnd = Listing.toMinutes(listing.timeEnd);
+      final selectedStart = Listing.toMinutes(widget.startTime);
+      final selectedEnd = Listing.toMinutes(widget.endTime);
+
+      return listingStart < selectedEnd && listingEnd > selectedStart;
+    }
+
+    // Helper function to check dining hall match
+    bool hasDiningHallMatch(Listing listing) {
+      return widget.locations.contains(listing.diningHall);
+    }
+
+    // Calculates how closely the listing's time matches the selected time range
+    // Returns negative if overlapping, positive if non-overlapping,
+    // with larger absolute values indicating further away from the range
+    int calculateTimeMatch(Listing listing) {
+      final listingStart = Listing.toMinutes(listing.timeStart);
+      final listingEnd = Listing.toMinutes(listing.timeEnd);
+      final selectedStart = Listing.toMinutes(widget.startTime);
+      final selectedEnd = Listing.toMinutes(widget.endTime);
+
+      if (listingEnd <= selectedStart) {
+        // Listing ends before/at query start; positive
+        return selectedStart - listingEnd;
+      } else if (listingStart >= selectedEnd) {
+        // Listing starts after/at query end; positive
+        return listingStart - selectedEnd;
+      } else if (listingStart < selectedStart) {
+        // Listing overlaps and starts before query; negative
+        return selectedStart - listingEnd;
+      } else {
+        // Listing overlaps and starts after query; negative
+        return listingStart - selectedEnd;
+      }
+    }
+
+    // Categorize listings into 4 groups
+    final bucket1 =
+        <Listing>[]; // Time overlap + Dining hall match (perfect matches)
+    final bucket2 = <Listing>[]; // Time overlap + No dining hall match
+    final bucket3 = <Listing>[]; // No time overlap + Dining hall match
+    final bucket4 = <Listing>[]; // No time overlap + No dining hall match
+
+    for (final listing in allListings) {
+      final timeOverlap = hasTimeOverlap(listing);
+      final hallMatch = hasDiningHallMatch(listing);
+
+      if (timeOverlap && hallMatch) {
+        bucket1.add(listing);
+      } else if (timeOverlap && !hallMatch) {
+        bucket2.add(listing);
+      } else if (!timeOverlap && hallMatch) {
+        bucket3.add(listing);
+      } else {
+        bucket4.add(listing);
+      }
+    }
+
+    // Sort each group by time match (ascending)
+    for (final group in [bucket1, bucket2, bucket3, bucket4]) {
+      group.sort((a, b) {
+        final distA = calculateTimeMatch(a);
+        final distB = calculateTimeMatch(b);
+        return distA.compareTo(distB);
+      });
+    }
+
+    // Return perfect matches (bucket1) and imperfect matches (bucket2-4) separately
+    return (bucket1, [...bucket2, ...bucket3, ...bucket4]);
   }
 
   String _formatTime(TimeOfDay time) {

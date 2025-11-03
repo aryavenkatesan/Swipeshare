@@ -1,4 +1,3 @@
-import 'package:swipeshare_app/models/listing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -22,18 +21,18 @@ class ListingService extends ChangeNotifier {
     final String currentUserName = user!.name;
     final double currentUserRating = user.stars;
 
-    Listing newListing = Listing(
-      sellerId: currentUserId,
-      diningHall: diningHall,
-      timeStart: timeStart,
-      timeEnd: timeEnd,
-      transactionDate: transactionDate,
-      sellerName: currentUserName,
-      sellerRating: currentUserRating,
-      paymentTypes: paymentTypes,
-    );
+    final newListing = {
+      "sellerId": currentUserId,
+      "diningHall": diningHall,
+      "timeStart": timeStart,
+      "timeEnd": timeEnd,
+      "transactionDate": transactionDate,
+      "sellerName": currentUserName,
+      "sellerRating": currentUserRating,
+      "paymentTypes": paymentTypes,
+    };
 
-    await _fireStore.collection('listings').add(newListing.toMap());
+    await _fireStore.collection('listings').add(newListing);
   }
 
   //GET ALL LISTINGS
@@ -47,9 +46,7 @@ class ListingService extends ChangeNotifier {
 
     return _fireStore
         .collection('listings')
-        .where(
-              Filter('sellerId', isEqualTo: currentUserId),
-        )
+        .where(Filter('sellerId', isEqualTo: currentUserId))
         .snapshots();
   }
 
