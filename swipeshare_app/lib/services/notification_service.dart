@@ -58,6 +58,12 @@ class NotificationService {
       return;
     }
 
+    try {
+      await _messaging.setAutoInitEnabled(true);
+    } catch (e) {
+      debugPrint("setAutoInitEnabled failed: $e");
+    }
+
     _refreshFcmToken(_auth.currentUser);
 
     _auth.authStateChanges().listen(_refreshFcmToken);
