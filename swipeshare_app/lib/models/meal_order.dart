@@ -21,18 +21,18 @@ class MealOrder {
   MealOrder({
     required this.sellerId,
     required this.sellerName,
-    required this.sellerVisibility,
+    this.sellerVisibility = true,
     required this.sellerStars,
     required this.buyerId,
     required this.buyerName,
-    required this.buyerVisibility,
+    this.buyerVisibility = true,
     required this.buyerStars,
     required this.diningHall,
     this.displayTime,
     required this.sellerHasNotifs,
     required this.buyerHasNotifs,
     required this.transactionDate,
-    required this.isChatDeleted,
+    this.isChatDeleted = false,
   });
 
   DateTime get datetime => DateTime(

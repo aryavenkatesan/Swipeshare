@@ -1,8 +1,8 @@
-import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/models/message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
@@ -138,7 +138,11 @@ class ChatService extends ChangeNotifier {
     }
   }
 
-  Future<void> systemMessage(String messageContent, String orderId) async {
+  Future<void> systemMessage(
+    String messageContent,
+    String orderId, {
+    Transaction? transaction,
+  }) async {
     final Timestamp timeStamp = Timestamp.now();
     Message systemMessage = Message(
       message: messageContent,
@@ -148,11 +152,26 @@ class ChatService extends ChangeNotifier {
       timestamp: timeStamp,
     );
 
-    await _fireStore
+    final messagesCollection = _fireStore
         .collection('orders')
         .doc(orderId)
-        .collection('messages')
-        .add(systemMessage.toMap());
+        .collection('messages');
+
+    if (transaction != null) {
+      transaction.set(messagesCollection.doc(), systemMessage.toMap());
+      return;
+    }
+
+    await messagesCollection.add(systemMessage.toMap());
+  }
+
+  Future<void> newOrderSystemMessage(
+    String orderId, {
+    Transaction? transaction,
+  }) async {
+    final message =
+        "Welcome to the chat room!\n\nFeel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) \n\n Remember swipes are \$7 and should be paid before the seller swipes you in. \n\n Happy Swiping!";
+    await systemMessage(message, orderId, transaction: transaction);
   }
 
   Future<void> deleteChat(MealOrder orderData) async {
@@ -163,7 +182,7 @@ class ChatService extends ChangeNotifier {
       systemMessage(message, orderData.getRoomName());
       OrderService().updateVisibility(orderData, true);
     } catch (e) {
-      print('Error deleting user: $e');
+      debugPrint('Error deleting user: $e');
       rethrow;
     }
   }

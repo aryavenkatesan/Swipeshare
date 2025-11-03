@@ -50,8 +50,28 @@ class ListingService extends ChangeNotifier {
         .snapshots();
   }
 
+  //GET LISTING BY ID
+  Future<Map<String, dynamic>?> getListingById(
+    String docId, {
+    Transaction? transaction,
+  }) async {
+    final docRef = _fireStore.collection('listings').doc(docId);
+    if (transaction != null) {
+      final docSnapshot = await transaction.get(docRef);
+      return docSnapshot.data();
+    }
+
+    final doc = await docRef.get();
+    return doc.data();
+  }
+
   //DELETE LISTING
-  Future<void> deleteListing(String docId) async {
-    await _fireStore.collection('listings').doc(docId).delete();
+  Future<void> deleteListing(String docId, {Transaction? transaction}) async {
+    final docRef = _fireStore.collection('listings').doc(docId);
+    if (transaction != null) {
+      transaction.delete(docRef);
+    } else {
+      await docRef.delete();
+    }
   }
 }

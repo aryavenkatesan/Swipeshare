@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
+import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class OrderService extends ChangeNotifier {
@@ -11,6 +13,7 @@ class OrderService extends ChangeNotifier {
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
   final UserService _userService = UserService();
   final ChatService _chatService = ChatService();
+  final ListingService _listingService = ListingService();
 
   //POST LISTING
   Future<void> postOrder(
@@ -33,13 +36,10 @@ class OrderService extends ChangeNotifier {
       transactionDate: transactionDate,
       sellerName: sellerName,
       buyerName: currentUserName,
-      sellerVisibility: true,
-      buyerVisibility: true,
       sellerStars: sellerstars,
       buyerStars: currentUserStars,
       sellerHasNotifs: false,
       buyerHasNotifs: false,
-      isChatDeleted: false,
     );
 
     try {
@@ -50,14 +50,65 @@ class OrderService extends ChangeNotifier {
           .doc(customDocId)
           .set(newOrder.toMap());
 
-      //send message from system
-      final String message =
-          "Welcome to the chat room!\n\nFeel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) \n\n Remember swipes are \$7 and should be paid before the seller swipes you in. \n\n Happy Swiping!";
-      _chatService.systemMessage(message, customDocId);
+      await _chatService.newOrderSystemMessage(customDocId);
     } catch (e, s) {
       // Handle the error and stack trace
-      print('Error: $e');
-      print('Stack: $s');
+      debugPrint('Error: $e');
+      debugPrint('Stack: $s');
+    }
+  }
+
+  /// Make a transaction by creating an order and deleting the listing
+  Future<void> makeTransaction(Listing listing) async {
+    final String currentUserId = _firebaseAuth.currentUser!.uid;
+    final user = await _userService.getUserData(currentUserId);
+
+    if (user == null) {
+      throw Exception(
+        'User data not found for current user ID: $currentUserId',
+      );
+    }
+
+    MealOrder newOrder = MealOrder(
+      sellerId: listing.sellerId,
+      buyerId: currentUserId,
+      diningHall: listing.diningHall,
+      transactionDate: listing.transactionDate,
+      sellerName: listing.sellerName,
+      buyerName: user.name,
+      sellerStars: listing.sellerRating,
+      buyerStars: user.stars,
+      sellerHasNotifs: true,
+      buyerHasNotifs: true,
+    );
+
+    try {
+      await _fireStore.runTransaction((transaction) async {
+        final orderRef = _fireStore
+            .collection('orders')
+            .doc(newOrder.getRoomName());
+
+        // Check if listing still exists (prevents race conditions)
+        final listingData = await _listingService.getListingById(
+          listing.id,
+          transaction: transaction,
+        );
+        if (listingData == null) {
+          throw Exception('Listing no longer exists');
+        }
+
+        _listingService.deleteListing(listing.id, transaction: transaction);
+        transaction.set(orderRef, newOrder.toMap());
+
+        _chatService.newOrderSystemMessage(
+          newOrder.getRoomName(),
+          transaction: transaction,
+        );
+      });
+    } catch (e, s) {
+      debugPrint('Error: $e');
+      debugPrint('Stack: $s');
+      rethrow;
     }
   }
 

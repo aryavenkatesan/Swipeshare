@@ -10,7 +10,6 @@ import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/user.dart';
-import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
@@ -36,7 +35,6 @@ class ListingSelectionPage extends StatefulWidget {
 
 class _ListingSelectionPageState extends State<ListingSelectionPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final _listingService = ListingService();
   final _orderService = OrderService();
 
   String? _expandedListingId;
@@ -466,14 +464,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
 
   Future<void> _handleListingSelection(Listing listing) async {
     try {
-      await _listingService.deleteListing(listing.id);
-      await _orderService.postOrder(
-        listing.sellerId,
-        listing.diningHall,
-        widget.date,
-        listing.sellerName,
-        listing.sellerRating,
-      );
+      await _orderService.makeTransaction(listing);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Order was placed successfully!')),
