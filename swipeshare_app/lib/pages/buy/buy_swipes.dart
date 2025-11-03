@@ -8,7 +8,7 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart'
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/pages/listing_selection_page.dart';
+import 'package:swipeshare_app/pages/buy/listing_selection_page.dart';
 
 class BuySwipeScreen extends StatefulWidget {
   List<String> paymentOptions;

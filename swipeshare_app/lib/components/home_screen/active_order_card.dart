@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/time_formatter.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
 
@@ -48,12 +48,26 @@ class ActiveOrderCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(orderData.diningHall, style: HeaderStyle),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${orderData.diningHall}',
+                          style: HeaderStyle,
+                        ),
+                        // TextSpan(
+                        //   text:
+                        //       '  ${TimeFormatter.formatToMMDD(orderData.transactionDate)}',
+                        //   style: GreyHeaderStyle,
+                        // ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     orderData.displayTime != null
-                        ? TimeFormatter.formatTimeOfDay(orderData.displayTime!)
-                        : "TBD",
+                        ? "${TimeFormatter.formatTimeOfDay(orderData.displayTime!)}    ${TimeFormatter.formatToMMDD(orderData.transactionDate)} "
+                        : "${TimeFormatter.formatToMMDD(orderData.transactionDate)}, TBD",
                     style: GreyHeaderStyle,
                   ),
                 ],

@@ -2,7 +2,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/time_formatter.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 
@@ -35,9 +35,9 @@ class ActiveListingCard extends StatelessWidget {
           width: 225,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.transparent,
+            color: const Color.fromARGB(107, 255, 255, 255),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black12, width: 1),
+            border: Border.all(color: Color(0x6F98D2EB), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -4,15 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
-import 'package:swipeshare_app/components/my_text_field.dart';
 import 'package:swipeshare_app/components/star_container.dart';
-import 'package:swipeshare_app/components/time_formatter.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/pages/ratings_page.dart';
-import 'package:swipeshare_app/services/chat/chat_service.dart';
+import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class ChatPage extends StatefulWidget {
   final MealOrder orderData;
@@ -257,7 +256,9 @@ class _ChatPageState extends State<ChatPage> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey.withOpacity(0.3), // Customize color as needed
+            color: Colors.grey.withValues(
+              alpha: 0.3,
+            ), // Customize color as needed
             height: 1.0,
           ),
         ),
@@ -403,7 +404,7 @@ class _ChatPageState extends State<ChatPage> {
                           // Decline button
                           GestureDetector(
                             onTap: () async {
-                              print("Declined");
+                              debugPrint("Declined");
 
                               await _chatService.updateTimeWidgetStatus(
                                 widget.orderData,
@@ -426,7 +427,7 @@ class _ChatPageState extends State<ChatPage> {
                           // Accept button
                           GestureDetector(
                             onTap: () async {
-                              print("Accepted");
+                              debugPrint("Accepted");
                               // Add your accept logic here
                               await _chatService.updateTimeWidgetStatus(
                                 widget.orderData,
@@ -505,10 +506,21 @@ class _ChatPageState extends State<ChatPage> {
 
           //textfield
           Expanded(
-            child: MyTextField(
+            child: TextField(
               controller: _messageController,
-              hintText: "Enter Message",
               obscureText: false,
+              decoration: InputDecoration(
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                fillColor: const Color.fromARGB(11, 3, 168, 244),
+                filled: true,
+                hintText: "Enter Message",
+                hintStyle: const TextStyle(color: Colors.grey),
+              ),
             ),
           ),
 

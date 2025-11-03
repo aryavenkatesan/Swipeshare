@@ -15,6 +15,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool rememberMe = false;
+  // controls whether the password is obscured
+  bool _isPasswordObscured = true;
   //text controller
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -57,10 +59,10 @@ class _LoginPageState extends State<LoginPage> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFF98D2EB),
-                  Color(0xFFDCEAFF),
-                  Color(0xFFDCEAFF),
-                  Color(0xFFA2A0DD),
+                  Color(0xFFB8E1F5), // Lightened from 0xFF98D2EB
+                  Color(0xFFE8F2FF), // Lightened from 0xFFDCEAFF
+                  Color(0xFFE8F2FF), // Lightened from 0xFFDCEAFF
+                  Color(0xFFC4C1ED),
                 ],
                 stops: [0.0, 0.3, 0.75, 1.0],
                 begin: Alignment.topLeft,
@@ -72,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
           // This makes the card scrollable when the keyboard appears
           Center(
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               //scrollview is important so when the onscreen keyboard comes up, the app doesn't blow up
               padding: const EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
@@ -81,8 +84,8 @@ class _LoginPageState extends State<LoginPage> {
                     filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
                     child: Container(
                       width: double.infinity,
-                      margin: EdgeInsets.symmetric(horizontal: 24),
-                      padding: EdgeInsets.all(24),
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(20),
@@ -100,6 +103,20 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // child: Image.asset(
+                              Image.asset(
+                                'assets/logo.png',
+                                width: 60,
+                                height: 60,
+                              ),
+                              // SizedBox(width: 8),
+                              // Text("Swipeshare", style: SubHeaderStyle),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
                           const Text(
                             "Login",
                             style: TextStyle(
@@ -116,17 +133,59 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 24),
                           TextField(
                             controller: emailController,
-                            decoration: const InputDecoration(
-                              hintText: 'Email',
+                            obscureText: false,
+                            // THIS IS THE FIX for the email keyboard
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color.fromARGB(255, 30, 88, 181),
+                                ),
+                              ),
+                              fillColor: const Color.fromARGB(0, 3, 168, 244),
+                              filled: true,
+                              hintText: "Email",
+                              hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextField(
                             controller: passwordController,
-                            decoration: const InputDecoration(
-                              hintText: 'Password',
+                            obscureText: _isPasswordObscured,
+                            decoration: InputDecoration(
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color.fromARGB(255, 30, 88, 181),
+                                ), // Highlight when focused
+                              ),
+                              // --- End of UI Change ---
+                              fillColor: const Color.fromARGB(0, 3, 168, 244),
+                              filled: true,
+                              hintText: "Password",
+                              hintStyle: const TextStyle(color: Colors.grey),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isPasswordObscured
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordObscured = !_isPasswordObscured;
+                                  });
+                                },
+                              ),
                             ),
-                            obscureText: true,
                           ),
                           const SizedBox(height: 12),
                           Row(

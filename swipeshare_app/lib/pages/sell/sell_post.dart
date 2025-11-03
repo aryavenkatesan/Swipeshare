@@ -10,7 +10,7 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/swipe_count_picke
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/pages/sell_order_confirm.dart';
+import 'package:swipeshare_app/pages/sell/sell_order_confirm.dart';
 
 class SellPostScreen extends StatefulWidget {
   List<String> paymentOptions;
