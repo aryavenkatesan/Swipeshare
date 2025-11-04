@@ -10,7 +10,8 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
-import 'package:swipeshare_app/services/auth/email_verification_service.dart';
+// Import the new code service
+import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 
 class OnboardingCarousel extends StatefulWidget {
   const OnboardingCarousel({super.key});
@@ -21,19 +22,26 @@ class OnboardingCarousel extends StatefulWidget {
 
 class _OnboardingCarouselState extends State<OnboardingCarousel> {
   final PageController _controller = PageController();
-  final _verificationService = EmailVerificationService();
+  // Use the new service
+  final _verificationService = EmailCodeVerificationService();
+  // Add a controller for the code input
+  final _codeController = TextEditingController();
 
   bool onLastPage = false;
   bool _isCheckingVerification = false;
+  bool _isResending = false;
 
   @override
   void initState() {
     super.initState();
-    _verificationService.sendVerificationEmail();
+    // Send the first verification code when the page loads
+    _resendCode();
   }
 
   @override
   void dispose() {
+    _controller.dispose();
+    _codeController.dispose();
     _verificationService.dispose();
     super.dispose();
   }
@@ -56,19 +64,11 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.69,
-            //genuinly does not work on iphone se at 0.7 or 0.68
             child: PageView(
               controller: _controller,
               onPageChanged: (index) {
-                final newOnLastPage = (index == 5);
-                if (newOnLastPage && newOnLastPage != onLastPage) {
-                  _awaitEmailVerification();
-                } else {
-                  _stopEmailVerification();
-                }
-
                 setState(() {
-                  onLastPage = newOnLastPage;
+                  onLastPage = (index == 5);
                 });
               },
               children: [
@@ -77,7 +77,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                 Page3(),
                 Page4(),
                 Page5(),
-                Page6(tutorial: false),
+                // Pass the code controller to the new Page6
+                Page6(tutorial: false, codeController: _codeController),
               ],
             ),
           ),
@@ -91,6 +92,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // --- Resend Button ---
                   !onLastPage
                       ? GestureDetector(
                           onTap: () {
@@ -98,11 +100,15 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                           },
                           child: Text("skip"),
                         )
+                      : _isResending
+                      // Show a small spinner while resending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : GestureDetector(
-                          onTap: () {
-                            _verificationService.sendVerificationEmail();
-                            _awaitEmailVerification();
-                          },
+                          onTap: _resendCode,
                           child: Text("    resend "),
                         ),
 
@@ -117,6 +123,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                     ),
                   ),
 
+                  // --- Next / Enter Button ---
                   !onLastPage
                       ? GestureDetector(
                           onTap: () {
@@ -128,7 +135,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                           child: const Text("next"),
                         )
                       : GestureDetector(
-                          onTap: () => _awaitEmailVerification(),
+                          onTap: _checkCode, // Point to the new check function
                           child: Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 14,
@@ -170,13 +177,24 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
     );
   }
 
-  Future<void> _awaitEmailVerification() async {
+  /// New function to check the code from the TextField
+  Future<void> _checkCode() async {
     if (_isCheckingVerification) return;
+
+    if (_codeController.text.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter all 6 digits.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isCheckingVerification = true);
 
     try {
-      await _verificationService.awaitVerification();
+      await _verificationService.checkVerificationCode(_codeController.text);
 
       // Email verified
       if (mounted) {
@@ -192,15 +210,6 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       }
-    } on TimeoutException {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verification check timed out. Please try again.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -214,12 +223,36 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
     }
   }
 
-  void _stopEmailVerification() {
-    if (!_isCheckingVerification) return;
+  /// New function to resend the code
+  Future<void> _resendCode() async {
+    if (_isResending) return;
+    setState(() => _isResending = true);
 
-    _verificationService.dispose();
-    setState(() => _isCheckingVerification = false);
+    try {
+      await _verificationService.sendVerificationCode();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('New verification code sent!'),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isResending = false);
+      }
+    }
   }
+
+  // This function is no longer needed and can be removed
+  // void _stopEmailVerification() { ... }
 
   void signOut() {
     final authService = context.read<AuthServices>();

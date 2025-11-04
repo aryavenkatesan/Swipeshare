@@ -470,11 +470,11 @@ class _HomeScreenState extends State<HomeScreen>
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children: (docs
-                .map(MealOrder.fromFirestore)
-                .toList()..sort(MealOrder.bySoonest))
-                .map((order) => ActiveOrderCard(orderData: order))
-                .toList(),
+            children:
+                (docs.map(MealOrder.fromFirestore).toList()
+                      ..sort(MealOrder.bySoonest))
+                    .map((order) => ActiveOrderCard(orderData: order))
+                    .toList(),
           ),
         );
       },

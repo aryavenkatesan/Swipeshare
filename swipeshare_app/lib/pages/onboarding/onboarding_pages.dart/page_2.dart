@@ -13,17 +13,8 @@ class Page2 extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: (vh * 0.1)),
-          // The Row is no longer needed
-          Image.asset(
-            'assets/onboarding2.png',
-            // 1. Set the width to the full screen width
-            width: vh,
-
-            // 2. Tell the image to scale to fill that width,
-            // maintaining its aspect ratio.
-            fit: BoxFit.fitWidth,
-          ),
+          SizedBox(height: vh > 767 ? (vh * 0.14) : (vh * 0.1)),
+          Image.asset('assets/onboarding2.png', fit: BoxFit.fitWidth),
 
           SizedBox(height: vh > 767 ? 100 : 50),
           Padding(
