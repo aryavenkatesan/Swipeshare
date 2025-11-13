@@ -1,13 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-enum PaymentType {
-  venmo,
-  cashapp,
-  paypal,
-  cash,
-} // Update after customer survey
-//survey says.. enum is not it, just use List<String> lmao
+enum PaymentType { venmo, cashapp, paypal, cash }
 
 class Listing {
   final String id;
@@ -41,7 +35,13 @@ class Listing {
       'diningHall': diningHall,
       'timeStart': Listing.toMinutes(timeStart),
       'timeEnd': Listing.toMinutes(timeEnd),
-      'transactionDate': Timestamp.fromDate(transactionDate),
+      'transactionDate': Timestamp.fromDate(
+        DateTime(
+          transactionDate.year,
+          transactionDate.month,
+          transactionDate.day,
+        ),
+      ),
       'sellerRating': sellerRating,
       'paymentTypes': paymentTypes,
       'price': price,
@@ -64,7 +64,9 @@ class Listing {
       diningHall: map['diningHall'] ?? '',
       timeStart: Listing.minutesToTOD(map['timeStart']),
       timeEnd: Listing.minutesToTOD(map['timeEnd']),
-      transactionDate: map['transactionDate'].toDate(),
+      transactionDate: map['transactionDate'] is Timestamp
+          ? map['transactionDate'].toDate()
+          : null,
       sellerRating: map['sellerRating'],
       paymentTypes: [for (var item in map['paymentTypes']) item as String],
       price: map['price'] != null ? (map['price'] as num).toDouble() : null,

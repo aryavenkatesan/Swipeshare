@@ -50,6 +50,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (await Haptics.canVibrate()) {
         Haptics.vibrate(HapticsType.error);
       }
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Passwords don't match")));

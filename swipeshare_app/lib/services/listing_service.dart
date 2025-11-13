@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class ListingService extends ChangeNotifier {
@@ -21,18 +22,19 @@ class ListingService extends ChangeNotifier {
     final String currentUserName = user!.name;
     final double currentUserRating = user.stars;
 
-    final newListing = {
-      "sellerId": currentUserId,
-      "diningHall": diningHall,
-      "timeStart": timeStart,
-      "timeEnd": timeEnd,
-      "transactionDate": transactionDate,
-      "sellerName": currentUserName,
-      "sellerRating": currentUserRating,
-      "paymentTypes": paymentTypes,
-    };
+    final newListing = Listing(
+      id: '',
+      sellerId: currentUserId,
+      sellerName: currentUserName,
+      diningHall: diningHall,
+      timeStart: timeStart,
+      timeEnd: timeEnd,
+      transactionDate: transactionDate,
+      sellerRating: currentUserRating,
+      paymentTypes: paymentTypes,
+    );
 
-    await _fireStore.collection('listings').add(newListing);
+    await _fireStore.collection('listings').add(newListing.toMap());
   }
 
   //GET ALL LISTINGS

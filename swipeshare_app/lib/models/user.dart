@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String email;
   final String name;
@@ -6,6 +8,9 @@ class UserModel {
   final int transactionsCompleted;
   final String referralEmail;
   final List<String> blockedUsers;
+  final bool isEmailVerified;
+  final String? verificationCode;
+  final DateTime? verificationCodeExpires;
 
   UserModel({
     required this.email,
@@ -15,6 +20,9 @@ class UserModel {
     required this.transactionsCompleted,
     required this.referralEmail,
     required this.blockedUsers,
+    required this.isEmailVerified,
+    this.verificationCode,
+    this.verificationCodeExpires,
   });
 
   factory UserModel.fromFirestore(Map<String, dynamic> data) {
@@ -26,6 +34,11 @@ class UserModel {
       transactionsCompleted: data['transactions_completed'] ?? 0,
       referralEmail: data['refferal_email'] ?? '',
       blockedUsers: List<String>.from(data['blocked_users'] ?? []),
+      isEmailVerified: data['isEmailVerified'] ?? false,
+      verificationCode: data['verificationCode'] as String?,
+      verificationCodeExpires: data['verificationCodeExpires'] != null
+          ? (data['verificationCodeExpires'] as Timestamp).toDate()
+          : null,
     );
   }
 }
