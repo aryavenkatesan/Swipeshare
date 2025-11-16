@@ -71,7 +71,7 @@ class Listing {
       transactionDate: map['transactionDate'] is Timestamp
           ? map['transactionDate'].toDate()
           : null,
-      sellerRating: map['sellerRating'],
+      sellerRating: map['sellerRating'].toDouble(),
       paymentTypes: [for (var item in map['paymentTypes']) item as String],
       price: map['price'] != null ? (map['price'] as num).toDouble() : null,
     );
