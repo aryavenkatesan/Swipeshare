@@ -15,51 +15,8 @@ class OrderService extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   final ListingService _listingService = ListingService();
 
-  //POST LISTING
-  Future<void> postOrder(
-    String sellerId,
-    // String buyerId, We'll find it here instead of passing
-    String diningHall,
-    DateTime transactionDate,
-    String sellerName,
-    double sellerstars,
-    // String buyerName, We'll do it here also
-  ) async {
-    final String currentUserId = _firebaseAuth.currentUser!.uid;
-    final user = await _userService.getUserData(currentUserId);
-    final String currentUserName = user!.name;
-    final double currentUserStars = user.stars;
-    MealOrder newOrder = MealOrder(
-      sellerId: sellerId,
-      buyerId: currentUserId,
-      diningHall: diningHall,
-      transactionDate: transactionDate,
-      sellerName: sellerName,
-      buyerName: currentUserName,
-      sellerStars: sellerstars,
-      buyerStars: currentUserStars,
-      sellerHasNotifs: false,
-      buyerHasNotifs: false,
-    );
-
-    try {
-      String customDocId = newOrder.getRoomName();
-
-      await _fireStore
-          .collection('orders')
-          .doc(customDocId)
-          .set(newOrder.toMap());
-
-      await _chatService.newOrderSystemMessage(customDocId);
-    } catch (e, s) {
-      // Handle the error and stack trace
-      debugPrint('Error: $e');
-      debugPrint('Stack: $s');
-    }
-  }
-
-  /// Make a transaction by creating an order and deleting the listing
-  Future<void> makeTransaction(Listing listing) async {
+  //POST ORDER
+  Future<void> postOrder(Listing listing) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
     final user = await _userService.getUserData(currentUserId);
 

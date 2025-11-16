@@ -22,6 +22,17 @@ class ListingService extends ChangeNotifier {
     final String currentUserName = user!.name;
     final double currentUserRating = user.stars;
 
+    final DateTime now = DateTime.now();
+    final DateTime listingDateTime = DateTime(
+      transactionDate.year,
+      transactionDate.month,
+      transactionDate.day,
+      now.hour,
+      now.minute,
+      now.second,
+      now.millisecond,
+    );
+
     final newListing = Listing(
       id: '',
       sellerId: currentUserId,
@@ -29,7 +40,7 @@ class ListingService extends ChangeNotifier {
       diningHall: diningHall,
       timeStart: timeStart,
       timeEnd: timeEnd,
-      transactionDate: transactionDate,
+      transactionDate: listingDateTime,
       sellerRating: currentUserRating,
       paymentTypes: paymentTypes,
     );

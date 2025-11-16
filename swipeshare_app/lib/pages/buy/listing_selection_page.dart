@@ -464,7 +464,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
 
   Future<void> _handleListingSelection(Listing listing) async {
     try {
-      await _orderService.makeTransaction(listing);
+      await _orderService.postOrder(listing);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Order was placed successfully!')),
