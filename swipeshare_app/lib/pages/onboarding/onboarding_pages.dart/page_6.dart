@@ -15,71 +15,81 @@ class Page6 extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      // Use SingleChildScrollView to prevent keyboard overflow
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(height: vh > 767 ? (vh * 0.065) : (vh * 0.01)),
-            Image.asset(
-              'assets/onboarding6.png',
-              width: vw * 0.8,
-              fit: BoxFit.fitWidth,
-            ),
-            SizedBox(height: vh > 767 ? 30 : 0), // Adjusted spacing
-            Column(
-              children: [
-                Text(
-                  tutorial ? "Don't Forget!" : "Let's get started!",
-                  style: AppTextStyles.subHeaderStyle,
-                ),
-                SizedBox(height: vh * 0.02),
-                Text(
-                  tutorial
-                      ? "Whenever using the app, always make sure to be courteous and respectful!"
-                      : "Please check your email inbox for the 6-digit verification code. It may be in your spam folder.",
-                  style: AppTextStyles.bodyText,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+      // --- FIX 2: Add GestureDetector ---
+      // This allows tapping anywhere on the page to dismiss the keyboard
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          // --- FIX 3: Add Keyboard Dismiss Behavior ---
+          // This allows swiping/dragging on the page to dismiss the keyboard
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SizedBox(height: vh > 767 ? (vh * 0.065) : (vh * 0.01)),
+              Image.asset(
+                'assets/onboarding6.png',
+                width: vw * 0.8,
+                fit: BoxFit.fitWidth,
+              ),
+              SizedBox(height: vh > 767 ? 30 : 0), // Adjusted spacing
+              Column(
+                children: [
+                  Text(
+                    tutorial ? "Don't Forget!" : "Let's get started!",
+                    style: AppTextStyles.subHeaderStyle,
+                  ),
+                  SizedBox(height: vh * 0.02),
+                  Text(
+                    tutorial
+                        ? "Whenever using the app, always make sure to be courteous and respectful!"
+                        : "Please check your email inbox for the 6-digit verification code. It may be in your spam folder.",
+                    style: AppTextStyles.bodyText,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
 
-            // --- ADDED: Verification Code Input Field ---
-            if (!tutorial)
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 32.0,
-                  left: 16.0,
-                  right: 16.0,
-                ),
-                child: TextField(
-                  controller: codeController,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  maxLength: 6,
-                  style: const TextStyle(fontSize: 24, letterSpacing: 16),
-                  decoration: InputDecoration(
-                    counterText: "", // Hide the "0/6" counter
-                    hintText: "------",
-                    hintStyle: const TextStyle(
-                      fontSize: 24,
-                      letterSpacing: 16,
-                      color: Colors.grey,
-                    ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey.shade400),
-                    ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color.fromARGB(255, 30, 88, 181),
+              // --- ADDED: Verification Code Input Field ---
+              if (!tutorial)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: 32.0,
+                    left: 16.0,
+                    right: 16.0,
+                  ),
+                  child: TextField(
+                    controller: codeController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 6,
+                    // --- FIX 4: Add Text Input Action ---
+                    // This adds a "Done" button to the number keyboard
+                    textInputAction: TextInputAction.done,
+                    style: const TextStyle(fontSize: 24, letterSpacing: 16),
+                    decoration: InputDecoration(
+                      counterText: "", // Hide the "0/6" counter
+                      hintText: "------",
+                      hintStyle: const TextStyle(
+                        fontSize: 24,
+                        letterSpacing: 16,
+                        color: Colors.grey,
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color.fromARGB(255, 30, 88, 181),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            // --- End of Added Section ---
-          ],
+              // --- End of Added Section ---
+            ],
+          ),
         ),
       ),
     );

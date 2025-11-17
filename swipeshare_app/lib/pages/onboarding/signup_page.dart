@@ -57,8 +57,8 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    //make sure name isn't too long (14 characters or less)
-    if (nameController.text.length > 14) {
+    //make sure name isn't too long (18 characters or less)
+    if (nameController.text.length > 18) {
       if (await Haptics.canVibrate()) {
         Haptics.vibrate(HapticsType.error);
       }

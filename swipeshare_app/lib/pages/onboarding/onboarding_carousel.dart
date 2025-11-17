@@ -10,7 +10,6 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
-// Import the new code service
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 
 class OnboardingCarousel extends StatefulWidget {
@@ -22,10 +21,10 @@ class OnboardingCarousel extends StatefulWidget {
 
 class _OnboardingCarouselState extends State<OnboardingCarousel> {
   final PageController _controller = PageController();
+  // Controller for the code input
+  final TextEditingController _codeController = TextEditingController();
   // Use the new service
   final _verificationService = EmailCodeVerificationService();
-  // Add a controller for the code input
-  final _codeController = TextEditingController();
 
   bool onLastPage = false;
   bool _isCheckingVerification = false;
@@ -59,126 +58,137 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
         ],
       ),
       backgroundColor: Color(0xFFFEF8FF),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.69,
-            child: PageView(
-              controller: _controller,
-              onPageChanged: (index) {
-                setState(() {
-                  onLastPage = (index == 5);
-                });
-              },
-              children: [
-                Page1(tutorial: false),
-                Page2(),
-                Page3(),
-                Page4(),
-                Page5(),
-                // Pass the code controller to the new Page6
-                Page6(tutorial: false, codeController: _codeController),
-              ],
-            ),
-          ),
-          SizedBox(height: 30),
-          Container(
-            height: 50,
-            alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
+      // --- FIX 1: Wrap body in SingleChildScrollView ---
+      // This allows the page to scroll when the keyboard appears
+      body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.69,
+              //genuinly does not work on iphone se at 0.7 or 0.68
+              child: PageView(
+                controller: _controller,
+                onPageChanged: (index) {
+                  setState(() {
+                    onLastPage = (index == 5);
+                  });
+                },
                 children: [
-                  // --- Resend Button ---
-                  !onLastPage
-                      ? GestureDetector(
-                          onTap: () {
-                            _controller.jumpToPage(5);
-                          },
-                          child: Text("skip"),
-                        )
-                      : _isResending
-                      // Show a small spinner while resending
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : GestureDetector(
-                          onTap: _resendCode,
-                          child: Text("    resend "),
-                        ),
-
-                  SmoothPageIndicator(
-                    controller: _controller,
-                    count: 6,
-                    effect: WormEffect(
-                      dotHeight: 20,
-                      dotWidth: 20,
-                      activeDotColor: Colors.black,
-                      dotColor: Colors.grey,
-                    ),
-                  ),
-
-                  // --- Next / Enter Button ---
-                  !onLastPage
-                      ? GestureDetector(
-                          onTap: () {
-                            _controller.nextPage(
-                              duration: Duration(milliseconds: 500),
-                              curve: Curves.easeIn,
-                            );
-                          },
-                          child: const Text("next"),
-                        )
-                      : GestureDetector(
-                          onTap: _checkCode, // Point to the new check function
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black,
-                              borderRadius: BorderRadius.circular(
-                                30,
-                              ), // Capsule shape
-                            ),
-                            child: _isCheckingVerification
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : const Text(
-                                    "enter",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                          ),
-                        ),
+                  Page1(tutorial: false),
+                  Page2(),
+                  Page3(),
+                  Page4(),
+                  Page5(),
+                  // Pass the code controller to the new Page6
+                  Page6(tutorial: false, codeController: _codeController),
                 ],
               ),
             ),
-          ),
-          SizedBox(height: 50),
-        ],
+            SizedBox(height: 30),
+            Container(
+              height: 50,
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // --- Resend Button ---
+                    !onLastPage
+                        ? GestureDetector(
+                            onTap: () {
+                              _controller.jumpToPage(5);
+                            },
+                            child: Text("skip"),
+                          )
+                        : _isResending
+                        // Show a small spinner while resending
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : GestureDetector(
+                            onTap: _resendCode,
+                            child: Text("    resend "),
+                          ),
+
+                    SmoothPageIndicator(
+                      controller: _controller,
+                      count: 6,
+                      effect: WormEffect(
+                        dotHeight: 20,
+                        dotWidth: 20,
+                        activeDotColor: Colors.black,
+                        dotColor: Colors.grey,
+                      ),
+                    ),
+
+                    // --- Next / Enter Button ---
+                    !onLastPage
+                        ? GestureDetector(
+                            onTap: () {
+                              _controller.nextPage(
+                                duration: Duration(milliseconds: 500),
+                                curve: Curves.easeIn,
+                              );
+                            },
+                            child: const Text("next"),
+                          )
+                        : GestureDetector(
+                            onTap:
+                                _checkCode, // Point to the new check function
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(
+                                  30,
+                                ), // Capsule shape
+                              ),
+                              child: _isCheckingVerification
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      "enter",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 50),
+          ],
+        ),
       ),
     );
   }
 
   /// New function to check the code from the TextField
   Future<void> _checkCode() async {
+    // Dismiss keyboard first
+    FocusScope.of(context).unfocus();
+
     if (_isCheckingVerification) return;
 
     if (_codeController.text.length != 6) {
@@ -250,9 +260,6 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
       }
     }
   }
-
-  // This function is no longer needed and can be removed
-  // void _stopEmailVerification() { ... }
 
   void signOut() {
     final authService = context.read<AuthServices>();
