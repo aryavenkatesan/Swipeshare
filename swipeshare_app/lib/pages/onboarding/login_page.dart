@@ -134,8 +134,8 @@ class _LoginPageState extends State<LoginPage> {
                           TextField(
                             controller: emailController,
                             obscureText: false,
-                            // THIS IS THE FIX for the email keyboard
                             keyboardType: TextInputType.emailAddress,
+                            textCapitalization: TextCapitalization.none,
                             decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(

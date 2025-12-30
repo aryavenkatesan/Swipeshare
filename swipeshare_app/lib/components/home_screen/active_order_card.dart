@@ -52,7 +52,7 @@ class ActiveOrderCard extends StatelessWidget {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: '${orderData.diningHall}',
+                          text: orderData.diningHall,
                           style: HeaderStyle,
                         ),
                         // TextSpan(
