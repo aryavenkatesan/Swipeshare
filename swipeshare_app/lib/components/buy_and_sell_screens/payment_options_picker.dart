@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 
 class PaymentOptionsComponent extends StatefulWidget {
   final List<String> selectedPaymentOptions;
@@ -125,7 +125,7 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
           padding: BuySwipesConstants.containerPadding,
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.accentBlue.withOpacity(0.05)
+                ? AppColors.accentBlue.withValues(alpha: 0.05)
                 : Colors.transparent,
           ),
           child: Row(

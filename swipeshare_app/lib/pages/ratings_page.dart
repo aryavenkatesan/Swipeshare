@@ -41,7 +41,7 @@ class _RatingsPageState extends State<RatingsPage> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey.withOpacity(0.3), // Customize color as needed
+            color: Colors.grey.withValues(alpha: 0.3), // Customize color as needed
             height: 1.0,
           ),
         ),
@@ -170,7 +170,7 @@ class _RatingsPageState extends State<RatingsPage> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isSelected ? Colors.blue.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? Colors.blue.withValues(alpha: 0.2) : Colors.transparent,
           border: Border.all(
             color: isSelected ? Colors.blue : Colors.grey.shade300,
             width: 3,

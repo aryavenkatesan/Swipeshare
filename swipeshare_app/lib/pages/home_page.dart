@@ -224,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen>
           // bottom: PreferredSize(
           //   preferredSize: Size.fromHeight(1.0),
           //   child: Container(
-          //     color: Colors.grey.withOpacity(0.3), // Customize color as needed
+          //     color: Colors.grey.withValues(alpha: 0.3), // Customize color as needed
           //     height: 1.0,
           //   ),
           // ),

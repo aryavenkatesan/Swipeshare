@@ -1,10 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/services/listing_service.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/post_listing_button.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/post_listing_button.dart';
-import 'package:flutter/material.dart';
+import 'package:swipeshare_app/services/listing_service.dart';
 
 class SellOrderConfirmScreen extends StatefulWidget {
   final String location;
@@ -138,15 +138,15 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.accentBlue.withOpacity(0.1),
-            AppColors.accentBlue.withOpacity(0.05),
+            AppColors.accentBlue.withValues(alpha: 0.1),
+            AppColors.accentBlue.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.accentBlue.withOpacity(0.2),
+          color: AppColors.accentBlue.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -171,7 +171,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.accentBlue.withOpacity(0.1),
+              color: AppColors.accentBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
@@ -200,7 +200,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentBlue.withOpacity(0.3),
+                color: AppColors.accentBlue.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -251,7 +251,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                     gradient: LinearGradient(
                       colors: [
                         AppColors.accentBlue,
-                        AppColors.accentBlue.withOpacity(0.8),
+                        AppColors.accentBlue.withValues(alpha: 0.8),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -259,7 +259,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
                     borderRadius: BorderRadius.circular(25),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accentBlue.withOpacity(0.3),
+                        color: AppColors.accentBlue.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -289,12 +289,12 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: AppColors.accentBlue.withOpacity(0.3),
+          color: AppColors.accentBlue.withValues(alpha: 0.3),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentBlue.withOpacity(0.1),
+            color: AppColors.accentBlue.withValues(alpha: 0.1),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
