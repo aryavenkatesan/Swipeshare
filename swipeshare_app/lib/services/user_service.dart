@@ -19,7 +19,7 @@ class UserService {
       }
       return null;
     } catch (e) {
-      print('Error fetching user data: $e');
+      debugPrint('Error fetching user data: $e');
       return null;
     }
   }
@@ -37,7 +37,7 @@ class UserService {
     try {
       await _fireStore.collection('users').doc(uid).update(data);
     } catch (e) {
-      print('Error updating user data: $e');
+      debugPrint('Error updating user data: $e');
     }
   }
 
@@ -47,7 +47,7 @@ class UserService {
         'payment_types': paymentTypes,
       });
     } catch (e) {
-      print('Error updating payment types: $e');
+      debugPrint('Error updating payment types: $e');
     }
   }
 
@@ -65,7 +65,7 @@ class UserService {
         'stars': calculatedStarRating,
       });
     } catch (e) {
-      print('Error updating star rating: $e');
+      debugPrint('Error updating star rating: $e');
     }
   }
 
@@ -83,7 +83,7 @@ class UserService {
         'transactions_completed': incrementedTransactionNumber,
       });
     } catch (e) {
-      print('Error updating star rating: $e');
+      debugPrint('Error updating star rating: $e');
     }
   }
 
@@ -103,7 +103,7 @@ class UserService {
         'blocked_users': appendedBlockList,
       });
     } catch (e) {
-      print('Error blocking user: $e');
+      debugPrint('Error blocking user: $e');
       rethrow;
     }
   }
@@ -186,18 +186,18 @@ class UserService {
       // 5. Delete Firebase Auth user (absolute last)
       await currentUser.delete();
 
-      print('Account successfully deleted');
+      debugPrint('Account successfully deleted');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
         throw Exception('Please sign in again before deleting your account');
       }
-      print('Firebase Auth Error: ${e.code} - ${e.message}');
+      debugPrint('Firebase Auth Error: ${e.code} - ${e.message}');
       throw Exception('Authentication error: ${e.message}');
     } on FirebaseException catch (e) {
-      print('Firestore Error: ${e.code} - ${e.message}');
+      debugPrint('Firestore Error: ${e.code} - ${e.message}');
       throw Exception('Database error: ${e.message}');
     } catch (e) {
-      print('Error deleting account: $e');
+      debugPrint('Error deleting account: $e');
       throw Exception('Failed to delete account: $e');
     }
   }

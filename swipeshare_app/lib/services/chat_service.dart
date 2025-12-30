@@ -80,7 +80,7 @@ class ChatService extends ChangeNotifier {
           .collection('messages')
           .add(systemMessage.toMap());
     } catch (e) {
-      print('Error sending time widget: $e');
+      debugPrint('Error sending time widget: $e');
       rethrow;
     }
   }
@@ -107,7 +107,7 @@ class ChatService extends ChangeNotifier {
             .update({'displayTime': time!});
       }
     } catch (e) {
-      print('Error updating time widget status: $e');
+      debugPrint('Error updating time widget status: $e');
       rethrow;
     }
   }
@@ -133,7 +133,7 @@ class ChatService extends ChangeNotifier {
 
       //notifyListeners();
     } catch (e) {
-      print('Error reporting user: $e');
+      debugPrint('Error reporting user: $e');
       rethrow;
     }
   }

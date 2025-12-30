@@ -148,7 +148,7 @@ class ChatSettingsMenu extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                print("Closing the Thingy");
+                debugPrint("Closing the Thingy");
                 Navigator.of(context).pop();
               },
               child: const Text('Close'),

@@ -57,9 +57,9 @@ class AuthServices extends ChangeNotifier {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       //catch errors
-      // print('Error code: ${e.code}');
-      // print('Error message: ${e.message}');
-      // print('Error details: ${e.stackTrace}');
+      // debugPrint('Error code: ${e.code}');
+      // debugPrint('Error message: ${e.message}');
+      // debugPrint('Error details: ${e.stackTrace}');
 
       throw Exception(e.code);
     }
