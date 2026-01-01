@@ -328,7 +328,7 @@ class _HomeScreenState extends State<HomeScreen>
                               navigator.push(
                                 MaterialPageRoute(
                                   builder: (context) => SellPostScreen(
-                                    paymentOptions: _paymentTypes,
+                                    initialPaymentOptions: _paymentTypes,
                                   ),
                                 ),
                               );

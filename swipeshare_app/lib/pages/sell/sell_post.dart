@@ -13,9 +13,9 @@ import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/pages/sell/sell_order_confirm.dart';
 
 class SellPostScreen extends StatefulWidget {
-  List<String> paymentOptions;
+  final List<String> initialPaymentOptions;
 
-  SellPostScreen({super.key, required this.paymentOptions});
+  const SellPostScreen({super.key, required this.initialPaymentOptions});
 
   @override
   State<SellPostScreen> createState() => _SellPostScreenState();
@@ -27,6 +27,13 @@ class _SellPostScreenState extends State<SellPostScreen> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   int swipeCount = 7;
+  late List<String> paymentOptions;
+
+  @override
+  void initState() {
+    super.initState();
+    paymentOptions = widget.initialPaymentOptions;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,9 +84,9 @@ class _SellPostScreenState extends State<SellPostScreen> {
                     ),
                     const SizedBox(height: BuySwipesConstants.mediumSpacing),
                     PaymentOptionsComponent(
-                      selectedPaymentOptions: widget.paymentOptions,
+                      selectedPaymentOptions: paymentOptions,
                       onPaymentOptionsChanged: (options) =>
-                          setState(() => widget.paymentOptions = options),
+                          setState(() => paymentOptions = options),
                       fromHomeScreen: false,
                     ),
                     const SizedBox(height: BuySwipesConstants.mediumSpacing),
@@ -88,7 +95,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
                       startTime: startTime,
                       endTime: endTime,
                       swipeCount: swipeCount,
-                      selectedPaymentOptions: widget.paymentOptions,
+                      selectedPaymentOptions: paymentOptions,
                     ),
                     const SizedBox(height: BuySwipesConstants.largeSpacing),
                   ],
@@ -148,7 +155,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
         endTime != null &&
         selectedLocations.isNotEmpty &&
         swipeCount > 0 &&
-        widget.paymentOptions.isNotEmpty &&
+        paymentOptions.isNotEmpty &&
         !_isEndTimeBeforeStartTime();
   }
 
@@ -165,7 +172,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
           startTime: startTime!,
           endTime: endTime!,
           swipeCount: swipeCount,
-          paymentOptions: widget.paymentOptions,
+          paymentOptions: paymentOptions,
         ),
       ),
     );
