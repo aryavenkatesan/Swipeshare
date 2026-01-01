@@ -5,6 +5,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class ActiveOrderCard extends StatelessWidget {
@@ -27,9 +28,7 @@ class ActiveOrderCard extends StatelessWidget {
           CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: () async {
-              if (await Haptics.canVibrate()) {
-                Haptics.vibrate(HapticsType.medium);
-              }
+              await safeVibrate(HapticsType.medium);
               Navigator.push(
                 context,
                 MaterialPageRoute(

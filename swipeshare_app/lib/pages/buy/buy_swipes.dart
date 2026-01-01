@@ -9,6 +9,7 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_valid
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/pages/buy/listing_selection_page.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class BuySwipeScreen extends StatefulWidget {
   List<String> paymentOptions;
@@ -157,9 +158,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
 
   /// Navigates to listing selection page with current selections
   void _navigateToListingSelection() async {
-    if (await Haptics.canVibrate()) {
-      Haptics.vibrate(HapticsType.medium);
-    }
+    await safeVibrate(HapticsType.medium);
     if (mounted) {
       Navigator.push(
         context,

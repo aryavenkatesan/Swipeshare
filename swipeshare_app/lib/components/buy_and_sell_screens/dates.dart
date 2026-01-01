@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class DateSelectorComponent extends StatelessWidget {
   final DateTime selectedDate;
@@ -37,9 +38,7 @@ class DateSelectorComponent extends StatelessWidget {
         padding: const EdgeInsets.only(right: BuySwipesConstants.mediumSpacing),
         child: GestureDetector(
           onTap: () async {
-            if (await Haptics.canVibrate()) {
-              Haptics.vibrate(HapticsType.selection);
-            }
+            await safeVibrate(HapticsType.selection);
             onDateSelected(date);
           },
           child: Container(

@@ -11,6 +11,7 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart'
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/pages/sell/sell_order_confirm.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class SellPostScreen extends StatefulWidget {
   final List<String> initialPaymentOptions;
@@ -160,9 +161,7 @@ class _SellPostScreenState extends State<SellPostScreen> {
   }
 
   void _navigateToConfirmation() async {
-    if (await Haptics.canVibrate()) {
-      Haptics.vibrate(HapticsType.medium);
-    }
+    await safeVibrate(HapticsType.medium);
     Navigator.push(
       context,
       MaterialPageRoute(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -33,9 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
         (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
             referralController.text.isNotEmpty)) {
       // Changed from != ''
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -48,9 +47,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     //password matching check
     if (passwordController.text != confirmPasswordController.text) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -60,9 +57,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     //make sure name isn't too long (14 characters or less)
     if (nameController.text.length > 14) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Name is too long, consider using a nickname!")),
       );
@@ -71,9 +66,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     //make sure name is appropriate
     if (ProfanityUtils.hasProfanityWord(nameController.text)) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Name contains profanity, please change.")),
       );
@@ -91,9 +84,7 @@ class _RegisterPageState extends State<RegisterPage> {
         referralController.text,
       );
       if (mounted) {
-        if (await Haptics.canVibrate()) {
-          Haptics.vibrate(HapticsType.medium);
-        }
+        await safeVibrate(HapticsType.medium);
         // Navigator.pushReplacement(
         //   context,
         //   MaterialPageRoute(builder: (context) => OnboardingCarousel()),

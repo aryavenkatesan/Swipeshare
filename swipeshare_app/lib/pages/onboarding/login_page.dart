@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class LoginPage extends StatefulWidget {
   final void Function()? onTap;
@@ -31,13 +32,9 @@ class _LoginPageState extends State<LoginPage> {
         emailController.text,
         passwordController.text,
       );
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.medium);
-      }
+      await safeVibrate(HapticsType.medium);
     } catch (e) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       if (mounted) {
         ScaffoldMessenger.of(
           context,

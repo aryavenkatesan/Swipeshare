@@ -4,6 +4,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class PaymentOptionsComponent extends StatefulWidget {
   final List<String> selectedPaymentOptions;
@@ -181,9 +182,7 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
   }
 
   void _togglePaymentOption(String option) async {
-    if (await Haptics.canVibrate()) {
-      Haptics.vibrate(HapticsType.selection);
-    }
+    await safeVibrate(HapticsType.selection);
     final currentOptions = List<String>.from(widget.selectedPaymentOptions);
     if (currentOptions.contains(option)) {
       currentOptions.remove(option);
