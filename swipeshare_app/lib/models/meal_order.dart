@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
@@ -39,9 +40,11 @@ class MealOrder {
     transactionDate.year,
     transactionDate.month,
     transactionDate.day,
-    displayTime != null ? int.parse(displayTime!.split(':')[0]) : 12,
     displayTime != null
-        ? int.parse(displayTime!.split(':')[1].split(' ')[0])
+        ? TimeFormatter.parseTimeOfDayString(displayTime!).hour
+        : 12,
+    displayTime != null
+        ? TimeFormatter.parseTimeOfDayString(displayTime!).minute
         : 0,
   );
 

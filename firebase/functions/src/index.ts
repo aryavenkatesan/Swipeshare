@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
-import { Message, Order } from "./types";
+import { Message, messageTypes, Order } from "./types";
 import {
   getOrder,
   getUser,
@@ -28,24 +28,22 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
         return;
       }
 
-      const messageType =
-        message.senderId === "time widget"
-          ? "proposal"
-          : message.senderId === "system"
-          ? "system"
-          : "text";
+      if (!messageTypes.includes(message.messageType)) {
+        console.log(
+          `Unknown message type: ${message.messageType}. No notification sent.`
+        );
+        return;
+      }
 
-      if (messageType === "system") {
+      if (message.messageType === "system") {
         console.log("System message. No notification sent.");
         return;
       }
 
-      // For time proposal, receiverId is actually the senderId
-      const senderId =
-        messageType === "proposal" ? message.receiverId : message.senderId;
-
       const recipientId =
-        orderData.buyerId === senderId ? orderData.sellerId : orderData.buyerId;
+        orderData.buyerId === message.senderId
+          ? orderData.sellerId
+          : orderData.buyerId;
 
       const recipientData = await getUser(recipientId);
       if (!recipientData) {
@@ -53,14 +51,14 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
       }
 
       const title =
-        messageType === "text"
+        message.messageType === "text"
           ? `${message.senderName} sent a message`
           : `${message.senderName} proposed a time`;
 
       const body =
-        messageType === "text"
-          ? message.message || ""
-          : timeOfDayStringToTime(message.message || "");
+        message.messageType === "text"
+          ? message.content ?? ""
+          : timeOfDayStringToTime(message.proposedTime ?? "");
 
       await updateNotificationsStatus(orderId, recipientId);
 
@@ -150,6 +148,14 @@ export const sendProposalUpdateNotification =
         return;
       }
 
+      if (
+        beforeData.messageType !== "timeProposal" ||
+        afterData.messageType !== "timeProposal"
+      ) {
+        console.log("Message is not a time proposal.");
+        return;
+      }
+
       if (beforeData.status === afterData.status) {
         console.log("Message is not a time proposal or status did not change");
         return;
@@ -166,9 +172,8 @@ export const sendProposalUpdateNotification =
           return;
         }
 
-        // For time proposal, receiverId is actually the senderId
-        const senderId = afterData.receiverId;
-        const senderData = await getUser(senderId);
+        const senderId = afterData.senderId;
+        const senderData = await getUser(afterData.senderId);
         if (!senderData) {
           return;
         }
@@ -180,7 +185,9 @@ export const sendProposalUpdateNotification =
             ? orderData.sellerName
             : "Someone";
 
-        const proposalTime = timeOfDayStringToTime(afterData.message || "");
+        const proposalTime = timeOfDayStringToTime(
+          afterData.proposedTime ?? ""
+        );
 
         await updateNotificationsStatus(orderId, senderId);
 

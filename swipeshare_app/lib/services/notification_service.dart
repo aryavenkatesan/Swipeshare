@@ -118,17 +118,11 @@ class NotificationService {
 
   /// Handles incoming messages when the app is in the foreground
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('Got a message in the foreground!');
-
     Haptics.vibrate(HapticsType.medium);
 
     final messageOrderId = message.data['orderId'] as String?;
-    debugPrint("Active chat: $activeChatId");
     if (messageOrderId != null && messageOrderId == activeChatId) {
-      debugPrint(
-        'User is already on chat page for this order, skipping snackbar',
-      );
-      ChatService().readNotificationsById(messageOrderId);
+      ChatService(messageOrderId).readNotifications();
       return;
     }
 
@@ -233,6 +227,7 @@ class NotificationService {
     final totalUnread =
         buyerSnapshots.docs.length + sellerSnapshots.docs.length;
 
+    // This is the source of "count: 0" logs if you are looking for it
     AppBadgePlus.updateBadge(totalUnread);
   }
 }

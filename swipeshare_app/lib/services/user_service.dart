@@ -82,7 +82,7 @@ class UserService {
         'transactions_completed': incrementedTransactionNumber,
       });
     } catch (e) {
-      debugPrint('Error updating star rating: $e');
+      debugPrint('Error incrementing transaction count: $e');
     }
   }
 

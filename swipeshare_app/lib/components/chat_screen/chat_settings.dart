@@ -7,19 +7,11 @@ import 'package:swipeshare_app/services/user_service.dart';
 enum SettingsItems { itemOne, itemTwo, itemThree }
 
 class ChatSettingsMenu extends StatelessWidget {
-  final String currentUserId;
-  final String currentUserEmail;
-  final String receiverUserId;
-  final String receiverUserName;
   final ChatService chatService;
   final MealOrder orderData;
 
   const ChatSettingsMenu({
     super.key,
-    required this.currentUserId,
-    required this.currentUserEmail,
-    required this.receiverUserId,
-    required this.receiverUserName,
     required this.chatService,
     required this.orderData,
   });
@@ -83,13 +75,7 @@ class ChatSettingsMenu extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 if (reportController.text.isNotEmpty) {
-                  chatService.reportUser(
-                    currentUserId,
-                    currentUserEmail,
-                    receiverUserId,
-                    receiverUserName,
-                    reportController.text,
-                  );
+                  chatService.reportUser(reportController.text);
                   if (await Haptics.canVibrate()) {
                     Haptics.vibrate(HapticsType.heavy);
                   }

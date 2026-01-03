@@ -34,21 +34,20 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
-  final ChatService _chatService = ChatService();
+  late final ChatService _chatService;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final NotificationService _notifService = NotificationService.instance;
   final ScrollController _scrollController = ScrollController();
 
-  bool _isChatDeleted = false;
+  late bool _isChatDeleted;
 
   @override
   void initState() {
     super.initState();
     _isChatDeleted = widget.orderData.isChatDeleted;
     _notifService.activeChatId = widget.orderData.getRoomName();
-    _chatService
-        .readNotifications(widget.orderData)
-        .then((_) => _notifService.updateBadgeCount());
+    _chatService = ChatService(widget.orderData.getRoomName());
+    _chatService.readNotifications();
     _listenToOrderChanges();
   }
 
@@ -87,7 +86,7 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void sendMessage() async {
+  void sendTextMessage() async {
     //check profanity
     if (ProfanityUtils.hasProfanity(_messageController.text)) {
       if (await Haptics.canVibrate()) {
@@ -106,11 +105,7 @@ class _ChatPageState extends State<ChatPage> {
       if (await Haptics.canVibrate()) {
         Haptics.vibrate(HapticsType.medium);
       }
-      await _chatService.sendMessage(
-        widget.receiverUserId,
-        _messageController.text,
-        widget.orderData,
-      );
+      await _chatService.sendTextMessage(_messageController.text);
       _messageController.clear();
       _scrollToBottom();
     }
@@ -146,10 +141,7 @@ class _ChatPageState extends State<ChatPage> {
     );
 
     if (pickedTime != null) {
-      await _chatService.timeWidget(
-        widget.orderData.getRoomName(),
-        TimeFormatter.productionToString(pickedTime),
-      );
+      await _chatService.sendTimeProposal(pickedTime);
     }
   }
   //if sent go to chat_service and post a thingy
@@ -243,10 +235,6 @@ class _ChatPageState extends State<ChatPage> {
                     : 'Close Order',
               ),
               ChatSettingsMenu(
-                currentUserId: _firebaseAuth.currentUser!.uid,
-                currentUserEmail: _firebaseAuth.currentUser!.email!,
-                receiverUserId: widget.receiverUserId,
-                receiverUserName: widget.receiverUserName,
                 chatService: _chatService,
                 orderData: widget.orderData,
               ),
@@ -282,11 +270,7 @@ class _ChatPageState extends State<ChatPage> {
   //build message list
   Widget _buildMessageList() {
     return StreamBuilder(
-      stream: _chatService.getMessages(
-        widget.receiverUserId,
-        _firebaseAuth.currentUser!.uid,
-        widget.orderData,
-      ),
+      stream: _chatService.getMessages(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
@@ -308,30 +292,63 @@ class _ChatPageState extends State<ChatPage> {
             }
 
             final doc = reversedDocs[index - 1];
-            return _buildMessageItem(doc);
+            final message = Message.fromDoc(doc);
+            return switch (message) {
+              SystemMessage() => _buildSystemMessage(message),
+              TimeProposal() => _buildTimeProposal(message),
+              TextMessage() => _buildTextMessage(message),
+            };
           },
         );
       },
     );
   }
 
-  //build message item
-  Widget _buildMessageItem(DocumentSnapshot document) {
-    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+  Widget _buildSystemMessage(SystemMessage message) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double horizontalPadding = screenWidth * 0.10;
+    return Column(
+      children: [
+        SizedBox(height: 20),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: Container(
+            alignment: Alignment.center,
+            child: Text(
+              message.content,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.blueGrey,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.56,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 32),
+      ],
+    );
+  }
 
-    //check if it's a system message
-    if (data['senderId'] == "system") {
-      return Column(
-        children: [
-          SizedBox(height: 20),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-            child: Container(
-              alignment: Alignment.center,
-              child: Text(
-                data['message'],
+  Widget _buildTimeProposal(TimeProposal proposal) {
+    String statusString = switch (proposal.status) {
+      ProposalStatus.accepted => "You accepted this time proposal.",
+      ProposalStatus.declined => "You declined this time proposal.",
+      ProposalStatus.pending => "",
+    };
+
+    return Column(
+      children: [
+        SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 80.0),
+          child: Column(
+            children: [
+              // Main message
+              Text(
+                "${proposal.senderName} proposes this time: ${TimeFormatter.formatTimeOfDay(TimeFormatter.productionToString(proposal.proposedTime))}",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.blueGrey,
@@ -341,133 +358,90 @@ class _ChatPageState extends State<ChatPage> {
                   decoration: TextDecoration.none,
                 ),
               ),
-            ),
-          ),
-          SizedBox(height: 32),
-        ],
-      );
-    }
-
-    if (data['senderId'] == 'time widget') {
-      Message messageWithDocId = Message.fromFirestore(document);
-
-      String statusString = '';
-
-      if (messageWithDocId.status == 'accepted') {
-        statusString = 'the time was accepted';
-      } else if (messageWithDocId.status == 'declined') {
-        statusString = 'the time was declined';
-      } //figuring out statusString string here so that we can avoid another conditional in the return statement
-
-      return Column(
-        children: [
-          SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 80.0),
-            child: Column(
-              children: [
-                // Main message
-                Text(
-                  "${data['senderName']} proposes this time: ${TimeFormatter.formatTimeOfDay(data['message'])}",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.blueGrey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: -0.56,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-                SizedBox(height: 12),
-                statusString != ''
-                    //if the propsal was accepted or declined, show that here
-                    ? Text(
-                        statusString,
-                        style: TextStyle(
-                          color: Colors.blueGrey[200],
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: -0.56,
-                          decoration: TextDecoration.none,
-                        ),
-                      )
-                    :
-                      // Decline and Accept buttons
-                      data['receiverId'] == widget.receiverUserId
-                    // data['receiverID'] is the sender's id of the time widget
-                    //ik its confusing
-                    //if the sender id != the receiver id
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-
-                        children: [
-                          // Decline button
-                          GestureDetector(
-                            onTap: () async {
-                              debugPrint("Declined");
-
-                              await _chatService.updateTimeWidgetStatus(
-                                widget.orderData,
-                                messageWithDocId.documentId!,
-                                'declined',
-                                'n/a',
-                              );
-                            },
-                            child: Text(
-                              "Decline",
-                              style: TextStyle(
-                                color: Colors.blueGrey[300],
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 24), // Space between buttons
-                          // Accept button
-                          GestureDetector(
-                            onTap: () async {
-                              debugPrint("Accepted");
-                              // Add your accept logic here
-                              await _chatService.updateTimeWidgetStatus(
-                                widget.orderData,
-                                messageWithDocId.documentId!,
-                                'accepted',
-                                data['message'],
-                              );
-                            },
-                            child: Text(
-                              "Accept",
-                              style: TextStyle(
-                                color: Colors.blueAccent,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        "wating for response....",
-                        style: TextStyle(
-                          color: Colors.blueGrey[200],
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: -0.56,
-                          decoration: TextDecoration.none,
-                        ),
+              SizedBox(height: 12),
+              proposal.status != ProposalStatus.pending
+                  //if the propsal was accepted or declined, show that here
+                  ? Text(
+                      statusString,
+                      style: TextStyle(
+                        color: Colors.blueGrey[200],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.56,
+                        decoration: TextDecoration.none,
                       ),
-              ],
-            ),
-          ),
-          SizedBox(height: 12),
-        ],
-      );
-    }
+                    )
+                  :
+                    // Decline and Accept buttons
+                    // Show buttons only if we are not the sender
+                    proposal.senderId != _firebaseAuth.currentUser!.uid
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Decline button
+                        GestureDetector(
+                          onTap: () async {
+                            debugPrint("Declined");
 
+                            await _chatService.updateTimeProposal(
+                              proposal.id,
+                              ProposalStatus.declined,
+                            );
+                          },
+                          child: Text(
+                            "Decline",
+                            style: TextStyle(
+                              color: Colors.blueGrey[300],
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 24), // Space between buttons
+                        // Accept button
+                        GestureDetector(
+                          onTap: () async {
+                            debugPrint("Accepted");
+                            // Add your accept logic here
+                            await _chatService.updateTimeProposal(
+                              proposal.id,
+                              ProposalStatus.accepted,
+                            );
+                          },
+                          child: Text(
+                            "Accept",
+                            style: TextStyle(
+                              color: Colors.blueAccent,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      "wating for response....",
+                      style: TextStyle(
+                        color: Colors.blueGrey[200],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.56,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+            ],
+          ),
+        ),
+        SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildTextMessage(TextMessage message) {
     //align the messages based on who sent it
-    var alignment = (data['senderId'] == _firebaseAuth.currentUser!.uid)
+    var alignment = (message.senderId == _firebaseAuth.currentUser!.uid)
         ? Alignment.centerRight
         : Alignment.centerLeft;
 
@@ -477,13 +451,13 @@ class _ChatPageState extends State<ChatPage> {
         alignment: alignment,
         child: Column(
           crossAxisAlignment:
-              (data['senderId'] == _firebaseAuth.currentUser!.uid)
+              (message.senderId == _firebaseAuth.currentUser!.uid)
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            Text(data['senderName']),
+            Text(message.senderName),
             const SizedBox(height: 5),
-            ChatBubble(message: (data['message']), alignment: alignment),
+            ChatBubble(message: (message.content), alignment: alignment),
             SizedBox(height: 5),
           ],
         ),
@@ -526,7 +500,7 @@ class _ChatPageState extends State<ChatPage> {
 
           //send button
           IconButton(
-            onPressed: sendMessage,
+            onPressed: sendTextMessage,
             icon: Icon(Icons.arrow_upward, size: 35),
           ),
         ],
