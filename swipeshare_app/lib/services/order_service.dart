@@ -14,9 +14,9 @@ class OrderService extends ChangeNotifier {
   //POST ORDER
   Future<MealOrder> postOrder(Listing listing) async {
     try {
-      final result = await _functions.httpsCallable('createOrderFromListing').call({
-        'listingId': listing.id,
-      });
+      final result = await _functions
+          .httpsCallable('createOrderFromListing')
+          .call({'listingId': listing.id});
 
       final orderData = result.data as Map<String, dynamic>;
       final newOrder = MealOrder.fromMap(orderData);
