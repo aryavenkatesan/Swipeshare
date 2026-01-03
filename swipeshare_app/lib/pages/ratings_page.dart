@@ -118,10 +118,7 @@ class _RatingsPageState extends State<RatingsPage> {
                     await _userService.incrementTransactionCount();
 
                     // blocks this order from being seen by the current user
-                    await _orderService.updateVisibility(
-                      widget.orderData,
-                      false,
-                    );
+                    await _orderService.updateVisibility(widget.orderData);
 
                     //do something with the feedback text
 

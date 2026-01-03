@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -12,11 +11,10 @@ class OrderService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
   final UserService _userService = UserService();
-  final ChatService _chatService = ChatService();
   final ListingService _listingService = ListingService();
 
   //POST ORDER
-  Future<void> postOrder(Listing listing) async {
+  Future<MealOrder> postOrder(Listing listing) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
     final user = await _userService.getUserData(currentUserId);
 
@@ -54,14 +52,17 @@ class OrderService extends ChangeNotifier {
           throw Exception('Listing no longer exists');
         }
 
-        _listingService.deleteListing(listing.id, transaction: transaction);
-        transaction.set(orderRef, newOrder.toMap());
-
-        _chatService.newOrderSystemMessage(
-          newOrder.getRoomName(),
+        await _listingService.deleteListing(
+          listing.id,
           transaction: transaction,
         );
+        transaction.set(orderRef, newOrder.toMap());
       });
+
+      // Send message after transaction to ensure order exists
+      await ChatService(newOrder.getRoomName()).newOrderSystemMessage();
+
+      return newOrder;
     } catch (e, s) {
       debugPrint('Error: $e');
       debugPrint('Stack: $s');
@@ -106,31 +107,46 @@ class OrderService extends ChangeNotifier {
     }
   }
 
-  Future<void> updateVisibility(MealOrder orderData, bool deletedChat) async {
+  Future<void> updateOrderTime(
+    String orderId,
+    TimeOfDay? newTime, {
+    Transaction? transaction,
+  }) async {
+    final String? timeString = newTime?.toString();
+
+    final docRef = _fireStore.collection('orders').doc(orderId);
+
+    if (transaction != null) {
+      transaction.update(docRef, {"displayTime": timeString});
+    } else {
+      await docRef.update({"displayTime": timeString});
+    }
+  }
+
+  Future<void> updateVisibility(
+    MealOrder orderData, {
+    bool deletedChat = false,
+  }) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
+    final updateMap = <String, dynamic>{};
 
     if (currentUserId == orderData.buyerId) {
       //set buyer visibility to false
-      await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
-        {'buyerVisibility': false, 'buyerHasNotifs': false},
-      );
+      updateMap['buyerVisibility'] = false;
+      updateMap['buyerHasNotifs'] = false;
     } else {
-      await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
-        {'sellerVisibility': false, 'sellerHasNotifs': false},
-      );
+      //set seller visibility to false
+      updateMap['sellerVisibility'] = false;
+      updateMap['sellerHasNotifs'] = false;
     }
-    if (!deletedChat) {
-      //send system message that the other person left
-      final UserModel? currentUser = await _userService.getUserData(
-        currentUserId,
-      );
-      final String message =
-          "${currentUser?.name ?? 'User'} has closed the order and left the chat.\nClick the check button above to close the order :)";
-      _chatService.systemMessage(message, orderData.getRoomName());
-    } else {
-      await _fireStore.collection('orders').doc(orderData.getRoomName()).update(
-        {'isChatDeleted': true},
-      );
+
+    if (deletedChat) {
+      updateMap['chatDeleted'] = true;
     }
+
+    await _fireStore
+        .collection('orders')
+        .doc(orderData.getRoomName())
+        .update(updateMap);
   }
 }
