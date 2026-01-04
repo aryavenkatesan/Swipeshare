@@ -57,7 +57,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final _listingService = ListingService();
+    final listingService = ListingService();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -104,7 +104,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
               ),
 
               // 3. FIXED BUTTON: This will always be visible at the bottom.
-              _buildConfirmButton(_listingService),
+              _buildConfirmButton(listingService),
             ],
           ),
         ),

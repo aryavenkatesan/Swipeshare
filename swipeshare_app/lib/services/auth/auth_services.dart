@@ -67,7 +67,9 @@ class AuthServices extends ChangeNotifier {
 
   //sign user out
   Future<void> signOut() async {
+    debugPrint('Signing out user: ${_firebaseAuth.currentUser?.uid}');
     await NotificationService.instance.removeTokenFromFirestore();
-    return await FirebaseAuth.instance.signOut();
+    await FirebaseAuth.instance.signOut();
+    debugPrint('User signed out successfully.');
   }
 }

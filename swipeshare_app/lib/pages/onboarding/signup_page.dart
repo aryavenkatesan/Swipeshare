@@ -214,6 +214,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: emailController,
                             keyboardType:
                                 TextInputType.emailAddress, // Email keyboard
+                            textCapitalization: TextCapitalization.none,
                             decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(

@@ -12,7 +12,6 @@ class UserService {
   Future<UserModel?> getUserData(String uid) async {
     try {
       final doc = await _fireStore.collection('users').doc(uid).get();
-      debugPrint('Fetched user data for UID $uid: ${doc.data()}');
 
       if (doc.exists) {
         return UserModel.fromFirestore(doc.data()!);
