@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class EmailCodeVerificationService {
   final _auth = FirebaseAuth.instance;
@@ -46,7 +47,7 @@ class EmailCodeVerificationService {
         },
       });
     } on FirebaseException catch (e) {
-      print("Error sending code: $e");
+      debugPrint("Error sending code: $e");
       // Provide a more user-friendly error
       if (e.code == 'permission-denied') {
         throw Exception("An error occurred. Please contact support.");

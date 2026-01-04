@@ -3,6 +3,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class RatingsPage extends StatefulWidget {
   final String recieverId;
@@ -41,7 +42,9 @@ class _RatingsPageState extends State<RatingsPage> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(
-            color: Colors.grey.withOpacity(0.3), // Customize color as needed
+            color: Colors.grey.withValues(
+              alpha: 0.3,
+            ), // Customize color as needed
             height: 1.0,
           ),
         ),
@@ -123,9 +126,7 @@ class _RatingsPageState extends State<RatingsPage> {
                     //do something with the feedback text
 
                     //haptic feedback
-                    if (await Haptics.canVibrate()) {
-                      Haptics.vibrate(HapticsType.success);
-                    }
+                    await safeVibrate(HapticsType.success);
 
                     //navigate back to the homescreen
                     Navigator.of(context).pop();
@@ -159,9 +160,7 @@ class _RatingsPageState extends State<RatingsPage> {
 
     return GestureDetector(
       onTap: () async {
-        if (await Haptics.canVibrate()) {
-          Haptics.vibrate(HapticsType.light);
-        }
+        await safeVibrate(HapticsType.light);
         setState(() {
           selectedFace = value;
         });
@@ -170,7 +169,9 @@ class _RatingsPageState extends State<RatingsPage> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isSelected ? Colors.blue.withOpacity(0.2) : Colors.transparent,
+          color: isSelected
+              ? Colors.blue.withValues(alpha: 0.2)
+              : Colors.transparent,
           border: Border.all(
             color: isSelected ? Colors.blue : Colors.grey.shade300,
             width: 3,

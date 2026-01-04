@@ -3,6 +3,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 enum SettingsItems { itemOne, itemTwo, itemThree }
 
@@ -90,9 +91,7 @@ class ChatSettingsMenu extends StatelessWidget {
                     receiverUserName,
                     reportController.text,
                   );
-                  if (await Haptics.canVibrate()) {
-                    Haptics.vibrate(HapticsType.heavy);
-                  }
+                  await safeVibrate(HapticsType.heavy);
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -134,9 +133,7 @@ class ChatSettingsMenu extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () async {
-                if (await Haptics.canVibrate()) {
-                  Haptics.vibrate(HapticsType.heavy);
-                }
+                await safeVibrate(HapticsType.heavy);
                 UserService().blockUser(orderData);
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
@@ -148,7 +145,7 @@ class ChatSettingsMenu extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                print("Closing the Thingy");
+                debugPrint("Closing the Thingy");
                 Navigator.of(context).pop();
               },
               child: const Text('Close'),
@@ -169,9 +166,7 @@ class ChatSettingsMenu extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () async {
-                if (await Haptics.canVibrate()) {
-                  Haptics.vibrate(HapticsType.heavy);
-                }
+                await safeVibrate(HapticsType.heavy);
                 chatService.deleteChat(orderData);
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();

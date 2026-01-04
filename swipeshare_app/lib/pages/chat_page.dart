@@ -10,6 +10,7 @@ import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/pages/ratings_page.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
@@ -90,9 +91,7 @@ class _ChatPageState extends State<ChatPage> {
   void sendMessage() async {
     //check profanity
     if (ProfanityUtils.hasProfanity(_messageController.text)) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Message contains profanity, please change.")),
@@ -103,9 +102,7 @@ class _ChatPageState extends State<ChatPage> {
 
     //send message
     if (_messageController.text.isNotEmpty) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.medium);
-      }
+      await safeVibrate(HapticsType.medium);
       await _chatService.sendMessage(
         widget.receiverUserId,
         _messageController.text,
