@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 class StarContainer extends StatelessWidget {
   final double? stars;
   final bool background;
-  StarContainer({super.key, required this.stars, this.background = true});
+  const StarContainer({super.key, required this.stars, this.background = true});
 
   @override
   Widget build(BuildContext context) {

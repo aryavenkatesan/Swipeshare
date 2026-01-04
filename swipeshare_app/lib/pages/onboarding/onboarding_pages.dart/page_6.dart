@@ -12,12 +12,16 @@ class Page6 extends StatelessWidget {
   Widget build(BuildContext context) {
     final double vh = MediaQuery.of(context).size.height;
     final double vw = MediaQuery.of(context).size.width;
+    final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      // Use SingleChildScrollView to prevent keyboard overflow
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: vh * 0.03,
+          right: vh * 0.03,
+          bottom: keyboardHeight > 0 ? 20 : 0,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [

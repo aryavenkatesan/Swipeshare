@@ -59,11 +59,11 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
         ],
       ),
       backgroundColor: Color(0xFFFEF8FF),
+      resizeToAvoidBottomInset: true,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.69,
+          Expanded(
             child: PageView(
               controller: _controller,
               onPageChanged: (index) {

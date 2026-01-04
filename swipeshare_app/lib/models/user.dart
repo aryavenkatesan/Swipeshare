@@ -1,4 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
+class PaymentOption {
+  final String name;
+  final IconData icon;
+
+  const PaymentOption(this.name, this.icon);
+
+  static const List<PaymentOption> allPaymentOptions = [
+    PaymentOption('Cash', Icons.attach_money),
+    PaymentOption('Venmo', Icons.payment),
+    PaymentOption('Zelle', Icons.account_balance),
+    PaymentOption('Apple Pay', Icons.apple),
+    PaymentOption('PayPal', Icons.paypal),
+    PaymentOption('CashApp', Icons.money),
+  ];
+
+  static IconData? getIcon(String paymentType) {
+    try {
+      return allPaymentOptions
+          .firstWhere((option) => option.name == paymentType)
+          .icon;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static List<String> get allPaymentTypeNames =>
+      allPaymentOptions.map((option) => option.name).toList();
+}
 
 class UserModel {
   final String email;

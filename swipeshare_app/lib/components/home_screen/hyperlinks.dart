@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Required for re-authentication
 
 class Hyperlinks extends StatelessWidget {
-  Hyperlinks({super.key});
+  const Hyperlinks({super.key});
 
   Future<void> _showDeleteConfirmation(BuildContext context) async {
     return showDialog(

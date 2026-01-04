@@ -45,12 +45,24 @@ class AuthGate extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .snapshots(),
+          .snapshots()
+          .handleError((error, stackTrace) {
+            debugPrint('Firestore error in auth_gate.dart: $error');
+            debugPrint('This is expected during logout (auth token race condition)');
+          }),
       builder: (context, userSnapshot) {
         // Show loading while fetching user data
         if (userSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             key: ValueKey('loading'),
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        // Handle errors from Firestore
+        if (userSnapshot.hasError) {
+          return const Center(
+            key: ValueKey('auth-transition'),
             child: CircularProgressIndicator(),
           );
         }

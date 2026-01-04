@@ -27,23 +27,23 @@ class _RegisterPageState extends State<RegisterPage> {
 
   //sign up user
   void signUp() async {
-    // make it unc email only
-    if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
-        (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
-            referralController.text.isNotEmpty)) {
-      // Changed from != ''
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Please use a valid UNC email address (ending with @unc.edu)",
-          ),
-        ),
-      );
-      return;
-    }
+    // Uncomment to make it unc email only
+    // if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
+    //     (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
+    //         referralController.text.isNotEmpty)) {
+    //   // Changed from != ''
+    //   if (await Haptics.canVibrate()) {
+    //     Haptics.vibrate(HapticsType.error);
+    //   }
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text(
+    //         "Please use a valid UNC email address (ending with @unc.edu)",
+    //       ),
+    //     ),
+    //   );
+    //   return;
+    // }
 
     //password matching check
     if (passwordController.text != confirmPasswordController.text) {
@@ -144,14 +144,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       margin: const EdgeInsets.symmetric(horizontal: 24),
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 20,
                             offset: Offset(0, 10),
                           ),
@@ -222,6 +222,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: emailController,
                             keyboardType:
                                 TextInputType.emailAddress, // Email keyboard
+                            textCapitalization: TextCapitalization.none,
                             decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(
