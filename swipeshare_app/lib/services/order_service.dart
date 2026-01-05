@@ -1,70 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
-import 'package:swipeshare_app/services/listing_service.dart';
-import 'package:swipeshare_app/services/user_service.dart';
 
 class OrderService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
-  final UserService _userService = UserService();
-  final ListingService _listingService = ListingService();
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   //POST ORDER
   Future<MealOrder> postOrder(Listing listing) async {
-    final String currentUserId = _firebaseAuth.currentUser!.uid;
-    final user = await _userService.getUserData(currentUserId);
-
-    if (user == null) {
-      throw Exception(
-        'User data not found for current user ID: $currentUserId',
-      );
-    }
-
-    MealOrder newOrder = MealOrder(
-      sellerId: listing.sellerId,
-      buyerId: currentUserId,
-      diningHall: listing.diningHall,
-      transactionDate: listing.transactionDate,
-      sellerName: listing.sellerName,
-      buyerName: user.name,
-      sellerStars: listing.sellerRating,
-      buyerStars: user.stars,
-      sellerHasNotifs: true,
-      buyerHasNotifs: true,
-    );
-
     try {
-      await _fireStore.runTransaction((transaction) async {
-        final orderRef = _fireStore
-            .collection('orders')
-            .doc(newOrder.getRoomName());
-
-        // Check if listing still exists (prevents race conditions)
-        final listingData = await _listingService.getListingById(
-          listing.id,
-          transaction: transaction,
-        );
-        if (listingData == null) {
-          throw Exception('Listing no longer exists');
-        }
-
-        await _listingService.deleteListing(
-          listing.id,
-          transaction: transaction,
-        );
-        transaction.set(orderRef, newOrder.toMap());
+      final result = await _functions.httpsCallable('createOrderFromListing').call({
+        'listingId': listing.id,
       });
 
-      // Send message after transaction to ensure order exists
+      final orderData = result.data as Map<String, dynamic>;
+      final newOrder = MealOrder.fromMap(orderData);
+
       await ChatService(newOrder.getRoomName()).newOrderSystemMessage();
 
       return newOrder;
     } catch (e, s) {
-      debugPrint('Error: $e');
+      debugPrint('Error creating order: $e');
       debugPrint('Stack: $s');
       rethrow;
     }
