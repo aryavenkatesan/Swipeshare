@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   List<MealOrder> orders = [];
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final OrderService _orderService = OrderService();
+  final OrderService _orderService = OrderService.instance;
   final UserService _userService = UserService.instance;
   final ListingService _listingService = ListingService.instance;
 
@@ -424,20 +424,26 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildOrderSection() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _orderService.getOrders(_auth.currentUser!.uid),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+    final userId = _auth.currentUser!.uid;
+    return _orderService.orderStreamBuilder(
+      filter: Filter.or(
+        Filter.and(
+          Filter('sellerId', isEqualTo: userId),
+          Filter('sellerVisibility', isEqualTo: true),
+        ),
+        Filter.and(
+          Filter('buyerId', isEqualTo: userId),
+          Filter('buyerVisibility', isEqualTo: true),
+        ),
+      ),
+      builder: (context, orders, isLoading, error) {
+        if (error != null) {
+          return Text('Error: ${error.toString()}');
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (isLoading) {
           return const Text('Loading..');
         }
-
-        final docs = snapshot.data?.docs ?? [];
-        final hasOrders = docs.isNotEmpty;
-
-        if (!hasOrders) {
+        if (orders.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -451,17 +457,14 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           );
         }
-
         // Has orders -> show horizontally scrollable cards
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children:
-                (docs.map(MealOrder.fromFirestore).toList()
-                      ..sort(MealOrder.bySoonest))
-                    .map((order) => ActiveOrderCard(orderData: order))
-                    .toList(),
+            children: (orders..sort(MealOrder.bySoonest))
+                .map((order) => ActiveOrderCard(orderData: order))
+                .toList(),
           ),
         );
       },

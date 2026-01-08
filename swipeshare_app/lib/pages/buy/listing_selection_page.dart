@@ -35,7 +35,7 @@ class ListingSelectionPage extends StatefulWidget {
 
 class _ListingSelectionPageState extends State<ListingSelectionPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final _orderService = OrderService();
+  final _orderService = OrderService.instance;
 
   String? _expandedListingId;
 

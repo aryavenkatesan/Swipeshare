@@ -7,9 +7,12 @@ import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 
 class OrderService extends ChangeNotifier {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  OrderService._();
+  static final instance = OrderService._();
+
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+  final _functions = FirebaseFunctions.instance;
 
   Future<MealOrder> postOrder(Listing listing) async {
     try {
@@ -31,7 +34,7 @@ class OrderService extends ChangeNotifier {
   }
 
   Stream<QuerySnapshot> getOrders(String userId) {
-    return _fireStore
+    return _firestore
         .collection('orders')
         .where(
           Filter.or(
@@ -48,22 +51,50 @@ class OrderService extends ChangeNotifier {
         .snapshots();
   }
 
-  Future<MealOrder?> getOrderById(String orderId) async {
+  Widget orderStreamBuilder({
+    required Widget Function(
+      BuildContext context,
+      List<MealOrder> orders,
+      bool isLoading,
+      Object? error,
+    )
+    builder,
+    Filter? filter,
+  }) {
+    Query query = _firestore.collection('orders');
+    if (filter != null) {
+      query = query.where(filter);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: query.snapshots(),
+      builder: (context, snapshot) {
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+        final error = snapshot.error;
+
+        List<MealOrder> orders = [];
+        if (snapshot.hasData) {
+          orders = snapshot.data!.docs
+              .map((doc) => MealOrder.fromFirestore(doc))
+              .toList();
+        }
+
+        return builder(context, orders, isLoading, error);
+      },
+    );
+  }
+
+  Future<MealOrder> getOrderById(String orderId) async {
     try {
-      DocumentSnapshot doc = await _fireStore
+      DocumentSnapshot doc = await _firestore
           .collection('orders')
           .doc(orderId)
           .get();
 
-      if (doc.exists) {
-        return MealOrder.fromMap(doc.data() as Map<String, dynamic>);
-      } else {
-        debugPrint('No such order with id: $orderId');
-        return null;
-      }
+      return MealOrder.fromFirestore(doc);
     } catch (e) {
       debugPrint('Error fetching order by id: $e');
-      return null;
+      rethrow;
     }
   }
 
@@ -74,7 +105,7 @@ class OrderService extends ChangeNotifier {
   }) async {
     final String? timeString = newTime?.toString();
 
-    final docRef = _fireStore.collection('orders').doc(orderId);
+    final docRef = _firestore.collection('orders').doc(orderId);
 
     if (transaction != null) {
       transaction.update(docRef, {"displayTime": timeString});
@@ -87,7 +118,7 @@ class OrderService extends ChangeNotifier {
     MealOrder orderData, {
     bool deletedChat = false,
   }) async {
-    final String currentUserId = _firebaseAuth.currentUser!.uid;
+    final String currentUserId = _auth.currentUser!.uid;
     final updateMap = <String, dynamic>{};
 
     if (currentUserId == orderData.buyerId) {
@@ -104,7 +135,7 @@ class OrderService extends ChangeNotifier {
       updateMap['chatDeleted'] = true;
     }
 
-    await _fireStore
+    await _firestore
         .collection('orders')
         .doc(orderData.getRoomName())
         .update(updateMap);
