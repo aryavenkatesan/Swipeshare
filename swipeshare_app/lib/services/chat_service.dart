@@ -13,7 +13,7 @@ class ChatService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserService _userService = UserService.instance;
   final NotificationService _notificationService = NotificationService.instance;
-  final OrderService _orderService = OrderService();
+  final OrderService _orderService = OrderService.instance;
   final String orderId;
 
   UserModel? _cachedCurrentUser;
@@ -178,7 +178,7 @@ Happy Swiping!
         "$currentUserName has deleted the chat and left.\nPlease click the menu options above to delete the chat.";
     //TODO: Have to stop the other user from closing the order if someone deletes the chat
     await sendSystemMessage(message);
-    await OrderService().updateVisibility(orderData, deletedChat: true);
+    await OrderService.instance.updateVisibility(orderData, deletedChat: true);
   }
 
   Future<void> readNotifications() async {

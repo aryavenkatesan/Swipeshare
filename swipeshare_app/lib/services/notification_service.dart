@@ -185,11 +185,7 @@ class NotificationService {
       return;
     }
 
-    final orderData = await OrderService().getOrderById(orderId);
-    if (orderData == null) {
-      debugPrint('No order data found for orderId: $orderId');
-      return;
-    }
+    final orderData = await OrderService.instance.getOrderById(orderId);
 
     _navigatorKey!.currentState!.push(
       MaterialPageRoute(builder: (context) => ChatPage(orderData: orderData)),
