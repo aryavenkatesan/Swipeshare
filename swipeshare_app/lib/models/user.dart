@@ -31,6 +31,7 @@ class PaymentOption {
 }
 
 class UserModel {
+  final String id;
   final String email;
   final String name;
   final List<String> paymentTypes;
@@ -43,6 +44,7 @@ class UserModel {
   final DateTime? verificationCodeExpires;
 
   UserModel({
+    required this.id,
     required this.email,
     required this.name,
     required this.paymentTypes,
@@ -55,14 +57,15 @@ class UserModel {
     this.verificationCodeExpires,
   });
 
-  factory UserModel.fromFirestore(Map<String, dynamic> data) {
+  factory UserModel.fromMap(String id, Map<String, dynamic> data) {
     return UserModel(
+      id: id,
       email: data['email'] ?? '',
       name: data['name'] ?? '',
       paymentTypes: List<String>.from(data['payment_types'] ?? []),
       stars: (data['stars'] ?? 5).toDouble(),
       transactionsCompleted: data['transactions_completed'] ?? 0,
-      referralEmail: data['refferal_email'] ?? '',
+      referralEmail: data['referral_email'] ?? '',
       blockedUsers: List<String>.from(data['blocked_users'] ?? []),
       isEmailVerified: data['isEmailVerified'] ?? false,
       verificationCode: data['verificationCode'] as String?,
@@ -70,5 +73,13 @@ class UserModel {
           ? (data['verificationCodeExpires'] as Timestamp).toDate()
           : null,
     );
+  }
+
+  factory UserModel.fromFirestore(DocumentSnapshot doc) {
+    final docData = doc.data() as Map<String, dynamic>;
+    if (!doc.exists || docData.isEmpty) {
+      throw Exception('Document does not exist or has no data');
+    }
+    return UserModel.fromMap(doc.id, docData);
   }
 }

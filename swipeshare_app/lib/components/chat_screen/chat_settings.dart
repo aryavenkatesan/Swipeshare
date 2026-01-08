@@ -120,7 +120,7 @@ class ChatSettingsMenu extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 await safeVibrate(HapticsType.heavy);
-                UserService().blockUser(orderData);
+                UserService.instance.blockUser(orderData);
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
               },

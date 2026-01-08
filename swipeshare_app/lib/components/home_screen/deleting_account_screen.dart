@@ -10,7 +10,7 @@ class DeletingAccountScreen extends StatefulWidget {
 }
 
 class _DeletingAccountScreenState extends State<DeletingAccountScreen> {
-  final UserService _userService = UserService();
+  final UserService _userService = UserService.instance;
   String _statusMessage = 'Preparing to delete account...';
   bool _hasError = false;
 

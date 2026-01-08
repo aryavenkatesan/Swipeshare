@@ -7,7 +7,7 @@ import 'package:swipeshare_app/services/user_service.dart';
 class ListingService extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
-  final UserService _userService = UserService();
+  final UserService _userService = UserService.instance;
 
   //POST LISTING
   Future<void> postListing(
@@ -19,7 +19,7 @@ class ListingService extends ChangeNotifier {
   ) async {
     final String currentUserId = _firebaseAuth.currentUser!.uid;
     final user = await _userService.getUserData(currentUserId);
-    final String currentUserName = user!.name;
+    final String currentUserName = user.name;
     final double currentUserRating = user.stars;
 
     final DateTime now = DateTime.now();
