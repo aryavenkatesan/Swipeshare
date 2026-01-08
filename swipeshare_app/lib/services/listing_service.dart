@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
-class ListingService extends ChangeNotifier {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+class ListingService {
+  ListingService._();
+  static final instance = ListingService._();
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserService _userService = UserService.instance;
 
-  //POST LISTING
   Future<void> postListing(
     String diningHall,
     TimeOfDay timeStart,
@@ -17,13 +17,12 @@ class ListingService extends ChangeNotifier {
     DateTime transactionDate,
     List<String> paymentTypes,
   ) async {
-    final String currentUserId = _firebaseAuth.currentUser!.uid;
-    final user = await _userService.getUserData(currentUserId);
-    final String currentUserName = user.name;
-    final double currentUserRating = user.stars;
+    final currentUser = await _userService.getCurrentUser();
+    final currentUserName = currentUser.name;
+    final currentUserRating = currentUser.stars;
 
-    final DateTime now = DateTime.now();
-    final DateTime listingDateTime = DateTime(
+    final now = DateTime.now();
+    final listingDateTime = DateTime(
       transactionDate.year,
       transactionDate.month,
       transactionDate.day,
@@ -35,7 +34,7 @@ class ListingService extends ChangeNotifier {
 
     final newListing = Listing(
       id: '',
-      sellerId: currentUserId,
+      sellerId: currentUser.id,
       sellerName: currentUserName,
       diningHall: diningHall,
       timeStart: timeStart,
@@ -45,42 +44,58 @@ class ListingService extends ChangeNotifier {
       paymentTypes: paymentTypes,
     );
 
-    await _fireStore.collection('listings').add(newListing.toMap());
+    await _firestore.collection('listings').add(newListing.toMap());
   }
 
-  //GET ALL LISTINGS
-  Stream<QuerySnapshot> getListings() {
-    return _fireStore.collection('listings').snapshots();
+  Widget listingStreamBuilder({
+    required Widget Function(
+      BuildContext context,
+      List<Listing> listings,
+      bool isLoading,
+      Object? error,
+    )
+    builder,
+    Filter? filter,
+  }) {
+    Query query = _firestore.collection('listings');
+    if (filter != null) {
+      query = query.where(filter);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: query.snapshots(),
+      builder: (context, snapshot) {
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+        final error = snapshot.error;
+
+        List<Listing> listings = [];
+        if (snapshot.hasData) {
+          listings = snapshot.data!.docs
+              .map((doc) => Listing.fromFirestore(doc))
+              .toList();
+        }
+
+        return builder(context, listings, isLoading, error);
+      },
+    );
   }
 
-  //GET USER'S LISTINGS
-  Stream<QuerySnapshot> getUserListings() {
-    final String currentUserId = _firebaseAuth.currentUser!.uid;
-
-    return _fireStore
-        .collection('listings')
-        .where(Filter('sellerId', isEqualTo: currentUserId))
-        .snapshots();
-  }
-
-  //GET LISTING BY ID
-  Future<Map<String, dynamic>?> getListingById(
+  Future<Listing> getListingById(
     String docId, {
     Transaction? transaction,
   }) async {
-    final docRef = _fireStore.collection('listings').doc(docId);
+    final docRef = _firestore.collection('listings').doc(docId);
     if (transaction != null) {
       final docSnapshot = await transaction.get(docRef);
-      return docSnapshot.data();
+      return Listing.fromFirestore(docSnapshot);
     }
 
     final doc = await docRef.get();
-    return doc.data();
+    return Listing.fromFirestore(doc);
   }
 
-  //DELETE LISTING
   Future<void> deleteListing(String docId, {Transaction? transaction}) async {
-    final docRef = _fireStore.collection('listings').doc(docId);
+    final docRef = _firestore.collection('listings').doc(docId);
     if (transaction != null) {
       transaction.delete(docRef);
     } else {
