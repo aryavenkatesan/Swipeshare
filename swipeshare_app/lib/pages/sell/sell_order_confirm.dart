@@ -57,7 +57,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final listingService = ListingService();
+    final listingService = ListingService.instance;
 
     return Scaffold(
       backgroundColor: AppColors.background,

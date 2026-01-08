@@ -11,7 +11,6 @@ class OrderService extends ChangeNotifier {
   final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  //POST ORDER
   Future<MealOrder> postOrder(Listing listing) async {
     try {
       final result = await _functions
