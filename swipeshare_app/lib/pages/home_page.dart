@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen>
   List<MealOrder> orders = [];
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final OrderService _orderService = OrderService();
-  final UserService _userService = UserService();
+  final UserService _userService = UserService.instance;
   final ListingService _listingService = ListingService();
 
   UserModel? userData;
@@ -88,30 +88,18 @@ class _HomeScreenState extends State<HomeScreen>
     });
 
     try {
-      UserModel? user = await _userService.getCurrentUser();
-
-      if (user == null) {
-        setState(() {
-          error =
-              'Unable to load your profile. Please check your connection and try again.';
-          isLoading = false;
-        });
-        return;
-      }
+      UserModel user = await _userService.getCurrentUser();
 
       final deadline = DateTime.now().add(Duration(seconds: 5));
 
       // Retry fetching to address post login delay issues
-      while (user!.name.isEmpty && DateTime.now().isBefore(deadline)) {
+      while (user.name.isEmpty && DateTime.now().isBefore(deadline)) {
         debugPrint('DEBUG: User name is empty, retrying...');
         user = await _userService.getCurrentUser();
-
-        if (user == null) break;
-
         await Future.delayed(Duration(milliseconds: 500));
       }
 
-      if (user == null || user.name.isEmpty) {
+      if (user.name.isEmpty) {
         debugPrint('DEBUG: User name is still empty after retries.');
         setState(() {
           error =
@@ -123,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen>
 
       setState(() {
         userData = user;
-        _paymentTypes = user!.paymentTypes;
+        _paymentTypes = user.paymentTypes;
         isLoading = false;
       });
 

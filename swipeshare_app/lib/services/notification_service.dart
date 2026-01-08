@@ -219,10 +219,10 @@ class NotificationService {
         .where('sellerId', isEqualTo: user.uid)
         .where('sellerHasNotifs', isEqualTo: true);
 
-    final [buyerSnapshots, sellerSnapshots] = await Future.wait([
+    final (buyerSnapshots, sellerSnapshots) = await (
       buyerOrders.get(),
       sellerOrders.get(),
-    ]);
+    ).wait;
 
     final totalUnread =
         buyerSnapshots.docs.length + sellerSnapshots.docs.length;
