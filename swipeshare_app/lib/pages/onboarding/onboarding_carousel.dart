@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -10,7 +11,6 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
-// Import the new code service
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 
 class OnboardingCarousel extends StatefulWidget {
@@ -22,10 +22,10 @@ class OnboardingCarousel extends StatefulWidget {
 
 class _OnboardingCarouselState extends State<OnboardingCarousel> {
   final PageController _controller = PageController();
+  // Controller for the code input
+  final TextEditingController _codeController = TextEditingController();
   // Use the new service
   final _verificationService = EmailCodeVerificationService();
-  // Add a controller for the code input
-  final _codeController = TextEditingController();
 
   bool onLastPage = false;
   bool _isCheckingVerification = false;
@@ -179,6 +179,9 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
   /// New function to check the code from the TextField
   Future<void> _checkCode() async {
+    // Dismiss keyboard first
+    FocusScope.of(context).unfocus();
+
     if (_isCheckingVerification) return;
 
     if (_codeController.text.length != 6) {
@@ -250,9 +253,6 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
       }
     }
   }
-
-  // This function is no longer needed and can be removed
-  // void _stopEmailVerification() { ... }
 
   void signOut() {
     final authService = context.read<AuthServices>();
