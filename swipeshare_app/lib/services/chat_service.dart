@@ -11,9 +11,9 @@ import 'package:swipeshare_app/services/user_service.dart';
 class ChatService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final UserService _userService = UserService();
+  final UserService _userService = UserService.instance;
   final NotificationService _notificationService = NotificationService.instance;
-  final OrderService _orderService = OrderService();
+  final OrderService _orderService = OrderService.instance;
   final String orderId;
 
   UserModel? _cachedCurrentUser;
@@ -31,11 +31,6 @@ class ChatService extends ChangeNotifier {
       return _cachedCurrentUser!;
     }
     _cachedCurrentUser = await _userService.getCurrentUser();
-
-    if (_cachedCurrentUser == null) {
-      throw Exception('No user is currently signed in');
-    }
-
     return _cachedCurrentUser!;
   }
 
@@ -46,11 +41,7 @@ class ChatService extends ChangeNotifier {
         ? order.sellerId
         : order.buyerId;
 
-    final userData = await _userService.getUserData(receivingUserId);
-    if (userData == null) {
-      throw Exception('User data not found for user ID: $receivingUserId');
-    }
-    return userData;
+    return await _userService.getUserData(receivingUserId);
   }
 
   Future<TextMessage> sendTextMessage(String content) async {
@@ -154,10 +145,6 @@ class ChatService extends ChangeNotifier {
       _userService.getCurrentUser(),
     ).wait;
 
-    if (thisUser == null) {
-      throw Exception('No user is currently signed in');
-    }
-
     await _firestore.collection('reports').add({
       'reporterId': _auth.currentUser!.uid,
       'reporterEmail': thisUser.email,
@@ -191,7 +178,7 @@ Happy Swiping!
         "$currentUserName has deleted the chat and left.\nPlease click the menu options above to delete the chat.";
     //TODO: Have to stop the other user from closing the order if someone deletes the chat
     await sendSystemMessage(message);
-    await OrderService().updateVisibility(orderData, deletedChat: true);
+    await OrderService.instance.updateVisibility(orderData, deletedChat: true);
   }
 
   Future<void> readNotifications() async {

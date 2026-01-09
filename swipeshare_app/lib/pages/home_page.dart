@@ -15,7 +15,6 @@ import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/buy_swipes.dart';
@@ -37,9 +36,9 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   List<MealOrder> orders = [];
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final OrderService _orderService = OrderService();
-  final UserService _userService = UserService();
-  final ListingService _listingService = ListingService();
+  final OrderService _orderService = OrderService.instance;
+  final UserService _userService = UserService.instance;
+  final ListingService _listingService = ListingService.instance;
 
   UserModel? userData;
   bool isLoading = true;
@@ -88,30 +87,18 @@ class _HomeScreenState extends State<HomeScreen>
     });
 
     try {
-      UserModel? user = await _userService.getCurrentUser();
-
-      if (user == null) {
-        setState(() {
-          error =
-              'Unable to load your profile. Please check your connection and try again.';
-          isLoading = false;
-        });
-        return;
-      }
+      UserModel user = await _userService.getCurrentUser();
 
       final deadline = DateTime.now().add(Duration(seconds: 5));
 
       // Retry fetching to address post login delay issues
-      while (user!.name.isEmpty && DateTime.now().isBefore(deadline)) {
+      while (user.name.isEmpty && DateTime.now().isBefore(deadline)) {
         debugPrint('DEBUG: User name is empty, retrying...');
         user = await _userService.getCurrentUser();
-
-        if (user == null) break;
-
         await Future.delayed(Duration(milliseconds: 500));
       }
 
-      if (user == null || user.name.isEmpty) {
+      if (user.name.isEmpty) {
         debugPrint('DEBUG: User name is still empty after retries.');
         setState(() {
           error =
@@ -123,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen>
 
       setState(() {
         userData = user;
-        _paymentTypes = user!.paymentTypes;
+        _paymentTypes = user.paymentTypes;
         isLoading = false;
       });
 
@@ -437,20 +424,26 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildOrderSection() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _orderService.getOrders(_auth.currentUser!.uid),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+    final userId = _auth.currentUser!.uid;
+    return _orderService.orderStreamBuilder(
+      filter: Filter.or(
+        Filter.and(
+          Filter('sellerId', isEqualTo: userId),
+          Filter('sellerVisibility', isEqualTo: true),
+        ),
+        Filter.and(
+          Filter('buyerId', isEqualTo: userId),
+          Filter('buyerVisibility', isEqualTo: true),
+        ),
+      ),
+      builder: (context, orders, isLoading, error) {
+        if (error != null) {
+          return Text('Error: ${error.toString()}');
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (isLoading) {
           return const Text('Loading..');
         }
-
-        final docs = snapshot.data?.docs ?? [];
-        final hasOrders = docs.isNotEmpty;
-
-        if (!hasOrders) {
+        if (orders.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -464,17 +457,14 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           );
         }
-
         // Has orders -> show horizontally scrollable cards
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children:
-                (docs.map(MealOrder.fromFirestore).toList()
-                      ..sort(MealOrder.bySoonest))
-                    .map((order) => ActiveOrderCard(orderData: order))
-                    .toList(),
+            children: (orders..sort(MealOrder.bySoonest))
+                .map((order) => ActiveOrderCard(orderData: order))
+                .toList(),
           ),
         );
       },
@@ -482,20 +472,16 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildListingSection() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _listingService.getUserListings(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+    return _listingService.listingStreamBuilder(
+      filter: Filter('sellerId', isEqualTo: _auth.currentUser!.uid),
+      builder: (context, listings, isLoading, error) {
+        if (error != null) {
+          return Text('Error: ${error.toString()}');
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (isLoading) {
           return const Text('Loading..');
         }
-
-        final docs = snapshot.data?.docs ?? [];
-        final hasOrders = docs.isNotEmpty;
-
-        if (!hasOrders) {
+        if (listings.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -514,19 +500,12 @@ class _HomeScreenState extends State<HomeScreen>
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: docs.map((doc) => _buildListingCard(doc)).toList(),
+            children: listings
+                .map((listing) => ActiveListingCard(currentListing: listing))
+                .toList(),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildListingCard(DocumentSnapshot document) {
-    Listing currentlisting = Listing.fromFirestore(document);
-
-    return ActiveListingCard(
-      currentListing: currentlisting,
-      listingId: document.id,
     );
   }
 }
