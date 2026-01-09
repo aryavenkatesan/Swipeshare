@@ -26,7 +26,7 @@ export type SystemMessage = BaseMessage & {
 
 export type TimeProposal = BaseMessage & {
   messageType: "timeProposal";
-  proposedTime: string; // TimeOfDay formatted as string
+  proposedTime: TimeOfDayString;
   status: "pending" | "accepted" | "rejected";
 };
 
