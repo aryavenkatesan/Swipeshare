@@ -55,8 +55,8 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    //make sure name isn't too long (14 characters or less)
-    if (nameController.text.length > 14) {
+    //make sure name isn't too long (18 characters or less)
+    if (nameController.text.length > 18) {
       await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Name is too long, consider using a nickname!")),

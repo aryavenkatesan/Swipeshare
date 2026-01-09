@@ -82,7 +82,7 @@ class UserService {
         'transactions_completed': incrementedTransactionNumber,
       });
     } catch (e) {
-      debugPrint('Error updating star rating: $e');
+      debugPrint('Error incrementing transaction count: $e');
     }
   }
 
@@ -105,6 +105,21 @@ class UserService {
       debugPrint('Error blocking user: $e');
       rethrow;
     }
+  }
+
+  Future<void> sendFeedback(String message) async {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      throw Exception('No user is currently signed in');
+    }
+
+    await _fireStore.collection('feedback').add({
+      'userId': currentUser.uid,
+      'userEmail': currentUser.email,
+      'message': message,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> deleteAccount() async {

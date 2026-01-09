@@ -17,6 +17,7 @@ class Page6 extends StatelessWidget {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: EdgeInsets.only(
           left: vh * 0.03,
           right: vh * 0.03,
@@ -62,6 +63,9 @@ class Page6 extends StatelessWidget {
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   maxLength: 6,
+                  // --- FIX 4: Add Text Input Action ---
+                  // This adds a "Done" button to the number keyboard
+                  textInputAction: TextInputAction.done,
                   style: const TextStyle(fontSize: 24, letterSpacing: 16),
                   decoration: InputDecoration(
                     counterText: "", // Hide the "0/6" counter
