@@ -8,7 +8,6 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart'
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/listing_selection_page.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
@@ -128,7 +127,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _canProceedToNextScreen()
+        onPressed: _canProceedToSelection()
             ? _navigateToListingSelection
             : null,
         style: ElevatedButton.styleFrom(
@@ -157,10 +156,11 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   }
 
   /// Validates if user can proceed to next screen
-  bool _canProceedToNextScreen() {
+  bool _canProceedToSelection() {
     return startTime != null &&
         endTime != null &&
         selectedLocations.isNotEmpty &&
+        selectedPaymentOptions.isNotEmpty &&
         !_isEndTimeBeforeStartTime();
   }
 
@@ -176,9 +176,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
             date: selectedDate,
             startTime: startTime!,
             endTime: endTime!,
-            paymentTypes: selectedPaymentOptions.isEmpty
-                ? PaymentOption.allPaymentTypeNames
-                : selectedPaymentOptions,
+            paymentTypes: selectedPaymentOptions,
           ),
         ),
       );
