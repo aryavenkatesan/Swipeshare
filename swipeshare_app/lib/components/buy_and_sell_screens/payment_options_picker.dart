@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/models/user.dart';
 
 class PaymentOptionsComponent extends StatefulWidget {
   final List<String> selectedPaymentOptions;
@@ -26,15 +28,6 @@ class PaymentOptionsComponent extends StatefulWidget {
 
 class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
   bool isExpanded = false;
-
-  final List<PaymentOption> paymentOptions = [
-    PaymentOption('Cash', Icons.attach_money),
-    PaymentOption('Venmo', Icons.payment),
-    PaymentOption('Zelle', Icons.account_balance),
-    PaymentOption('Apple Pay', Icons.apple),
-    PaymentOption('PayPal', Icons.paypal),
-    PaymentOption('CashApp', Icons.money),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +92,7 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
                 ? Column(
                     children: [
                       const Divider(height: 1, color: AppColors.borderGrey),
-                      ...paymentOptions.map(
+                      ...PaymentOption.allPaymentOptions.map(
                         (option) => _buildPaymentOption(option),
                       ),
                       // Conditional button for home screen
@@ -125,7 +118,7 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
           padding: BuySwipesConstants.containerPadding,
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.accentBlue.withOpacity(0.05)
+                ? AppColors.accentBlue.withValues(alpha: 0.05)
                 : Colors.transparent,
           ),
           child: Row(
@@ -181,9 +174,7 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
   }
 
   void _togglePaymentOption(String option) async {
-    if (await Haptics.canVibrate()) {
-      Haptics.vibrate(HapticsType.selection);
-    }
+    await safeVibrate(HapticsType.selection);
     final currentOptions = List<String>.from(widget.selectedPaymentOptions);
     if (currentOptions.contains(option)) {
       currentOptions.remove(option);
@@ -192,11 +183,4 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
     }
     widget.onPaymentOptionsChanged(currentOptions);
   }
-}
-
-class PaymentOption {
-  final String name;
-  final IconData icon;
-
-  PaymentOption(this.name, this.icon);
 }

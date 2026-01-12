@@ -1,10 +1,11 @@
-import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/utils/time_formatter.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class ActiveListingCard extends StatelessWidget {
   final Listing currentListing;
@@ -26,9 +27,7 @@ class ActiveListingCard extends StatelessWidget {
         padding: EdgeInsets.zero,
         onPressed: () async {
           //popup for delete
-          if (await Haptics.canVibrate()) {
-            Haptics.vibrate(HapticsType.light);
-          }
+          await safeVibrate(HapticsType.light);
           _showDeleteDialog(context);
         },
         child: Container(
@@ -71,9 +70,7 @@ class ActiveListingCard extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 _listingService.deleteListing(listingId);
-                if (await Haptics.canVibrate()) {
-                  Haptics.vibrate(HapticsType.heavy);
-                }
+                await safeVibrate(HapticsType.heavy);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

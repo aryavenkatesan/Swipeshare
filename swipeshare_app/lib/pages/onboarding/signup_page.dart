@@ -1,8 +1,10 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -32,9 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
         (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
             referralController.text.isNotEmpty)) {
       // Changed from != ''
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -47,9 +47,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     //password matching check
     if (passwordController.text != confirmPasswordController.text) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -59,9 +57,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     //make sure name isn't too long (18 characters or less)
     if (nameController.text.length > 18) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Name is too long, consider using a nickname!")),
       );
@@ -70,9 +66,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     //make sure name is appropriate
     if (ProfanityUtils.hasProfanityWord(nameController.text)) {
-      if (await Haptics.canVibrate()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Name contains profanity, please change.")),
       );
@@ -90,9 +84,7 @@ class _RegisterPageState extends State<RegisterPage> {
         referralController.text,
       );
       if (mounted) {
-        if (await Haptics.canVibrate()) {
-          Haptics.vibrate(HapticsType.medium);
-        }
+        await safeVibrate(HapticsType.medium);
         // Navigator.pushReplacement(
         //   context,
         //   MaterialPageRoute(builder: (context) => OnboardingCarousel()),
@@ -144,14 +136,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       margin: const EdgeInsets.symmetric(horizontal: 24),
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 20,
                             offset: Offset(0, 10),
                           ),
@@ -222,6 +214,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: emailController,
                             keyboardType:
                                 TextInputType.emailAddress, // Email keyboard
+                            textCapitalization: TextCapitalization.none,
                             decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(

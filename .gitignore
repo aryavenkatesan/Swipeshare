@@ -16,3 +16,27 @@ swipeshare_app/ios/Runner/GoogleService-Info.plist
 
 # --- Operating System ---
 .DS_Store
+
+# --- Flutter/Dart ---
+**/flutter_export_environment.sh
+**/Flutter/GeneratedPluginRegistrant.swift
+**/Flutter/Flutter.framework
+**/Flutter/Flutter.podspec
+**/Flutter/ephemeral/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/generated_plugin_registrant.dart
+**/.dart_tool/
+**/build/
+
+# --- iOS/macOS ---
+**/Pods/
+**/.symlinks/
+**/xcuserdata/
+**/*.lock
+
+# --- Android ---
+**/.gradle/
+**/captures/
+**/local.properties
+**/GeneratedPluginRegistrant.java

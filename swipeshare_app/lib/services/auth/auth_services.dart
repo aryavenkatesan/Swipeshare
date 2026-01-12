@@ -57,9 +57,9 @@ class AuthServices extends ChangeNotifier {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       //catch errors
-      // print('Error code: ${e.code}');
-      // print('Error message: ${e.message}');
-      // print('Error details: ${e.stackTrace}');
+      // debugPrint('Error code: ${e.code}');
+      // debugPrint('Error message: ${e.message}');
+      // debugPrint('Error details: ${e.stackTrace}');
 
       throw Exception(e.code);
     }
@@ -67,7 +67,9 @@ class AuthServices extends ChangeNotifier {
 
   //sign user out
   Future<void> signOut() async {
+    debugPrint('Signing out user: ${_firebaseAuth.currentUser?.uid}');
     await NotificationService.instance.removeTokenFromFirestore();
-    return await FirebaseAuth.instance.signOut();
+    await FirebaseAuth.instance.signOut();
+    debugPrint('User signed out successfully.');
   }
 }

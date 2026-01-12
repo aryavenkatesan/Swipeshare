@@ -8,11 +8,13 @@ import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart'
 import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/listing_selection_page.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class BuySwipeScreen extends StatefulWidget {
-  List<String> paymentOptions;
-  BuySwipeScreen({super.key, required this.paymentOptions});
+  final List<String> paymentOptions;
+  const BuySwipeScreen({super.key, required this.paymentOptions});
 
   @override
   State<BuySwipeScreen> createState() => _BuySwipeScreenState();
@@ -23,6 +25,13 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay? startTime;
   TimeOfDay? endTime;
+  late List<String> selectedPaymentOptions;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedPaymentOptions = widget.paymentOptions;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,9 +71,9 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
 
                     const SizedBox(height: BuySwipesConstants.largeSpacing),
                     PaymentOptionsComponent(
-                      selectedPaymentOptions: widget.paymentOptions,
+                      selectedPaymentOptions: selectedPaymentOptions,
                       onPaymentOptionsChanged: (options) =>
-                          setState(() => widget.paymentOptions = options),
+                          setState(() => selectedPaymentOptions = options),
                       fromHomeScreen: false,
                     ),
                     const SizedBox(height: BuySwipesConstants.mediumSpacing),
@@ -157,9 +166,7 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
 
   /// Navigates to listing selection page with current selections
   void _navigateToListingSelection() async {
-    if (await Haptics.canVibrate()) {
-      Haptics.vibrate(HapticsType.medium);
-    }
+    await safeVibrate(HapticsType.medium);
     if (mounted) {
       Navigator.push(
         context,
@@ -169,7 +176,9 @@ class _BuySwipeScreenState extends State<BuySwipeScreen> {
             date: selectedDate,
             startTime: startTime!,
             endTime: endTime!,
-            paymentTypes: widget.paymentOptions,
+            paymentTypes: selectedPaymentOptions.isEmpty
+                ? PaymentOption.allPaymentTypeNames
+                : selectedPaymentOptions,
           ),
         ),
       );

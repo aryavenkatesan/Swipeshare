@@ -12,6 +12,7 @@ import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
@@ -438,9 +439,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                             color: const Color.fromARGB(192, 131, 199, 255),
                             borderRadius: BorderRadius.circular(8),
                             onPressed: () async {
-                              if (await Haptics.canVibrate()) {
-                                Haptics.vibrate(HapticsType.success);
-                              }
+                              await safeVibrate(HapticsType.success);
                               _handleListingSelection(listing);
                             },
                             child: Text(

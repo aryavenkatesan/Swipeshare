@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -58,23 +59,38 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
         ],
       ),
       backgroundColor: Color(0xFFFEF8FF),
-      // --- FIX 1: Wrap body in SingleChildScrollView ---
-      // This allows the page to scroll when the keyboard appears
-      body: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.69,
-              //genuinly does not work on iphone se at 0.7 or 0.68
-              child: PageView(
-                controller: _controller,
-                onPageChanged: (index) {
-                  setState(() {
-                    onLastPage = (index == 5);
-                  });
-                },
+      resizeToAvoidBottomInset: true,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(
+            child: PageView(
+              controller: _controller,
+              onPageChanged: (index) {
+                setState(() {
+                  onLastPage = (index == 5);
+                });
+              },
+              children: [
+                Page1(tutorial: false),
+                Page2(),
+                Page3(),
+                Page4(),
+                Page5(),
+                // Pass the code controller to the new Page6
+                Page6(tutorial: false, codeController: _codeController),
+              ],
+            ),
+          ),
+          SizedBox(height: 30),
+          Container(
+            height: 50,
+            alignment: Alignment.center,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Page1(tutorial: false),
                   Page2(),
