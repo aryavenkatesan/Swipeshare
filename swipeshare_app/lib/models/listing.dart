@@ -88,6 +88,36 @@ class Listing {
     return TimeOfDay(hour: hours, minute: minutes);
   }
 
+  /// Computed datetime combining transactionDate and timeStart
+  DateTime get datetime => DateTime(
+        transactionDate.year,
+        transactionDate.month,
+        transactionDate.day,
+        timeStart.hour,
+        timeStart.minute,
+      );
+
+  /// Comparator to sort Listings by soonest transaction date
+  static int bySoonest(Listing a, Listing b) {
+    final now = DateTime.now();
+
+    final aIsFuture = a.datetime.isAfter(now);
+    final bIsFuture = b.datetime.isAfter(now);
+
+    // Both future: soonest first
+    if (aIsFuture && bIsFuture) {
+      return a.datetime.compareTo(b.datetime);
+    }
+
+    // Both past: most recent first
+    if (!aIsFuture && !bIsFuture) {
+      return b.datetime.compareTo(a.datetime);
+    }
+
+    // One future, one past: future comes first
+    return aIsFuture ? -1 : 1;
+  }
+
   static DateTime? stringToDateTime(String dateString) {
     // 1. Guard against null or empty strings
     if (dateString.isEmpty) {
