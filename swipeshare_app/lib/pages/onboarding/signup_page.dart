@@ -228,7 +228,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               fillColor: const Color.fromARGB(0, 3, 168, 244),
                               filled: true,
-                              hintText: "Email*",
+                              hintText: "Student Email*",
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
