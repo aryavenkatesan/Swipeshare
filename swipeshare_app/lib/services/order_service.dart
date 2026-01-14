@@ -7,16 +7,24 @@ import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 
 class OrderService extends ChangeNotifier {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  OrderService._();
+  static final instance = OrderService._();
 
-  //POST ORDER
+  final _auth = FirebaseAuth.instance;
+  final _functions = FirebaseFunctions.instance;
+
+  CollectionReference<MealOrder> get orderCol => FirebaseFirestore.instance
+      .collection('orders')
+      .withConverter(
+        fromFirestore: (snap, _) => MealOrder.fromFirestore(snap),
+        toFirestore: (order, _) => order.toMap(),
+      );
+
   Future<MealOrder> postOrder(Listing listing) async {
     try {
-      final result = await _functions.httpsCallable('createOrderFromListing').call({
-        'listingId': listing.id,
-      });
+      final result = await _functions
+          .httpsCallable('createOrderFromListing')
+          .call({'listingId': listing.id});
 
       final orderData = result.data as Map<String, dynamic>;
       final newOrder = MealOrder.fromMap(orderData);
@@ -31,42 +39,8 @@ class OrderService extends ChangeNotifier {
     }
   }
 
-  Stream<QuerySnapshot> getOrders(String userId) {
-    return _fireStore
-        .collection('orders')
-        .where(
-          Filter.or(
-            Filter.and(
-              Filter('sellerId', isEqualTo: userId),
-              Filter('sellerVisibility', isEqualTo: true),
-            ),
-            Filter.and(
-              Filter('buyerId', isEqualTo: userId),
-              Filter('buyerVisibility', isEqualTo: true),
-            ),
-          ),
-        )
-        .snapshots();
-  }
-
-  Future<MealOrder?> getOrderById(String orderId) async {
-    try {
-      DocumentSnapshot doc = await _fireStore
-          .collection('orders')
-          .doc(orderId)
-          .get();
-
-      if (doc.exists) {
-        return MealOrder.fromMap(doc.data() as Map<String, dynamic>);
-      } else {
-        debugPrint('No such order with id: $orderId');
-        return null;
-      }
-    } catch (e) {
-      debugPrint('Error fetching order by id: $e');
-      return null;
-    }
-  }
+  Future<MealOrder> getOrderById(String orderId) async =>
+      await orderCol.doc(orderId).get().then((s) => s.data()!);
 
   Future<void> updateOrderTime(
     String orderId,
@@ -75,7 +49,7 @@ class OrderService extends ChangeNotifier {
   }) async {
     final String? timeString = newTime?.toString();
 
-    final docRef = _fireStore.collection('orders').doc(orderId);
+    final docRef = orderCol.doc(orderId);
 
     if (transaction != null) {
       transaction.update(docRef, {"displayTime": timeString});
@@ -88,7 +62,7 @@ class OrderService extends ChangeNotifier {
     MealOrder orderData, {
     bool deletedChat = false,
   }) async {
-    final String currentUserId = _firebaseAuth.currentUser!.uid;
+    final String currentUserId = _auth.currentUser!.uid;
     final updateMap = <String, dynamic>{};
 
     if (currentUserId == orderData.buyerId) {
@@ -105,8 +79,7 @@ class OrderService extends ChangeNotifier {
       updateMap['chatDeleted'] = true;
     }
 
-    await _fireStore
-        .collection('orders')
+    await orderCol
         .doc(orderData.getRoomName())
         .update(updateMap);
   }

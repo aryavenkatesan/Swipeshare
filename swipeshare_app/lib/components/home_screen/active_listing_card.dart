@@ -9,15 +9,10 @@ import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class ActiveListingCard extends StatelessWidget {
   final Listing currentListing;
-  final String listingId;
 
-  ActiveListingCard({
-    super.key,
-    required this.currentListing,
-    required this.listingId,
-  });
+  ActiveListingCard({super.key, required this.currentListing});
 
-  final ListingService _listingService = ListingService();
+  final ListingService _listingService = ListingService.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +64,7 @@ class ActiveListingCard extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () async {
-                _listingService.deleteListing(listingId);
+                _listingService.deleteListing(currentListing.id);
                 await safeVibrate(HapticsType.heavy);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(

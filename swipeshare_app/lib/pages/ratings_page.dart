@@ -21,8 +21,8 @@ class RatingsPage extends StatefulWidget {
 class _RatingsPageState extends State<RatingsPage> {
   String? selectedFace;
   final TextEditingController _feedbackController = TextEditingController();
-  final _userService = UserService();
-  final _orderService = OrderService();
+  final _userService = UserService.instance;
+  final _orderService = OrderService.instance;
 
   @override
   void dispose() {

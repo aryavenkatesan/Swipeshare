@@ -5,106 +5,74 @@ import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 
 class UserService {
-  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  UserService._();
+  static final instance = UserService._();
 
-  // Get user data once (static)
-  Future<UserModel?> getUserData(String uid) async {
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
+
+  Future<UserModel> getUserData(String uid) async {
     try {
-      final doc = await _fireStore.collection('users').doc(uid).get();
-
-      if (doc.exists) {
-        return UserModel.fromFirestore(doc.data()!);
-      }
-      return null;
+      final doc = await _firestore.collection('users').doc(uid).get();
+      return UserModel.fromFirestore(doc);
     } catch (e) {
       debugPrint('Error fetching user data: $e');
-      return null;
+      rethrow;
     }
   }
 
-  // Get current logged-in user
-  Future<UserModel?> getCurrentUser() async {
-    final currentUser = _firebaseAuth.currentUser;
-    if (currentUser == null) return null;
-
+  Future<UserModel> getCurrentUser() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('No user is currently signed in');
+    }
     return await getUserData(currentUser.uid);
   }
 
-  // Optional: Update user data
   Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
     try {
-      await _fireStore.collection('users').doc(uid).update(data);
+      await _firestore.collection('users').doc(uid).update(data);
     } catch (e) {
       debugPrint('Error updating user data: $e');
+      rethrow;
     }
   }
 
-  Future<void> updatePaymentTypes(String uid, List<String> paymentTypes) async {
-    try {
-      await _fireStore.collection('users').doc(uid).update({
-        'payment_types': paymentTypes,
-      });
-    } catch (e) {
-      debugPrint('Error updating payment types: $e');
-    }
-  }
+  Future<void> updatePaymentTypes(
+    String uid,
+    List<String> paymentTypes,
+  ) async => await updateUserData(uid, {'payment_types': paymentTypes});
 
   Future<void> updateStarRating(String uid, int incomingStar) async {
-    try {
-      final userDoc = await _fireStore.collection('users').doc(uid).get();
-      final userData = userDoc.data()!;
-      double calculatedStarRating =
-          ((userData['transactions_completed'] * userData['stars']) +
-              incomingStar) /
-          (userData['transactions_completed'] + 1);
-      //this is the true raw score, the initial 5 is not considered
-      //also yes there are edge cases depending on who rates first,
-      await _fireStore.collection('users').doc(uid).update({
-        'stars': calculatedStarRating,
-      });
-    } catch (e) {
-      debugPrint('Error updating star rating: $e');
-    }
+    final user = await getUserData(uid);
+    double calculatedStarRating =
+        ((user.transactionsCompleted * user.stars) + incomingStar) /
+        (user.transactionsCompleted + 1);
+    //this is the true raw score, the initial 5 is not considered
+    //also yes there are edge cases depending on who rates first,
+    await updateUserData(uid, {'stars': calculatedStarRating});
   }
 
   Future<void> incrementTransactionCount() async {
-    try {
-      final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-      final userDoc = await _fireStore
-          .collection('users')
-          .doc(currentUserId)
-          .get();
-      final userData = userDoc.data()!;
-      int incrementedTransactionNumber =
-          (userData['transactions_completed'] + 1);
-      await _fireStore.collection('users').doc(currentUserId).update({
-        'transactions_completed': incrementedTransactionNumber,
-      });
-    } catch (e) {
-      debugPrint('Error incrementing transaction count: $e');
-    }
+    final currentUser = await getCurrentUser();
+    int incrementedTransactionNumber = (currentUser.transactionsCompleted + 1);
+    await updateUserData(currentUser.id, {
+      'transactions_completed': incrementedTransactionNumber,
+    });
   }
 
   Future<void> blockUser(MealOrder orderData) async {
-    try {
-      final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-      final String otherUserId = orderData.buyerId != currentUserId
-          ? orderData.buyerId
-          : orderData.sellerId;
-      final userDoc = await _fireStore
-          .collection('users')
-          .doc(currentUserId)
-          .get();
-      final userData = userDoc.data()!;
-      int appendedBlockList = (userData['blocked_users'].add(otherUserId));
-      await _fireStore.collection('users').doc(currentUserId).update({
-        'blocked_users': appendedBlockList,
-      });
-    } catch (e) {
-      debugPrint('Error blocking user: $e');
-      rethrow;
+    final currentUser = await getCurrentUser();
+    final String otherUserId = orderData.buyerId != currentUser.id
+        ? orderData.buyerId
+        : orderData.sellerId;
+
+    if (currentUser.blockedUsers.contains(otherUserId)) {
+      return;
     }
+
+    final appendedBlockList = currentUser.blockedUsers..add(otherUserId);
+    await updateUserData(currentUser.id, {'blocked_users': appendedBlockList});
   }
 
   Future<void> sendFeedback(String message) async {
@@ -114,7 +82,7 @@ class UserService {
       throw Exception('No user is currently signed in');
     }
 
-    await _fireStore.collection('feedback').add({
+    await _firestore.collection('feedback').add({
       'userId': currentUser.uid,
       'userEmail': currentUser.email,
       'message': message,
@@ -133,13 +101,13 @@ class UserService {
       final String currentUserId = currentUser.uid;
 
       // 1. Delete listings
-      final QuerySnapshot listingsSnapshot = await _fireStore
+      final QuerySnapshot listingsSnapshot = await _firestore
           .collection('listings')
           .where('sellerId', isEqualTo: currentUserId)
           .get();
 
       if (listingsSnapshot.docs.isNotEmpty) {
-        final WriteBatch listingsBatch = _fireStore.batch();
+        final WriteBatch listingsBatch = _firestore.batch();
         for (final DocumentSnapshot doc in listingsSnapshot.docs) {
           listingsBatch.delete(doc.reference);
         }
@@ -147,7 +115,7 @@ class UserService {
       }
 
       // 2. Delete orders as seller (with messages)
-      final QuerySnapshot ordersAsSellerSnapshot = await _fireStore
+      final QuerySnapshot ordersAsSellerSnapshot = await _firestore
           .collection('orders')
           .where('sellerId', isEqualTo: currentUserId)
           .get();
@@ -159,7 +127,7 @@ class UserService {
             .get();
 
         if (messagesSnapshot.docs.isNotEmpty) {
-          final messagesBatch = _fireStore.batch();
+          final messagesBatch = _firestore.batch();
           for (final msgDoc in messagesSnapshot.docs) {
             messagesBatch.delete(msgDoc.reference);
           }
@@ -171,7 +139,7 @@ class UserService {
       }
 
       // 3. Delete orders as buyer (with messages)
-      final QuerySnapshot ordersAsBuyerSnapshot = await _fireStore
+      final QuerySnapshot ordersAsBuyerSnapshot = await _firestore
           .collection('orders')
           .where('buyerId', isEqualTo: currentUserId)
           .get();
@@ -183,7 +151,7 @@ class UserService {
             .get();
 
         if (messagesSnapshot.docs.isNotEmpty) {
-          final messagesBatch = _fireStore.batch();
+          final messagesBatch = _firestore.batch();
           for (final msgDoc in messagesSnapshot.docs) {
             messagesBatch.delete(msgDoc.reference);
           }
@@ -195,7 +163,7 @@ class UserService {
       }
 
       // 4. Delete user document (second to last)
-      await _fireStore.collection('users').doc(currentUserId).delete();
+      await _firestore.collection('users').doc(currentUserId).delete();
 
       // 5. Delete Firebase Auth user (absolute last)
       await currentUser.delete();

@@ -9,7 +9,6 @@ import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
-import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
@@ -36,7 +35,7 @@ class ListingSelectionPage extends StatefulWidget {
 
 class _ListingSelectionPageState extends State<ListingSelectionPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final _orderService = OrderService();
+  final _orderService = OrderService.instance;
 
   String? _expandedListingId;
 
@@ -70,21 +69,10 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
           .collection('listings')
           .where(_buildListingsFilter());
 
-      final [
-        snapshot as QuerySnapshot<Map<String, dynamic>>,
-        currentUser as UserModel?,
-      ] = await Future.wait([
+      final (snapshot, currentUser) = await (
         listingsQuery.get(),
-        UserService().getCurrentUser(),
-      ]);
-
-      if (currentUser == null) {
-        setState(() {
-          _error = "Failed to load user data.";
-          _isLoading = false;
-        });
-        return;
-      }
+        UserService.instance.getCurrentUser(),
+      ).wait;
 
       final (perfectMatches, imperfectMatches) = sortListingsByRelevance(
         snapshot.docs

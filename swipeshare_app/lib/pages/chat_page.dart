@@ -267,7 +267,9 @@ class _ChatPageState extends State<ChatPage> {
   //build message list
   Widget _buildMessageList() {
     return StreamBuilder(
-      stream: _chatService.getMessages(),
+      stream: _chatService.chatCol
+          .orderBy("timestamp", descending: false)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
@@ -276,7 +278,9 @@ class _ChatPageState extends State<ChatPage> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final reversedDocs = snapshot.data!.docs.reversed.toList();
+        final reversedDocs = snapshot.data!.docs.reversed
+            .map((snapshot) => snapshot.data())
+            .toList();
 
         return ListView.builder(
           controller: _scrollController,
@@ -288,8 +292,7 @@ class _ChatPageState extends State<ChatPage> {
               //adding padding for the very last message
             }
 
-            final doc = reversedDocs[index - 1];
-            final message = Message.fromDoc(doc);
+            final message = reversedDocs[index - 1];
             return switch (message) {
               SystemMessage() => _buildSystemMessage(message),
               TimeProposal() => _buildTimeProposal(message),
