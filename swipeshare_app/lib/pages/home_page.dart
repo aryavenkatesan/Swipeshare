@@ -507,11 +507,12 @@ class _HomeScreenState extends State<HomeScreen>
           );
         }
 
-        // Has orders -> show horizontally scrollable cards
+        // Has listings -> show horizontally scrollable cards
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
           child: Row(
-            children: listings
+            children: (listings..sort(Listing.bySoonest))
                 .map((listing) => ActiveListingCard(currentListing: listing))
                 .toList(),
           ),
