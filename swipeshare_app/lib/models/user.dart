@@ -76,9 +76,9 @@ class UserModel {
   }
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final docData = doc.data() as Map<String, dynamic>;
-    if (!doc.exists || docData.isEmpty) {
-      throw Exception('Document does not exist or has no data');
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('User document (id: ${doc.id}) does not exist or has no data');
     }
     return UserModel.fromMap(doc.id, docData);
   }

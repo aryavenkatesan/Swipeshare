@@ -267,7 +267,9 @@ class _ChatPageState extends State<ChatPage> {
   //build message list
   Widget _buildMessageList() {
     return StreamBuilder(
-      stream: _chatService.getMessages(),
+      stream: _chatService.chatCol
+          .orderBy("timestamp", descending: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
@@ -289,7 +291,7 @@ class _ChatPageState extends State<ChatPage> {
             }
 
             final doc = reversedDocs[index - 1];
-            final message = Message.fromDoc(doc);
+            final message = Message.fromFirestore(doc);
             return switch (message) {
               SystemMessage() => _buildSystemMessage(message),
               TimeProposal() => _buildTimeProposal(message),

@@ -88,9 +88,9 @@ class MealOrder {
   }
 
   factory MealOrder.fromFirestore(DocumentSnapshot doc) {
-    final docData = doc.data() as Map<String, dynamic>;
-    if (!doc.exists || docData.isEmpty) {
-      throw Exception('Document does not exist or has no data');
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('MealOrder document (id: ${doc.id}) does not exist or has no data');
     }
     return MealOrder.fromMap(docData);
   }

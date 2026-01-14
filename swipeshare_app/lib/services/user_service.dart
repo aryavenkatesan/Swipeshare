@@ -82,7 +82,7 @@ class UserService {
       throw Exception('No user is currently signed in');
     }
 
-    await _fireStore.collection('feedback').add({
+    await _firestore.collection('feedback').add({
       'userId': currentUser.uid,
       'userEmail': currentUser.email,
       'message': message,

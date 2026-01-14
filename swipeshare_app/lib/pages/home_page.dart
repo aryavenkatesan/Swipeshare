@@ -15,6 +15,7 @@ import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/buy_swipes.dart';
@@ -34,7 +35,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  List<MealOrder> orders = [];
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final OrderService _orderService = OrderService.instance;
   final UserService _userService = UserService.instance;
@@ -425,24 +425,32 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildOrderSection() {
     final userId = _auth.currentUser!.uid;
-    return _orderService.orderStreamBuilder(
-      filter: Filter.or(
-        Filter.and(
-          Filter('sellerId', isEqualTo: userId),
-          Filter('sellerVisibility', isEqualTo: true),
-        ),
-        Filter.and(
-          Filter('buyerId', isEqualTo: userId),
-          Filter('buyerVisibility', isEqualTo: true),
-        ),
-      ),
-      builder: (context, orders, isLoading, error) {
-        if (error != null) {
-          return Text('Error: ${error.toString()}');
+    return StreamBuilder<QuerySnapshot<MealOrder>>(
+      stream: _orderService.orderCol
+          .where(
+            Filter.or(
+              Filter.and(
+                Filter('sellerId', isEqualTo: userId),
+                Filter('sellerVisibility', isEqualTo: true),
+              ),
+              Filter.and(
+                Filter('buyerId', isEqualTo: userId),
+                Filter('buyerVisibility', isEqualTo: true),
+              ),
+            ),
+          )
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.error != null) {
+          return Text('Error: ${snapshot.error.toString()}');
         }
-        if (isLoading) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text('Loading..');
         }
+
+        final orders =
+            snapshot.data?.docs.map((doc) => doc.data()).toList() ?? [];
+
         if (orders.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(16),
@@ -472,15 +480,18 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildListingSection() {
-    return _listingService.listingStreamBuilder(
-      filter: Filter('sellerId', isEqualTo: _auth.currentUser!.uid),
-      builder: (context, listings, isLoading, error) {
-        if (error != null) {
-          return Text('Error: ${error.toString()}');
+    return StreamBuilder<QuerySnapshot<Listing>>(
+      stream: _listingService.listingCol.snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.error != null) {
+          return Text('Error: ${snapshot.error.toString()}');
         }
-        if (isLoading) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text('Loading..');
         }
+
+        final listings =
+            snapshot.data?.docs.map((doc) => doc.data()).toList() ?? [];
         if (listings.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(16),

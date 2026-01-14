@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 class Hyperlinks extends StatelessWidget {
   Hyperlinks({super.key});
 
-  final _userService = UserService();
+  final _userService = UserService.instance;
   final TextEditingController feedbackController = TextEditingController();
 
   // Method to show the feedback popup
