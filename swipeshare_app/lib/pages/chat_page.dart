@@ -229,7 +229,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageList() {
     return StreamBuilder(
       stream: _chatService.chatCol
-          .orderBy("timestamp", descending: false)
+          .orderBy("timestamp", descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
