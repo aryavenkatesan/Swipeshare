@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
+import 'package:swipeshare_app/models/report.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
@@ -140,17 +141,22 @@ class ChatService extends ChangeNotifier {
   Future<void> reportUser(String message) async {
     final (otherUser, thisUser) = await (
       getReceivingUser(),
-      _userService.getCurrentUser(),
+      _getCurrentUser(),
     ).wait;
 
-    await _firestore.collection('reports').add({
-      'reporterId': _auth.currentUser!.uid,
-      'reporterEmail': thisUser.email,
-      'reportedId': otherUser.email,
-      'reportedEmail': otherUser.email,
-      'reason': message,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    final report = Report(
+      reporterId: _auth.currentUser!.uid,
+      reporterEmail: thisUser.email,
+      reportedId: otherUser.id,
+      reportedEmail: otherUser.email,
+      reason: message,
+      timestamp: DateTime.now(),
+    );
+
+    final reportData = report.toMap();
+    reportData['timestamp'] = FieldValue.serverTimestamp();
+
+    await _firestore.collection('reports').add(reportData);
   }
 
   Future<SystemMessage> newOrderSystemMessage({
@@ -176,7 +182,7 @@ Happy Swiping!
         "$currentUserName has deleted the chat and left.\nPlease click the menu options above to delete the chat.";
     //TODO: Have to stop the other user from closing the order if someone deletes the chat
     await sendSystemMessage(message);
-    await OrderService.instance.updateVisibility(orderData, deletedChat: true);
+    await _orderService.updateVisibility(orderData, deletedChat: true);
   }
 
   Future<void> readNotifications() async {
