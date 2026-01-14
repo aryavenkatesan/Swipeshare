@@ -53,9 +53,9 @@ class Listing {
   }
 
   factory Listing.fromFirestore(DocumentSnapshot doc) {
-    final docData = doc.data() as Map<String, dynamic>;
-    if (!doc.exists || docData.isEmpty) {
-      throw Exception('Document does not exist or has no data');
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('Listing document (id: ${doc.id}) does not exist or has no data');
     }
     return Listing.fromMap(doc.id, docData);
   }

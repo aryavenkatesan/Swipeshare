@@ -9,22 +9,27 @@ import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class ChatService extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final UserService _userService = UserService.instance;
-  final NotificationService _notificationService = NotificationService.instance;
-  final OrderService _orderService = OrderService.instance;
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+  final _userService = UserService.instance;
+  final _notificationService = NotificationService.instance;
+  final _orderService = OrderService.instance;
   final String orderId;
 
   UserModel? _cachedCurrentUser;
 
   ChatService(this.orderId);
 
-  DocumentReference<Map<String, dynamic>> get _orderDoc =>
-      _firestore.collection('orders').doc(orderId);
+  DocumentReference<MealOrder> get _orderDoc =>
+      _orderService.orderCol.doc(orderId);
 
   CollectionReference<Map<String, dynamic>> get _chatRef =>
       _orderDoc.collection('messages');
+
+  CollectionReference<Message> get chatCol => _chatRef.withConverter(
+    fromFirestore: (snap, _) => Message.fromFirestore(snap),
+    toFirestore: (message, _) => message.toMap(),
+  );
 
   Future<UserModel> _getCurrentUser() async {
     if (_cachedCurrentUser != null) {
@@ -110,14 +115,14 @@ class ChatService extends ChangeNotifier {
   ) async {
     if (newStatus == ProposalStatus.accepted) {
       await _firestore.runTransaction((transaction) async {
-        final proposalDoc = _chatRef.doc(proposalId);
-        final proposalSnapshot = await transaction.get(proposalDoc);
+        final proposalDoc = chatCol.doc(proposalId);
+        final proposal = await transaction
+            .get(proposalDoc)
+            .then((s) => s.data());
 
-        if (!proposalSnapshot.exists) {
-          throw Exception('Proposal not found');
+        if (proposal == null || proposal is! TimeProposal) {
+          throw Exception('Proposal not found or invalid');
         }
-
-        final proposal = TimeProposal.fromDoc(proposalSnapshot);
 
         transaction.update(proposalDoc, {"status": newStatus.name});
         await _orderService.updateOrderTime(
@@ -127,17 +132,10 @@ class ChatService extends ChangeNotifier {
         );
       });
     } else {
-      final proposalDoc = _chatRef.doc(proposalId);
+      final proposalDoc = chatCol.doc(proposalId);
       await proposalDoc.update({"status": newStatus.name});
     }
   }
-
-  Stream<QuerySnapshot> getMessages() => _firestore
-      .collection('orders')
-      .doc(orderId)
-      .collection("messages")
-      .orderBy('timestamp', descending: false)
-      .snapshots();
 
   Future<void> reportUser(String message) async {
     final (otherUser, thisUser) = await (
@@ -183,7 +181,7 @@ Happy Swiping!
 
   Future<void> readNotifications() async {
     final currentUserId = _auth.currentUser!.uid;
-    final order = await _orderDoc.get().then(MealOrder.fromFirestore);
+    final order = await _orderService.getOrderById(orderId);
 
     if (currentUserId == order.buyerId && order.buyerHasNotifs) {
       await _orderDoc.update({'buyerHasNotifs': false});

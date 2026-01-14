@@ -7,8 +7,13 @@ class ListingService {
   ListingService._();
   static final instance = ListingService._();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserService _userService = UserService.instance;
+  CollectionReference<Listing> get listingCol => FirebaseFirestore.instance
+      .collection("listings")
+      .withConverter(
+        fromFirestore: (snap, _) => Listing.fromFirestore(snap),
+        toFirestore: (listing, _) => listing.toMap(),
+      );
 
   Future<void> postListing(
     String diningHall,
@@ -44,58 +49,24 @@ class ListingService {
       paymentTypes: paymentTypes,
     );
 
-    await _firestore.collection('listings').add(newListing.toMap());
-  }
-
-  Widget listingStreamBuilder({
-    required Widget Function(
-      BuildContext context,
-      List<Listing> listings,
-      bool isLoading,
-      Object? error,
-    )
-    builder,
-    Filter? filter,
-  }) {
-    Query query = _firestore.collection('listings');
-    if (filter != null) {
-      query = query.where(filter);
-    }
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: query.snapshots(),
-      builder: (context, snapshot) {
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-        final error = snapshot.error;
-
-        List<Listing> listings = [];
-        if (snapshot.hasData) {
-          listings = snapshot.data!.docs
-              .map((doc) => Listing.fromFirestore(doc))
-              .toList();
-        }
-
-        return builder(context, listings, isLoading, error);
-      },
-    );
+    await listingCol.add(newListing);
   }
 
   Future<Listing> getListingById(
     String docId, {
     Transaction? transaction,
   }) async {
-    final docRef = _firestore.collection('listings').doc(docId);
-    if (transaction != null) {
-      final docSnapshot = await transaction.get(docRef);
-      return Listing.fromFirestore(docSnapshot);
-    }
+    final docRef = listingCol.doc(docId);
 
-    final doc = await docRef.get();
-    return Listing.fromFirestore(doc);
+    final snapshot = transaction != null
+        ? await transaction.get(docRef)
+        : await docRef.get();
+
+    return snapshot.data()!;
   }
 
   Future<void> deleteListing(String docId, {Transaction? transaction}) async {
-    final docRef = _firestore.collection('listings').doc(docId);
+    final docRef = listingCol.doc(docId);
     if (transaction != null) {
       transaction.delete(docRef);
     } else {
