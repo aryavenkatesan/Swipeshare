@@ -1,9 +1,9 @@
-export const messageTypes = ['text', 'system', 'timeProposal'] as const;
+export const messageTypes = ["text", "system", "timeProposal"] as const;
 export type MessageType = (typeof messageTypes)[number];
 
 // TimeOfDay string type matching Flutter's TimeFormatter.productionToString format
 // Format: "TimeOfDay(HH:MM)" where HH and MM are zero-padded
-type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 export type TimeOfDayString = `TimeOfDay(${Digit}${Digit}:${Digit}${Digit})`;
 
 // Base message fields shared by all message types
@@ -15,19 +15,19 @@ type BaseMessage = {
 };
 
 export type TextMessage = BaseMessage & {
-  messageType: 'text';
+  messageType: "text";
   content: string;
 };
 
 export type SystemMessage = BaseMessage & {
-  messageType: 'system';
+  messageType: "system";
   content: string;
 };
 
 export type TimeProposal = BaseMessage & {
-  messageType: 'timeProposal';
+  messageType: "timeProposal";
   proposedTime: TimeOfDayString;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: "pending" | "accepted" | "rejected";
 };
 
 export type Message = TextMessage | SystemMessage | TimeProposal;
