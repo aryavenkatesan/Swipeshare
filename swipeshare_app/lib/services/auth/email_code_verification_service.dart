@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -53,6 +54,36 @@ class EmailCodeVerificationService {
         throw Exception("An error occurred. Please contact support.");
       }
       throw Exception("Failed to send code. Please try again later.");
+    }
+  }
+
+  Future<void> sendForgotPasswordCode({required String targetEmail}) async {
+    try {
+      // Call the 'requestPasswordReset' function we just wrote
+      await FirebaseFunctions.instance
+          .httpsCallable('requestPasswordReset')
+          .call({'email': targetEmail});
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception(e.message ?? "Failed to send code.");
+    }
+  }
+
+  Future<String?> verifyForgotPasswordCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      // Note: Ensure your region here matches your Firebase Console (us-central1)
+      final result = await FirebaseFunctions.instanceFor(
+        region: 'us-central1',
+      ).httpsCallable('verifyResetCode').call({'email': email, 'code': code});
+
+      // Return the token provided by the updated TypeScript function
+      return result.data['token'] as String?;
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception(e.message ?? "Invalid or expired code.");
+    } catch (e) {
+      throw Exception("Verification failed. Please try again.");
     }
   }
 
