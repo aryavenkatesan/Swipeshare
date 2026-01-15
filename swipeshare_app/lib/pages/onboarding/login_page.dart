@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
+import 'package:swipeshare_app/pages/onboarding/forgot_password/forgot_password_page.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
@@ -205,7 +206,13 @@ class _LoginPageState extends State<LoginPage> {
                                 // Using Flexible is better here
                                 child: TextButton(
                                   onPressed: () {
-                                    //TODO: Forgot Password
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ForgotPasswordPage(),
+                                      ),
+                                    );
                                   },
                                   child: const Text(
                                     "Forgot Password?",

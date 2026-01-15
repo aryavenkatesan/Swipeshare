@@ -4,3 +4,4 @@ admin.initializeApp();
 
 export * from "./functions/notifications";
 export * from "./functions/remote-call";
+export * from "./functions/forgot-password";

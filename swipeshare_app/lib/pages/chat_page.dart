@@ -280,20 +280,23 @@ class _ChatPageState extends State<ChatPage> {
 
         return ListView.builder(
           controller: _scrollController,
-          reverse: true, // to add padding for last message
+          reverse: true,
           itemCount: reversedDocs.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
               return const SizedBox(height: 14);
-              //adding padding for the very last message
             }
 
             final doc = reversedDocs[index - 1];
             final message = Message.fromDoc(doc);
+            final previousMessage = index < reversedDocs.length
+                ? Message.fromDoc(reversedDocs[index])
+                : null;
+
             return switch (message) {
               SystemMessage() => _buildSystemMessage(message),
               TimeProposal() => _buildTimeProposal(message),
-              TextMessage() => _buildTextMessage(message),
+              TextMessage() => _buildTextMessage(message, previousMessage),
             };
           },
         );
@@ -436,11 +439,16 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildTextMessage(TextMessage message) {
+  Widget _buildTextMessage(TextMessage message, Message? previousMessage) {
     //align the messages based on who sent it
     var alignment = (message.senderId == _firebaseAuth.currentUser!.uid)
         ? Alignment.centerRight
         : Alignment.centerLeft;
+
+    final bool showSenderName =
+        previousMessage == null ||
+        (previousMessage is! TextMessage) ||
+        (previousMessage.senderId != message.senderId);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
@@ -452,8 +460,8 @@ class _ChatPageState extends State<ChatPage> {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            Text(message.senderName),
-            const SizedBox(height: 5),
+            if (showSenderName) Text(message.senderName),
+            if (showSenderName) SizedBox(height: 5),
             ChatBubble(message: (message.content), alignment: alignment),
             SizedBox(height: 5),
           ],
