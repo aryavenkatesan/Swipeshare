@@ -481,7 +481,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildListingSection() {
     return StreamBuilder<QuerySnapshot<Listing>>(
-      stream: _listingService.listingCol.snapshots(),
+      stream: _listingService.listingCol
+          .where("sellerId", isEqualTo: _auth.currentUser!.uid)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.error != null) {
           return Text('Error: ${snapshot.error.toString()}');
