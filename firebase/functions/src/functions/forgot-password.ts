@@ -4,14 +4,8 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as crypto from "crypto";
 
 
-if (admin.apps.length === 0) {
-  admin.initializeApp();
-}
 
-// Ensure the name here matches your Flutter call exactly
-// Update the signature to (request) 
 export const requestPasswordReset = functions.https.onCall(async (request) => {
-  // In v2, your parameters are inside request.data
   const email = request.data.email;
 
   if (!email) {
@@ -19,7 +13,8 @@ export const requestPasswordReset = functions.https.onCall(async (request) => {
   }
 
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 12 * 60 * 60000));
+  const expires = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 12 * 60 * 60 * 1000));
+  //expires after 12 hours, we could change this
 
   try {
     await admin.firestore().collection('password_resets').doc(email).set({
