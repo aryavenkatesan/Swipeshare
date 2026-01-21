@@ -32,6 +32,15 @@ export type TimeProposal = BaseMessage & {
 
 export type Message = TextMessage | SystemMessage | TimeProposal;
 
+export const listingStatus = {
+  active: "active",
+  claimed: "claimed",
+  cancelled: "cancelled",
+  expired: "expired",
+} as const;
+
+export type ListingStatus = (typeof listingStatus)[keyof typeof listingStatus];
+
 export type Listing = {
   sellerId: string;
   sellerName: string;
@@ -42,6 +51,7 @@ export type Listing = {
   sellerRating: number;
   paymentTypes: string[];
   price?: number;
+  status: ListingStatus;
 };
 
 export type Order = {

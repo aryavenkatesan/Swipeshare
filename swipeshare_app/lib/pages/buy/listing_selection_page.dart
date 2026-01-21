@@ -487,7 +487,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       // Exclude current user's listings
       Filter('sellerId', isNotEqualTo: _auth.currentUser!.uid),
 
-      // Get listings only on the selected date
+      // Get listings only on the selected date (after current time if today)
       Filter(
         'transactionDate',
         isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
@@ -496,6 +496,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
 
       // Get listings only with payment type overlap
       Filter('paymentTypes', arrayContainsAny: widget.paymentTypes),
+
+      // Get only active listings
+      Filter('status', isEqualTo: ListingStatus.active.name),
     );
   }
 

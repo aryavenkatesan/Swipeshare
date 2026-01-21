@@ -64,7 +64,10 @@ class ActiveListingCard extends StatelessWidget {
           actions: <Widget>[
             TextButton(
               onPressed: () async {
-                _listingService.deleteListing(currentListing.id);
+                _listingService.updateListingStatus(
+                  currentListing.id,
+                  ListingStatus.cancelled,
+                );
                 await safeVibrate(HapticsType.heavy);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(

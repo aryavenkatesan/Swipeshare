@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-enum PaymentType { venmo, cashapp, paypal, cash }
+enum ListingStatus { active, claimed, expired, cancelled }
 
 class Listing {
   final String id;
@@ -14,6 +14,7 @@ class Listing {
   final double sellerRating;
   final List<String> paymentTypes;
   final double? price;
+  final ListingStatus status;
 
   Listing({
     required this.id,
@@ -26,6 +27,7 @@ class Listing {
     required this.sellerRating,
     required this.paymentTypes,
     this.price,
+    required this.status,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,27 +37,20 @@ class Listing {
       'diningHall': diningHall,
       'timeStart': Listing.toMinutes(timeStart),
       'timeEnd': Listing.toMinutes(timeEnd),
-      'transactionDate': Timestamp.fromDate(
-        DateTime(
-          transactionDate.year,
-          transactionDate.month,
-          transactionDate.day,
-          transactionDate.hour,
-          transactionDate.minute,
-          transactionDate.second,
-          transactionDate.millisecond,
-        ),
-      ),
+      'transactionDate': Timestamp.fromDate(transactionDate),
       'sellerRating': sellerRating,
       'paymentTypes': paymentTypes,
       'price': price,
+      'status': status.name,
     };
   }
 
   factory Listing.fromFirestore(DocumentSnapshot doc) {
     final docData = doc.data() as Map<String, dynamic>?;
     if (!doc.exists || docData == null || docData.isEmpty) {
-      throw Exception('Listing document (id: ${doc.id}) does not exist or has no data');
+      throw Exception(
+        'Listing document (id: ${doc.id}) does not exist or has no data',
+      );
     }
     return Listing.fromMap(doc.id, docData);
   }
@@ -74,6 +69,9 @@ class Listing {
       sellerRating: map['sellerRating'].toDouble(),
       paymentTypes: [for (var item in map['paymentTypes']) item as String],
       price: map['price'] != null ? (map['price'] as num).toDouble() : null,
+      status: map['status'] != null
+          ? ListingStatus.values.byName(map['status'])
+          : ListingStatus.expired,
     );
   }
 
@@ -90,12 +88,12 @@ class Listing {
 
   /// Computed datetime combining transactionDate and timeStart
   DateTime get datetime => DateTime(
-        transactionDate.year,
-        transactionDate.month,
-        transactionDate.day,
-        timeStart.hour,
-        timeStart.minute,
-      );
+    transactionDate.year,
+    transactionDate.month,
+    transactionDate.day,
+    timeStart.hour,
+    timeStart.minute,
+  );
 
   /// Comparator to sort Listings by soonest transaction date
   static int bySoonest(Listing a, Listing b) {

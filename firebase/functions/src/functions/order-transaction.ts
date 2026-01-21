@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/https";
 import * as functions from "firebase-functions/v2";
-import { Order } from "../types";
+import { Listing, listingStatus, Order } from "../types";
 import { getListing, getOrderRoomName, getUser } from "../utils/firestore";
 
 export const createOrderFromListing = functions.https.onCall(
@@ -88,7 +88,11 @@ export const createOrderFromListing = functions.https.onCall(
         .firestore()
         .collection("listings")
         .doc(listingId);
-      transaction.delete(listingDoc);
+
+      const listingUpdate: Partial<Listing> = {
+        status: listingStatus.claimed,
+      }
+      transaction.update(listingDoc, listingUpdate);
 
       return newOrder;
     });
