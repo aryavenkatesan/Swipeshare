@@ -54,6 +54,14 @@ export type Listing = {
   status: ListingStatus;
 };
 
+export const orderStatus = {
+  active: "active",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export type OrderStatus = (typeof orderStatus)[keyof typeof orderStatus];
+
 export type Order = {
   sellerId: string;
   sellerName: string;
@@ -67,8 +75,9 @@ export type Order = {
   displayTime?: TimeOfDayString;
   sellerHasNotifs: boolean;
   buyerHasNotifs: boolean;
-  transactionDate: string; // ISO 8601 string
+  transactionDate: FirebaseFirestore.Timestamp;
   isChatDeleted: boolean;
+  status: OrderStatus;
 };
 
 export type User = {
