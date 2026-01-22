@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
@@ -11,6 +12,7 @@ import 'package:swipeshare_app/services/user_service.dart';
 class ChatService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
   final UserService _userService = UserService();
   final NotificationService _notificationService = NotificationService.instance;
   final OrderService _orderService = OrderService();
@@ -71,25 +73,8 @@ class ChatService extends ChangeNotifier {
     return message;
   }
 
-  Future<SystemMessage> sendSystemMessage(
-    String content, {
-    Transaction? transaction,
-  }) async {
-    final chatDoc = _chatRef.doc();
-
-    final message = SystemMessage(id: chatDoc.id, content: content);
-
-    final messageData = message.toMap();
-    messageData['timestamp'] = FieldValue.serverTimestamp();
-
-    if (transaction != null) {
-      transaction.set(chatDoc, messageData);
-      return message;
-    }
-
-    await chatDoc.set(messageData);
-    return message;
-  }
+  // Note: System messages are now sent via Cloud Functions for security.
+  // Use sendNewOrderSystemMessage() or sendChatDeletedSystemMessage() cloud functions instead.
 
   Future<TimeProposal> sendTimeProposal(
     TimeOfDay proposedTime, {
@@ -168,29 +153,28 @@ class ChatService extends ChangeNotifier {
     });
   }
 
-  Future<SystemMessage> newOrderSystemMessage({
+  Future<void> newOrderSystemMessage({
     Transaction? transaction,
   }) async {
-    final message = """
-Welcome to the chat room!
-
-Feel free to discuss things like the time you'd want to meet up, identifiers like shirt color, or maybe the movie that came out last week :) 
-
-Remember swipes are \$7 and should be paid before the seller swipes you in.
-
-Happy Swiping!
-""";
-    return await sendSystemMessage(message, transaction: transaction);
+    // Note: transaction parameter is no longer used since this is now a cloud function
+    try {
+      final callable = _functions.httpsCallable('sendNewOrderSystemMessage');
+      await callable.call({'orderId': orderId});
+    } catch (e) {
+      debugPrint('Error sending new order system message: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteChat(MealOrder orderData) async {
-    final currentUserName = _auth.currentUser!.uid == orderData.buyerId
-        ? orderData.buyerName
-        : orderData.sellerName;
-    final String message =
-        "$currentUserName has deleted the chat and left.\nPlease click the menu options above to delete the chat.";
     //TODO: Have to stop the other user from closing the order if someone deletes the chat
-    await sendSystemMessage(message);
+    try {
+      final callable = _functions.httpsCallable('sendChatDeletedSystemMessage');
+      await callable.call({'orderId': orderId});
+    } catch (e) {
+      debugPrint('Error sending chat deleted system message: $e');
+      rethrow;
+    }
     await OrderService().updateVisibility(orderData, deletedChat: true);
   }
 

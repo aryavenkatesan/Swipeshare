@@ -50,21 +50,17 @@ class UserService {
     }
   }
 
-  Future<void> updateStarRating(String uid, int incomingStar) async {
+  Future<void> updateStarRating(String orderId, int incomingStar) async {
     try {
-      final userDoc = await _fireStore.collection('users').doc(uid).get();
-      final userData = userDoc.data()!;
-      double calculatedStarRating =
-          ((userData['transactions_completed'] * userData['stars']) +
-              incomingStar) /
-          (userData['transactions_completed'] + 1);
-      //this is the true raw score, the initial 5 is not considered
-      //also yes there are edge cases depending on who rates first,
-      await _fireStore.collection('users').doc(uid).update({
-        'stars': calculatedStarRating,
+      final callable = FirebaseFunctions.instance.httpsCallable('updateStarRating');
+      final result = await callable.call({
+        'orderId': orderId,
+        'incomingStar': incomingStar,
       });
+      debugPrint('Rating is updated: ${result.data}');
     } catch (e) {
       debugPrint('Error updating star rating: $e');
+      rethrow;
     }
   }
 
