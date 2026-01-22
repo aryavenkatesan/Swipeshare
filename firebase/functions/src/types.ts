@@ -59,6 +59,8 @@ export type Order = {
   buyerHasNotifs: boolean;
   transactionDate: string; // ISO 8601 string
   isChatDeleted: boolean;
+  buyerHasRated?: boolean;
+  sellerHasRated?: boolean;
 };
 
 export type User = {

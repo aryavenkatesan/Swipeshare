@@ -97,3 +97,40 @@ export const getOrderRoomName = ({
 }): string => {
   return `${sellerId}_${buyerId}_${transactionDate}`;
 };
+
+/**
+ * Validates that an order exists and that the caller is a participant.
+ * Throws appropriate HttpsErrors if validation fails.
+ * Returns the order data if successful.
+ */
+export const validateOrderParticipant = async (
+  orderId: string,
+  callerUid: string
+): Promise<Order> => {
+  // Import functions here to avoid circular dependency
+  const functions = await import("firebase-functions/v2");
+  
+  // Fetch the order
+  const orderData = await getOrder(orderId);
+
+  // Verify the order exists
+  if (!orderData) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      `Order with ID ${orderId} does not exist.`
+    );
+  }
+
+  // Verify the caller is either the buyer or seller in this order
+  const isCallerParticipant =
+    callerUid === orderData.buyerId || callerUid === orderData.sellerId;
+
+  if (!isCallerParticipant) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "You are not a participant in this order."
+    );
+  }
+
+  return orderData;
+};
