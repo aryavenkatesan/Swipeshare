@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+enum UserStatus { active, deleted }
+
 class PaymentOption {
   final String name;
   final IconData icon;
@@ -42,6 +44,7 @@ class UserModel {
   final bool isEmailVerified;
   final String? verificationCode;
   final DateTime? verificationCodeExpires;
+  final UserStatus status;
 
   UserModel({
     required this.id,
@@ -55,6 +58,7 @@ class UserModel {
     required this.isEmailVerified,
     this.verificationCode,
     this.verificationCodeExpires,
+    this.status = UserStatus.active,
   });
 
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
@@ -72,6 +76,9 @@ class UserModel {
       verificationCodeExpires: data['verificationCodeExpires'] != null
           ? (data['verificationCodeExpires'] as Timestamp).toDate()
           : null,
+      status: data['status'] != null
+          ? UserStatus.values.byName(data['status'])
+          : UserStatus.active,
     );
   }
 
