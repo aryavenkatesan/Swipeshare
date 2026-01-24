@@ -53,9 +53,9 @@ class Listing {
   }
 
   factory Listing.fromFirestore(DocumentSnapshot doc) {
-    final docData = doc.data() as Map<String, dynamic>;
-    if (!doc.exists || docData.isEmpty) {
-      throw Exception('Document does not exist or has no data');
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('Listing document (id: ${doc.id}) does not exist or has no data');
     }
     return Listing.fromMap(doc.id, docData);
   }
@@ -86,6 +86,36 @@ class Listing {
     int minutes = totalMinutes % 60;
 
     return TimeOfDay(hour: hours, minute: minutes);
+  }
+
+  /// Computed datetime combining transactionDate and timeStart
+  DateTime get datetime => DateTime(
+        transactionDate.year,
+        transactionDate.month,
+        transactionDate.day,
+        timeStart.hour,
+        timeStart.minute,
+      );
+
+  /// Comparator to sort Listings by soonest transaction date
+  static int bySoonest(Listing a, Listing b) {
+    final now = DateTime.now();
+
+    final aIsFuture = a.datetime.isAfter(now);
+    final bIsFuture = b.datetime.isAfter(now);
+
+    // Both future: soonest first
+    if (aIsFuture && bIsFuture) {
+      return a.datetime.compareTo(b.datetime);
+    }
+
+    // Both past: most recent first
+    if (!aIsFuture && !bIsFuture) {
+      return b.datetime.compareTo(a.datetime);
+    }
+
+    // One future, one past: future comes first
+    return aIsFuture ? -1 : 1;
   }
 
   static DateTime? stringToDateTime(String dateString) {
