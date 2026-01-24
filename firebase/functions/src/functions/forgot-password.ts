@@ -64,8 +64,8 @@ export const verifyResetCode = onCall(async (request) => {
   await docRef.update({
     isVerified: true,
     verifiedToken: verifiedToken,
-    // Short 5-minute window to complete the password change
-    tokenExpires: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 5 * 60000))
+    // 15-minute window to complete the password change
+    tokenExpires: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 15 * 60000))
   });
 
   return { success: true, token: verifiedToken };

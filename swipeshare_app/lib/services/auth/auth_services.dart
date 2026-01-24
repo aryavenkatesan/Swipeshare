@@ -50,7 +50,7 @@ class AuthServices extends ChangeNotifier {
         'payment_types': [],
         'stars': 5,
         'transactions_completed': 0,
-        'refferal_email': referralEmail,
+        'referral_email': referralEmail,
         'blocked_users': [],
       });
 
