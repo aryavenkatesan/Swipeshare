@@ -25,6 +25,18 @@ class _LoginPageState extends State<LoginPage> {
 
   //sign in user
   void signIn() async {
+    // Validate that email and password are not empty
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.isEmpty) {
+      await safeVibrate(HapticsType.error);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter both email and password')),
+        );
+      }
+      return;
+    }
+
     //get the auth service
     final authService = Provider.of<AuthServices>(context, listen: false);
 
@@ -37,9 +49,10 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       await safeVibrate(HapticsType.error);
       if (mounted) {
+        final errorMessage = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     }
   }

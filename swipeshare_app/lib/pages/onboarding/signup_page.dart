@@ -29,6 +29,18 @@ class _RegisterPageState extends State<RegisterPage> {
 
   //sign up user
   void signUp() async {
+    // Validate that all required fields are filled out
+    if (nameController.text.trim().isEmpty ||
+        emailController.text.trim().isEmpty ||
+        passwordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      await safeVibrate(HapticsType.error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill out all required fields')),
+      );
+      return;
+    }
+
     // make it unc email only
     if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
         (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
@@ -83,18 +95,13 @@ class _RegisterPageState extends State<RegisterPage> {
         nameController.text,
         referralController.text,
       );
-      if (mounted) {
-        await safeVibrate(HapticsType.medium);
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => OnboardingCarousel()),
-        // );
-      }
+      await safeVibrate(HapticsType.medium);
     } catch (e) {
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     }
   }
