@@ -38,7 +38,7 @@ class UserService {
       rethrow;
     }
   }
-
+ 
   Future<void> updatePaymentTypes(
     String uid,
     List<String> paymentTypes,
