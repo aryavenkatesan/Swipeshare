@@ -77,6 +77,8 @@ export type Order = {
   buyerHasNotifs: boolean;
   transactionDate: FirebaseFirestore.Timestamp;
   isChatDeleted: boolean;
+  buyerHasRated?: boolean;
+  sellerHasRated?: boolean;
   status: OrderStatus;
 };
 
