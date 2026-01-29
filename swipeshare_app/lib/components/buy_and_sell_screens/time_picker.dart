@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
@@ -180,35 +181,92 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
   }
 
   /// Builds an individual time picker with animation
+  /// Uses Cupertino scroll wheel on iOS, Material tap-to-select on Android
   Widget _buildTimePicker({
     required bool isVisible,
     required TimeOfDay? time,
     required int defaultHour,
     required Function(TimeOfDay) onTimeChanged,
   }) {
-    return Visibility(
-      visible: isVisible,
-      child: SizedBox(
-        width: double.infinity,
-        child: CupertinoDatePicker(
-          mode: CupertinoDatePickerMode.time,
-          use24hFormat: false,
-          minuteInterval: 5,
-          initialDateTime: DateTime(
-            2023,
-            1,
-            1,
-            time?.hour ?? defaultHour,
-            time?.minute ?? 0,
+    if (AdaptiveTimePicker.useCupertino) {
+      // iOS/macOS: Cupertino scroll wheel picker
+      return Visibility(
+        visible: isVisible,
+        child: SizedBox(
+          width: double.infinity,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.time,
+            use24hFormat: false,
+            minuteInterval: 5,
+            initialDateTime: DateTime(
+              2023,
+              1,
+              1,
+              time?.hour ?? defaultHour,
+              time?.minute ?? 0,
+            ),
+            onDateTimeChanged: (DateTime dateTime) {
+              onTimeChanged(
+                TimeOfDay(hour: dateTime.hour, minute: dateTime.minute),
+              );
+            },
           ),
-          onDateTimeChanged: (DateTime dateTime) {
-            onTimeChanged(
-              TimeOfDay(hour: dateTime.hour, minute: dateTime.minute),
-            );
-          },
         ),
-      ),
+      );
+    } else {
+      // Android: Tap-to-select pattern with Material time picker dialog
+      final displayTime = time ?? TimeOfDay(hour: defaultHour, minute: 0);
+      return Visibility(
+        visible: isVisible,
+        child: SizedBox(
+          width: double.infinity,
+          child: GestureDetector(
+            onTap: () => _showMaterialTimePicker(displayTime, onTimeChanged),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    displayTime.format(context),
+                    style: AppTextStyles.timeValueText.copyWith(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tap to change',
+                    style: AppTextStyles.subText.copyWith(
+                      color: AppColors.subText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Shows Material time picker dialog (Android only)
+  Future<void> _showMaterialTimePicker(
+    TimeOfDay initialTime,
+    Function(TimeOfDay) onTimeChanged,
+  ) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return Theme(
+          data: AdaptiveTimePicker.buildMaterialTimePickerTheme(),
+          child: child!,
+        );
+      },
     );
+    if (picked != null) {
+      onTimeChanged(picked);
+    }
   }
 
   /// Builds an individual time selector with label and time display
