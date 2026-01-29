@@ -7,7 +7,7 @@ import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
-enum SettingsItems { itemOne, itemTwo, itemThree }
+enum SettingsItems { report, block }
 
 class ChatSettingsMenu extends StatelessWidget {
   final ChatService chatService;
@@ -22,28 +22,22 @@ class ChatSettingsMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<SettingsItems>(
+      onSelected: (value) {
+        switch (value) {
+          case SettingsItems.report:
+            _showReportDialog(context);
+          case SettingsItems.block:
+            _showBlockDialog(context);
+        }
+      },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<SettingsItems>>[
-        PopupMenuItem<SettingsItems>(
-          value: SettingsItems.itemOne,
-          child: const Text('Report This User'),
-          onTap: () {
-            // Delay is needed to prevent context issues with popup menu
-            Future.delayed(Duration.zero, () => _showReportDialog(context));
-          },
+        const PopupMenuItem<SettingsItems>(
+          value: SettingsItems.report,
+          child: Text('Report This User'),
         ),
-        PopupMenuItem<SettingsItems>(
-          value: SettingsItems.itemTwo,
-          child: const Text('Block This User'),
-          onTap: () {
-            Future.delayed(Duration.zero, () => _showBlockDialog(context));
-          },
-        ),
-        PopupMenuItem<SettingsItems>(
-          value: SettingsItems.itemThree,
-          child: const Text('Delete Chat'),
-          onTap: () {
-            Future.delayed(Duration.zero, () => _showDeleteDialog(context));
-          },
+        const PopupMenuItem<SettingsItems>(
+          value: SettingsItems.block,
+          child: Text('Block This User'),
         ),
       ],
     );
@@ -83,28 +77,6 @@ class ChatSettingsMenu extends StatelessWidget {
       await safeVibrate(HapticsType.heavy);
       UserService.instance.blockUser(orderData);
       Navigator.of(context).pop();
-    }
-  }
-
-  void _showDeleteDialog(BuildContext context) async {
-    final confirmed = await AdaptiveDialog.showConfirmation(
-      context: context,
-      title: 'Delete Chat',
-      content: 'Are you sure you want to Delete the Chat?',
-      confirmText: 'Delete',
-      cancelText: 'Close',
-      isDestructive: true,
-    );
-
-    if (confirmed == true && context.mounted) {
-      await safeVibrate(HapticsType.heavy);
-      chatService.deleteChat(orderData);
-      if (context.mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.chatDeleted)));
-      }
     }
   }
 }

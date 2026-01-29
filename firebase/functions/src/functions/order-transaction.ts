@@ -59,18 +59,15 @@ export const createOrderFromListing = functions.https.onCall(
       const newOrder: Order = {
         sellerId: listing.sellerId,
         sellerName: listing.sellerName,
-        sellerVisibility: true,
         sellerStars: seller.stars,
         buyerId: buyerId,
         buyerName: buyer.name,
-        buyerVisibility: true,
         buyerStars: buyer.stars,
         diningHall: listing.diningHall,
         // displayTime: undefined,
         sellerHasNotifs: true,
         buyerHasNotifs: true,
         transactionDate: listing.transactionDate,
-        isChatDeleted: false,
         status: orderStatus.active,
       };
 

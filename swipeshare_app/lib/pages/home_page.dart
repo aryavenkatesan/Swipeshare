@@ -13,6 +13,7 @@ import 'package:swipeshare_app/components/home_screen/active_listing_card.dart';
 import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
 import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
 import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
+import 'package:swipeshare_app/components/home_screen/ratings_bottom_sheet.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
@@ -117,12 +118,52 @@ class _HomeScreenState extends State<HomeScreen>
 
       // Start fade-in animation after data is loaded
       _animationController.forward();
+
+      // Check for orders that need rating
+      _checkOrdersToRate();
     } catch (e) {
       debugPrint('ERROR loading user data: $e');
       setState(() {
         error = 'Something went wrong. Please try again.';
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _checkOrdersToRate() async {
+    // final ordersToRate = [
+    //   MealOrder(
+    //     sellerId: 'mock-seller-id',
+    //     sellerName: 'John Doe',
+    //     sellerStars: 4.5,
+    //     buyerId: _auth.currentUser!.uid,
+    //     buyerName: 'You',
+    //     buyerStars: 4.0,
+    //     diningHall: 'Dining Hall West',
+    //     displayTime: 'TimeOfDay(12:30)',
+    //     sellerHasNotifs: true,
+    //     buyerHasNotifs: true,
+    //     transactionDate: DateTime.now().subtract(const Duration(days: 1)),
+    //     status: OrderStatus.completed,
+    //   ),
+    //   MealOrder(
+    //     sellerId: _auth.currentUser!.uid,
+    //     sellerName: 'You',
+    //     sellerStars: 4.0,
+    //     buyerId: 'mock-buyer-id',
+    //     buyerName: 'Jane Smith',
+    //     buyerStars: 4.8,
+    //     diningHall: 'Dining Hall East',
+    //     displayTime: 'TimeOfDay(18:00)',
+    //     sellerHasNotifs: true,
+    //     buyerHasNotifs: true,
+    //     transactionDate: DateTime.now().subtract(const Duration(days: 2)),
+    //     status: OrderStatus.completed,
+    //   ),
+    // ];
+    final ordersToRate = await _orderService.getOrdersToRate();
+    if (ordersToRate.isNotEmpty && mounted) {
+      RatingsBottomSheet.show(context, ordersToRate);
     }
   }
 
@@ -430,16 +471,11 @@ class _HomeScreenState extends State<HomeScreen>
       stream: _orderService.orderCol
           .where(
             Filter.or(
-              Filter.and(
-                Filter('sellerId', isEqualTo: userId),
-                Filter('sellerVisibility', isEqualTo: true),
-              ),
-              Filter.and(
-                Filter('buyerId', isEqualTo: userId),
-                Filter('buyerVisibility', isEqualTo: true),
-              ),
+              Filter('sellerId', isEqualTo: userId),
+              Filter('buyerId', isEqualTo: userId),
             ),
           )
+          .where('status', isEqualTo: OrderStatus.active.name)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.error != null) {

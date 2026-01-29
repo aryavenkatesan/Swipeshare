@@ -1,17 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/components/star_container.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
-import 'package:swipeshare_app/pages/ratings_page.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
@@ -45,33 +42,12 @@ class _ChatPageState extends State<ChatPage> {
   final NotificationService _notifService = NotificationService.instance;
   final ScrollController _scrollController = ScrollController();
 
-  late bool _isChatDeleted;
-
   @override
   void initState() {
     super.initState();
-    _isChatDeleted = widget.orderData.isChatDeleted;
     _notifService.activeChatId = widget.orderData.getRoomName();
     _chatService = ChatService(widget.orderData.getRoomName());
     _chatService.readNotifications();
-    _listenToOrderChanges();
-  }
-
-  void _listenToOrderChanges() {
-    FirebaseFirestore.instance
-        .collection('orders')
-        .doc(widget.orderData.getRoomName())
-        .snapshots()
-        .listen((snapshot) {
-          if (snapshot.exists && mounted) {
-            final data = snapshot.data();
-            if (data != null && data['isChatDeleted'] != null) {
-              setState(() {
-                _isChatDeleted = data['isChatDeleted'];
-              });
-            }
-          }
-        });
   }
 
   @override
@@ -158,40 +134,6 @@ class _ChatPageState extends State<ChatPage> {
         actions: <Widget>[
           Row(
             children: [
-              IconButton(
-                onPressed: _isChatDeleted
-                    ? null
-                    : () async {
-                        final confirmed = await AdaptiveDialog.showConfirmation(
-                          context: context,
-                          title: 'Close Order',
-                          content:
-                              'Are you sure you want to mark this order as complete? This action cannot be undone.',
-                        );
-                        if (confirmed == true && context.mounted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RatingsPage(
-                                recieverId: widget.receiverUserId,
-                                orderData: widget.orderData,
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                icon: Icon(
-                  Icons.task_alt,
-                  color:
-                      _isChatDeleted // ⭐ Use the state variable instead
-                      ? Colors.grey
-                      : null,
-                ),
-                tooltip:
-                    _isChatDeleted // ⭐ Use the state variable instead
-                    ? 'Order already closed'
-                    : 'Close Order',
-              ),
               ChatSettingsMenu(
                 chatService: _chatService,
                 orderData: widget.orderData,

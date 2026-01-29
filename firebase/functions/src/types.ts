@@ -65,18 +65,15 @@ export type OrderStatus = (typeof orderStatus)[keyof typeof orderStatus];
 export type Order = {
   sellerId: string;
   sellerName: string;
-  sellerVisibility: boolean;
   sellerStars: number;
   buyerId: string;
   buyerName: string;
-  buyerVisibility: boolean;
   buyerStars: number;
   diningHall: string;
   displayTime?: TimeOfDayString;
   sellerHasNotifs: boolean;
   buyerHasNotifs: boolean;
   transactionDate: FirebaseFirestore.Timestamp;
-  isChatDeleted: boolean;
   ratingByBuyer?: Rating;
   ratingBySeller?: Rating;
   status: OrderStatus;
