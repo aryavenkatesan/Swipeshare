@@ -11,9 +11,12 @@ class UserService {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
-  Future<UserModel> getUserData(String uid) async {
+  Future<UserModel> getUserData(String uid, {Transaction? transaction}) async {
     try {
-      final doc = await _firestore.collection('users').doc(uid).get();
+      final docRef = _firestore.collection('users').doc(uid);
+      final doc = transaction != null
+          ? await transaction.get(docRef)
+          : await docRef.get();
       return UserModel.fromFirestore(doc);
     } catch (e) {
       debugPrint('Error fetching user data: $e');
@@ -21,17 +24,26 @@ class UserService {
     }
   }
 
-  Future<UserModel> getCurrentUser() async {
+  Future<UserModel> getCurrentUser({Transaction? transaction}) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
       throw Exception('No user is currently signed in');
     }
-    return await getUserData(currentUser.uid);
+    return await getUserData(currentUser.uid, transaction: transaction);
   }
 
-  Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
+  Future<void> updateUserData(
+    String uid,
+    Map<String, dynamic> data, {
+    Transaction? transaction,
+  }) async {
     try {
-      await _firestore.collection('users').doc(uid).update(data);
+      final docRef = _firestore.collection('users').doc(uid);
+      if (transaction != null) {
+        transaction.update(docRef, data);
+      } else {
+        await docRef.update(data);
+      }
     } catch (e) {
       debugPrint('Error updating user data: $e');
       rethrow;
@@ -43,22 +55,28 @@ class UserService {
     List<String> paymentTypes,
   ) async => await updateUserData(uid, {'payment_types': paymentTypes});
 
-  Future<void> updateStarRating(String uid, int incomingStar) async {
-    final user = await getUserData(uid);
+  Future<void> updateStarRating(
+    String uid,
+    int incomingStar, {
+    Transaction? transaction,
+  }) async {
+    final user = await getUserData(uid, transaction: transaction);
     double calculatedStarRating =
         ((user.transactionsCompleted * user.stars) + incomingStar) /
         (user.transactionsCompleted + 1);
     //this is the true raw score, the initial 5 is not considered
     //also yes there are edge cases depending on who rates first,
-    await updateUserData(uid, {'stars': calculatedStarRating});
+    await updateUserData(uid, {'stars': calculatedStarRating}, transaction: transaction);
   }
 
-  Future<void> incrementTransactionCount() async {
-    final currentUser = await getCurrentUser();
+  Future<void> incrementTransactionCount({Transaction? transaction}) async {
+    final currentUser = await getCurrentUser(transaction: transaction);
     int incrementedTransactionNumber = (currentUser.transactionsCompleted + 1);
-    await updateUserData(currentUser.id, {
-      'transactions_completed': incrementedTransactionNumber,
-    });
+    await updateUserData(
+      currentUser.id,
+      {'transactions_completed': incrementedTransactionNumber},
+      transaction: transaction,
+    );
   }
 
   Future<void> blockUser(MealOrder orderData) async {
