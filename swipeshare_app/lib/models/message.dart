@@ -26,16 +26,21 @@ sealed class Message {
     };
   }
 
-  factory Message.fromDoc(DocumentSnapshot doc) {
+  factory Message.fromFirestore(DocumentSnapshot doc) {
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('Message document (id: ${doc.id}) does not exist or has no data');
+    }
+
     switch (doc["messageType"]) {
       case 'text':
-        return TextMessage.fromDoc(doc);
+        return TextMessage.fromFirestore(doc);
       case 'timeProposal':
-        return TimeProposal.fromDoc(doc);
+        return TimeProposal.fromFirestore(doc);
       case 'system':
-        return SystemMessage.fromDoc(doc);
+        return SystemMessage.fromFirestore(doc);
       default:
-        throw StateError("Unknown message type: ${doc['messageType']}");
+        throw StateError("Unknown message type: ${doc['messageType']} for Message (id: ${doc.id})");
     }
   }
 }
@@ -57,13 +62,14 @@ class TextMessage extends Message {
     return {'messageType': 'text', 'content': content, ...super.toMap()};
   }
 
-  factory TextMessage.fromDoc(DocumentSnapshot doc) {
-    if (!doc.exists) {
-      throw StateError("Document does not exist");
+  factory TextMessage.fromFirestore(DocumentSnapshot doc) {
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('TextMessage document (id: ${doc.id}) does not exist or has no data');
     }
 
     if (doc["messageType"] != 'text') {
-      throw StateError("Not a TextMessage doc");
+      throw StateError("Document (id: ${doc.id}) is not a TextMessage, got type: ${doc['messageType']}");
     }
 
     return TextMessage(
@@ -88,13 +94,14 @@ class SystemMessage extends Message {
     return {'messageType': 'system', 'content': content, ...super.toMap()};
   }
 
-  factory SystemMessage.fromDoc(DocumentSnapshot doc) {
-    if (!doc.exists) {
-      throw StateError("Document does not exist");
+  factory SystemMessage.fromFirestore(DocumentSnapshot doc) {
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('SystemMessage document (id: ${doc.id}) does not exist or has no data');
     }
 
     if (doc["messageType"] != 'system') {
-      throw StateError("Not a SystemMessage doc");
+      throw StateError("Document (id: ${doc.id}) is not a SystemMessage, got type: ${doc['messageType']}");
     }
 
     return SystemMessage(
@@ -121,13 +128,14 @@ class TimeProposal extends Message {
     super.timestamp,
   });
 
-  factory TimeProposal.fromDoc(DocumentSnapshot doc) {
-    if (!doc.exists) {
-      throw StateError("Document does not exist");
+  factory TimeProposal.fromFirestore(DocumentSnapshot doc) {
+    final docData = doc.data() as Map<String, dynamic>?;
+    if (!doc.exists || docData == null || docData.isEmpty) {
+      throw Exception('TimeProposal document (id: ${doc.id}) does not exist or has no data');
     }
 
     if (doc["messageType"] != 'timeProposal') {
-      throw StateError("Not a TimeProposal doc");
+      throw StateError("Document (id: ${doc.id}) is not a TimeProposal, got type: ${doc['messageType']}");
     }
 
     return TimeProposal(

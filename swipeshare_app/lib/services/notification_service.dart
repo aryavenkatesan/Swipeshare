@@ -185,11 +185,7 @@ class NotificationService {
       return;
     }
 
-    final orderData = await OrderService().getOrderById(orderId);
-    if (orderData == null) {
-      debugPrint('No order data found for orderId: $orderId');
-      return;
-    }
+    final orderData = await OrderService.instance.getOrderById(orderId);
 
     _navigatorKey!.currentState!.push(
       MaterialPageRoute(builder: (context) => ChatPage(orderData: orderData)),
@@ -219,10 +215,10 @@ class NotificationService {
         .where('sellerId', isEqualTo: user.uid)
         .where('sellerHasNotifs', isEqualTo: true);
 
-    final [buyerSnapshots, sellerSnapshots] = await Future.wait([
+    final (buyerSnapshots, sellerSnapshots) = await (
       buyerOrders.get(),
       sellerOrders.get(),
-    ]);
+    ).wait;
 
     final totalUnread =
         buyerSnapshots.docs.length + sellerSnapshots.docs.length;

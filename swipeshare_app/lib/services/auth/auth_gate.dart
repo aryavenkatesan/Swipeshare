@@ -47,8 +47,7 @@ class AuthGate extends StatelessWidget {
           .doc(user.uid)
           .snapshots()
           .handleError((error, stackTrace) {
-            debugPrint('Firestore error in auth_gate.dart: $error');
-            debugPrint('This is expected during logout (auth token race condition)');
+            debugPrint('Firestore error in auth_gate.dart: $error\nThis is expected during logout (auth token race condition)');
           }),
       builder: (context, userSnapshot) {
         // Show loading while fetching user data

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
+import 'package:swipeshare_app/pages/onboarding/forgot_password/forgot_password_page.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
@@ -24,6 +25,18 @@ class _LoginPageState extends State<LoginPage> {
 
   //sign in user
   void signIn() async {
+    // Validate that email and password are not empty
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.isEmpty) {
+      await safeVibrate(HapticsType.error);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter both email and password')),
+        );
+      }
+      return;
+    }
+
     //get the auth service
     final authService = Provider.of<AuthServices>(context, listen: false);
 
@@ -36,9 +49,10 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       await safeVibrate(HapticsType.error);
       if (mounted) {
+        final errorMessage = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     }
   }
@@ -205,7 +219,13 @@ class _LoginPageState extends State<LoginPage> {
                                 // Using Flexible is better here
                                 child: TextButton(
                                   onPressed: () {
-                                    //TODO: Forgot Password
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ForgotPasswordPage(),
+                                      ),
+                                    );
                                   },
                                   child: const Text(
                                     "Forgot Password?",

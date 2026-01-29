@@ -27,7 +27,7 @@ class AuthServices extends ChangeNotifier {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.code);
+      throw Exception(_getAuthErrorMessage(e.code));
     }
   }
 
@@ -50,18 +50,13 @@ class AuthServices extends ChangeNotifier {
         'payment_types': [],
         'stars': 5,
         'transactions_completed': 0,
-        'refferal_email': referralEmail,
+        'referral_email': referralEmail,
         'blocked_users': [],
       });
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      //catch errors
-      // debugPrint('Error code: ${e.code}');
-      // debugPrint('Error message: ${e.message}');
-      // debugPrint('Error details: ${e.stackTrace}');
-
-      throw Exception(e.code);
+      throw Exception(_getAuthErrorMessage(e.code));
     }
   }
 
@@ -71,5 +66,31 @@ class AuthServices extends ChangeNotifier {
     await NotificationService.instance.removeTokenFromFirestore();
     await FirebaseAuth.instance.signOut();
     debugPrint('User signed out successfully.');
+  }
+
+  //convert Firebase auth error codes to user-friendly messages
+  String _getAuthErrorMessage(String code) {
+    switch (code) {
+      case 'invalid-credential':
+        return 'Invalid email or password. Please try again.';
+      case 'user-not-found':
+        return 'No account found with this email.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'email-already-in-use':
+        return 'This email is already registered.';
+      case 'weak-password':
+        return 'Password is too weak. Please use a stronger password.';
+      case 'invalid-email':
+        return 'Invalid email address format.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many failed attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
   }
 }
