@@ -195,9 +195,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           const SizedBox(height: 24),
 
                           // --- Name Field ---
-                          TextField(
-                            controller: nameController,
-                            decoration: InputDecoration(
+                          AutofillGroup(
+                            child: Column(
+                              children: [
+                                TextField(
+                                  controller: nameController,
+                                  autofillHints: const [AutofillHints.givenName],
+                                  decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Colors.grey.shade400,
@@ -213,16 +217,17 @@ class _RegisterPageState extends State<RegisterPage> {
                               hintText: "First Name*",
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
-                          ),
-                          const SizedBox(height: 16),
+                                ),
+                                const SizedBox(height: 16),
 
-                          // --- Email Field ---
-                          TextField(
-                            controller: emailController,
-                            keyboardType:
-                                TextInputType.emailAddress, // Email keyboard
-                            textCapitalization: TextCapitalization.none,
-                            decoration: InputDecoration(
+                                // --- Email Field ---
+                                TextField(
+                                  controller: emailController,
+                                  keyboardType:
+                                      TextInputType.emailAddress, // Email keyboard
+                                  textCapitalization: TextCapitalization.none,
+                                  autofillHints: const [AutofillHints.email],
+                                  decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Colors.grey.shade400,
@@ -238,16 +243,17 @@ class _RegisterPageState extends State<RegisterPage> {
                               hintText: "Student Email*",
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
-                          ),
+                                ),
 
-                          const SizedBox(height: 16),
+                                const SizedBox(height: 16),
 
-                          // --- Password Field ---
-                          TextField(
-                            controller: passwordController,
-                            obscureText:
-                                _isPasswordObscured, // Use state variable
-                            decoration: InputDecoration(
+                                // --- Password Field ---
+                                TextField(
+                                  controller: passwordController,
+                                  obscureText:
+                                      _isPasswordObscured, // Use state variable
+                                  autofillHints: const [AutofillHints.newPassword],
+                                  decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Colors.grey.shade400,
@@ -276,15 +282,17 @@ class _RegisterPageState extends State<RegisterPage> {
                                 },
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
+                                ),
+                                const SizedBox(height: 16),
 
-                          // --- Confirm Password Field ---
-                          TextField(
-                            controller: confirmPasswordController,
-                            obscureText:
-                                _isConfirmPasswordObscured, // Use state variable
-                            decoration: InputDecoration(
+                                // --- Confirm Password Field ---
+                                TextField(
+                                  controller: confirmPasswordController,
+                                  obscureText:
+                                      _isConfirmPasswordObscured, // Use state variable
+                                  autofillHints: const [AutofillHints.newPassword],
+                                  onEditingComplete: () => signUp(),
+                                  decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Colors.grey.shade400,
@@ -312,7 +320,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                         !_isConfirmPasswordObscured;
                                   });
                                 },
+                                ),
                               ),
+                            ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 16),
