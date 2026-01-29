@@ -5,6 +5,7 @@ import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 enum SettingsItems { itemOne, itemTwo, itemThree }
 
@@ -64,11 +65,7 @@ class ChatSettingsMenu extends StatelessWidget {
       chatService.reportUser(reportText);
       await safeVibrate(HapticsType.success);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Thank you for reporting, we will review your message and take action as soon as possible.',
-          ),
-        ),
+        const SnackBar(content: Text(SnackbarMessages.reportSubmitted)),
       );
     }
   }
@@ -104,9 +101,9 @@ class ChatSettingsMenu extends StatelessWidget {
       chatService.deleteChat(orderData);
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('The chat has been deleted.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.chatDeleted)));
       }
     }
   }

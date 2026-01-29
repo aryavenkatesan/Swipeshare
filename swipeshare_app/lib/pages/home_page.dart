@@ -18,6 +18,7 @@ import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 import 'package:swipeshare_app/pages/buy/buy_swipes.dart';
 import 'package:swipeshare_app/pages/onboarding/tutorial_carousel.dart';
 import 'package:swipeshare_app/pages/sell/sell_post.dart';
@@ -353,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Preferred payment methods updated succesfully!',
+                              SnackbarMessages.paymentMethodsUpdated,
                             ),
                           ),
                         );

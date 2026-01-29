@@ -5,6 +5,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/pages/onboarding/forgot_password/set_new_password_page.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -59,7 +60,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your student email.")),
+        SnackBar(content: Text(SnackbarMessages.enterStudentEmail)),
       );
       return;
     }

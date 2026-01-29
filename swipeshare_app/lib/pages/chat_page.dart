@@ -17,6 +17,7 @@ import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class ChatPage extends StatefulWidget {
   final MealOrder orderData;
@@ -97,7 +98,7 @@ class _ChatPageState extends State<ChatPage> {
       await safeVibrate(HapticsType.error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Message contains profanity, please change.")),
+          SnackBar(content: Text(SnackbarMessages.profanityInMessage)),
         );
       }
       return;

@@ -4,6 +4,7 @@ import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/components/home_screen/deleting_account_screen.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Hyperlinks extends StatelessWidget {
@@ -27,8 +28,8 @@ class Hyperlinks extends StatelessWidget {
     if (feedbackText != null && context.mounted) {
       _userService.sendFeedback(feedbackText);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Successfully submitted!'),
+        SnackBar(
+          content: Text(SnackbarMessages.feedbackSubmitted),
           backgroundColor: Colors.green,
         ),
       );

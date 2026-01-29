@@ -12,6 +12,7 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class OnboardingCarousel extends StatefulWidget {
   const OnboardingCarousel({super.key});
@@ -186,8 +187,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
     if (_codeController.text.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter all 6 digits.'),
+        SnackBar(
+          content: Text(SnackbarMessages.enterAllDigits),
           backgroundColor: Colors.orange,
         ),
       );
@@ -202,8 +203,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
       // Email verified
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email verified successfully!'),
+          SnackBar(
+            content: Text(SnackbarMessages.emailVerified),
             backgroundColor: Colors.green,
           ),
         );
@@ -235,8 +236,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
       await _verificationService.sendVerificationCode();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('New verification code sent!'),
+          SnackBar(
+            content: Text(SnackbarMessages.verificationCodeSent),
             backgroundColor: Colors.blue,
           ),
         );

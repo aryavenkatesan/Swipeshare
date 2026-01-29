@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:swipeshare_app/pages/onboarding/forgot_password/forgot_password_page.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class LoginPage extends StatefulWidget {
   final void Function()? onTap;
@@ -31,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
       await safeVibrate(HapticsType.error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter both email and password')),
+          SnackBar(content: Text(SnackbarMessages.enterEmailAndPassword)),
         );
       }
       return;
