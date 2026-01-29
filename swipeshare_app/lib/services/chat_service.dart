@@ -159,8 +159,14 @@ class ChatService extends ChangeNotifier {
 
   Future<void> deleteChat(MealOrder orderData) async {
     //TODO: Have to stop the other user from closing the order if someone deletes the chat
-    await sendSystemMessage(message);
-    await OrderService().updateVisibility(orderData, deletedChat: true);
+    try {
+      final callable = _functions.httpsCallable('sendChatDeletedSystemMessage');
+      await callable.call({'orderId': orderId});
+    } catch (e) {
+      debugPrint('Error sending chat deleted system message: $e');
+      rethrow;
+    }
+    await _orderService.updateVisibility(orderData, deletedChat: true);
   }
 
   Future<void> readNotifications() async {

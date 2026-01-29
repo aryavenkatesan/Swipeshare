@@ -278,8 +278,11 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
           width: 1,
         ),
       ),
-      child: Column(
-        children: [
+      child: IntrinsicHeight(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
           // ========== CARD FRONT (Always Visible) ==========
           GestureDetector(
             onTap: () {
@@ -370,18 +373,18 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
           ),
 
           // ========== EXPANDABLE CONTENT (Inside Card) ==========
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: isExpanded
-                ? Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+          ClipRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topLeft,
+              child: isExpanded
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                         Divider(height: 1, thickness: 1, color: Colors.black12),
                         const SizedBox(height: 12),
 
@@ -440,11 +443,13 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
                           ),
                         ),
                       ],
-                    ),
-                  )
-                : const SizedBox.shrink(),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ),
         ],
+        ),
       ),
     );
   }
