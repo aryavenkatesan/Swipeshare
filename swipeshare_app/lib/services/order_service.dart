@@ -65,22 +65,43 @@ class OrderService extends ChangeNotifier {
     final String currentUserId = _auth.currentUser!.uid;
     final updateMap = <String, dynamic>{};
 
-    if (currentUserId == orderData.buyerId) {
-      //set buyer visibility to false
+    final isBuyer = currentUserId == orderData.buyerId;
+
+    if (isBuyer) {
       updateMap['buyerVisibility'] = false;
       updateMap['buyerHasNotifs'] = false;
     } else {
-      //set seller visibility to false
       updateMap['sellerVisibility'] = false;
       updateMap['sellerHasNotifs'] = false;
     }
 
-    if (deletedChat) {
-      updateMap['chatDeleted'] = true;
+    // Order status is completed only if both users have submitted feedback
+    final bothDone = (isBuyer && !orderData.sellerVisibility) ||
+        (!isBuyer && !orderData.buyerVisibility);
+
+    if (bothDone) {
+      updateMap['status'] = OrderStatus.completed.name;
     }
 
-    await orderCol
-        .doc(orderData.getRoomName())
-        .update(updateMap);
+    if (deletedChat) {
+      updateMap['chatDeleted'] = true;
+      updateMap['status'] = OrderStatus.cancelled.name;
+    }
+
+    await orderCol.doc(orderData.getRoomName()).update(updateMap);
+  }
+
+  Future<void> updateOrderStatus(
+    String orderId,
+    OrderStatus newStatus, {
+    Transaction? transaction,
+  }) async {
+    final docRef = orderCol.doc(orderId);
+    final updateMap = {'status': newStatus.name};
+    if (transaction != null) {
+      transaction.update(docRef, updateMap);
+    } else {
+      await docRef.update(updateMap);
+    }
   }
 }

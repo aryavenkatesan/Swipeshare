@@ -7,3 +7,5 @@ export * from "./functions/remote-call";
 export * from "./functions/ratings";
 export * from "./functions/system-messages";
 export * from "./functions/forgot-password";
+export * from "./functions/order-transaction";
+export * from "./functions/resource-expiration";

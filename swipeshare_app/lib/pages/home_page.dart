@@ -483,6 +483,7 @@ class _HomeScreenState extends State<HomeScreen>
     return StreamBuilder<QuerySnapshot<Listing>>(
       stream: _listingService.listingCol
           .where("sellerId", isEqualTo: _auth.currentUser!.uid)
+          .where("status", isEqualTo: ListingStatus.active.name)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.error != null) {

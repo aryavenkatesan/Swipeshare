@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swipeshare_app/utils/firestore_utils.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
+
+enum OrderStatus { active, completed, cancelled }
 
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
@@ -18,6 +21,7 @@ class MealOrder {
   final bool buyerHasNotifs;
   final DateTime transactionDate;
   final bool isChatDeleted;
+  final OrderStatus status;
 
   MealOrder({
     required this.sellerId,
@@ -34,6 +38,7 @@ class MealOrder {
     required this.buyerHasNotifs,
     required this.transactionDate,
     this.isChatDeleted = false,
+    required this.status,
   });
 
   DateTime get datetime => DateTime(
@@ -62,9 +67,9 @@ class MealOrder {
       'displayTime': displayTime,
       'sellerHasNotifs': sellerHasNotifs,
       'buyerHasNotifs': buyerHasNotifs,
-      'transactionDate': transactionDate
-          .toIso8601String(), //better to have as string or no?
+      'transactionDate': Timestamp.fromDate(transactionDate),
       'isChatDeleted': isChatDeleted,
+      'status': status.name,
     };
   }
 
@@ -82,22 +87,27 @@ class MealOrder {
       displayTime: map['displayTime'],
       sellerHasNotifs: map['sellerHasNotifs'] ?? false,
       buyerHasNotifs: map['buyerHasNotifs'] ?? false,
-      transactionDate: DateTime.parse(map['transactionDate']),
+      transactionDate: FirestoreUtils.parseTimestamp(map['transactionDate']),
       isChatDeleted: map['isChatDeleted'] ?? false,
+      status: map['status'] != null
+          ? OrderStatus.values.byName(map['status'])
+          : OrderStatus.cancelled,
     );
   }
 
   factory MealOrder.fromFirestore(DocumentSnapshot doc) {
     final docData = doc.data() as Map<String, dynamic>?;
     if (!doc.exists || docData == null || docData.isEmpty) {
-      throw Exception('MealOrder document (id: ${doc.id}) does not exist or has no data');
+      throw Exception(
+        'MealOrder document (id: ${doc.id}) does not exist or has no data',
+      );
     }
     return MealOrder.fromMap(docData);
   }
 
   getRoomName() {
     //something unique between the two people and their specific interaction, it will never be repeated
-    return '${sellerId}_${buyerId}_${transactionDate.toIso8601String()}';
+    return '${sellerId}_${buyerId}_${transactionDate.millisecondsSinceEpoch}';
   }
 
   /// Comparator to sort MealOrders by soonest transaction date
