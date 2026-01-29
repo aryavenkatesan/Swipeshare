@@ -1,9 +1,8 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:provider/provider.dart';
 import 'package:swipeshare_app/pages/onboarding/forgot_password/set_new_password_page.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 

@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 import { Listing, Order, User } from "../types";
 
 /**
@@ -6,7 +7,7 @@ import { Listing, Order, User } from "../types";
  */
 export const getUser = async (
   userId: string,
-  transaction?: FirebaseFirestore.Transaction
+  transaction?: FirebaseFirestore.Transaction,
 ): Promise<User | null> => {
   const userDoc = admin.firestore().collection("users").doc(userId);
   const userSnapshot = transaction
@@ -28,7 +29,7 @@ export const getUser = async (
  */
 export const getUserWithFcm = async (
   userId: string,
-  transaction?: FirebaseFirestore.Transaction
+  transaction?: FirebaseFirestore.Transaction,
 ): Promise<(User & { fcmToken: string }) | null> => {
   const userData = await getUser(userId, transaction);
   if (!userData) {
@@ -45,7 +46,7 @@ export const getUserWithFcm = async (
 
 export const getListing = async (
   listingId: string,
-  transaction?: FirebaseFirestore.Transaction
+  transaction?: FirebaseFirestore.Transaction,
 ): Promise<Listing | null> => {
   const listingDoc = admin.firestore().collection("listings").doc(listingId);
   const listingSnapshot = transaction
@@ -66,7 +67,7 @@ export const getListing = async (
  */
 export const getOrder = async (
   orderId: string,
-  transaction?: FirebaseFirestore.Transaction
+  transaction?: FirebaseFirestore.Transaction,
 ): Promise<Order | null> => {
   const orderSnapshot = transaction
     ? await transaction.get(admin.firestore().collection("orders").doc(orderId))
@@ -93,7 +94,7 @@ export const getOrderRoomName = ({
 }: {
   sellerId: string;
   buyerId: string;
-  transactionDate: string;
+  transactionDate: Timestamp;
 }): string => {
-  return `${sellerId}_${buyerId}_${transactionDate}`;
+  return `${sellerId}_${buyerId}_${transactionDate.toMillis()}`;
 };

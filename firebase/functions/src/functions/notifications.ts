@@ -101,7 +101,7 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
       }
 
       const readableDate = new Date(
-        orderData.transactionDate
+        orderData.transactionDate.toDate()
       ).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
