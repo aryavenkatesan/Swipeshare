@@ -45,7 +45,7 @@ class SnackbarMessages {
       ]);
 
   static const nameToolong =
-      "That's a mouthful! How about a shorter version?";
+      "We can't handle your name's power! How about a shorter version?";
 
   static const uncEmailRequired = "Please use your UNC email (@unc.edu)";
 
