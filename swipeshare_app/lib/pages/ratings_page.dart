@@ -116,7 +116,8 @@ class _RatingsPageState extends State<RatingsPage> {
                               widget.orderData,
                               rating: Rating(
                                 stars: stars,
-                                extraInfo: _feedbackController.text == ""
+                                extraInfo:
+                                    _feedbackController.text.trim().isEmpty
                                     ? null
                                     : _feedbackController.text,
                               ),
