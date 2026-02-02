@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:swipeshare_app/utils/firestore_utils.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
 enum OrderRole { buyer, seller }
+
+enum OrderStatus { active, completed, cancelled }
 
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
@@ -23,6 +26,7 @@ class MealOrder {
   final bool isChatDeleted;
   final Rating? ratingByBuyer;
   final Rating? ratingBySeller;
+  final OrderStatus status;
 
   MealOrder({
     required this.sellerId,
@@ -41,6 +45,7 @@ class MealOrder {
     this.isChatDeleted = false,
     this.ratingByBuyer,
     this.ratingBySeller,
+    required this.status,
   });
 
   DateTime get datetime => DateTime(
@@ -85,11 +90,11 @@ class MealOrder {
       'displayTime': displayTime,
       'sellerHasNotifs': sellerHasNotifs,
       'buyerHasNotifs': buyerHasNotifs,
-      'transactionDate': transactionDate
-          .toIso8601String(), //better to have as string or no?
+      'transactionDate': Timestamp.fromDate(transactionDate),
       'isChatDeleted': isChatDeleted,
       'ratingByBuyer': ratingByBuyer?.toMap(),
       'ratingBySeller': ratingBySeller?.toMap(),
+      'status': status.name,
     };
   }
 
@@ -107,7 +112,7 @@ class MealOrder {
       displayTime: map['displayTime'],
       sellerHasNotifs: map['sellerHasNotifs'] ?? false,
       buyerHasNotifs: map['buyerHasNotifs'] ?? false,
-      transactionDate: DateTime.parse(map['transactionDate']),
+      transactionDate: FirestoreUtils.parseTimestamp(map['transactionDate']),
       isChatDeleted: map['isChatDeleted'] ?? false,
       ratingByBuyer: map['ratingByBuyer'] != null
           ? Rating.fromMap(Map<String, dynamic>.from(map['ratingByBuyer']))
@@ -115,6 +120,9 @@ class MealOrder {
       ratingBySeller: map['ratingBySeller'] != null
           ? Rating.fromMap(Map<String, dynamic>.from(map['ratingBySeller']))
           : null,
+      status: map['status'] != null
+          ? OrderStatus.values.byName(map['status'])
+          : OrderStatus.cancelled,
     );
   }
 
@@ -130,7 +138,7 @@ class MealOrder {
 
   getRoomName() {
     //something unique between the two people and their specific interaction, it will never be repeated
-    return '${sellerId}_${buyerId}_${transactionDate.toIso8601String()}';
+    return '${sellerId}_${buyerId}_${transactionDate.millisecondsSinceEpoch}';
   }
 
   /// Comparator to sort MealOrders by soonest transaction date

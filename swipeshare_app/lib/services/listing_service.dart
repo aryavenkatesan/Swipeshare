@@ -47,6 +47,7 @@ class ListingService {
       transactionDate: listingDateTime,
       sellerRating: currentUserRating,
       paymentTypes: paymentTypes,
+      status: ListingStatus.active,
     );
 
     await listingCol.add(newListing);
@@ -65,12 +66,17 @@ class ListingService {
     return snapshot.data()!;
   }
 
-  Future<void> deleteListing(String docId, {Transaction? transaction}) async {
+  Future<void> updateListingStatus(
+    String docId,
+    ListingStatus newStatus, {
+    Transaction? transaction,
+  }) async {
     final docRef = listingCol.doc(docId);
+    final updateMap = {'status': newStatus.name};
     if (transaction != null) {
-      transaction.delete(docRef);
+      transaction.update(docRef, updateMap);
     } else {
-      await docRef.delete();
+      await docRef.update(updateMap);
     }
   }
 }

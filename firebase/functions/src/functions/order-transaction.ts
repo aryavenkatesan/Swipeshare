@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/https";
 import * as functions from "firebase-functions/v2";
-import { Order } from "../types";
+import { Listing, listingStatus, Order, orderStatus } from "../types";
 import { getListing, getOrderRoomName, getUser } from "../utils/firestore";
 
 export const createOrderFromListing = functions.https.onCall(
@@ -10,7 +10,7 @@ export const createOrderFromListing = functions.https.onCall(
     if (!request.auth) {
       throw new HttpsError(
         "unauthenticated",
-        "User must be authenticated to create an order"
+        "User must be authenticated to create an order",
       );
     }
 
@@ -29,14 +29,14 @@ export const createOrderFromListing = functions.https.onCall(
       if (!buyer) {
         throw new HttpsError(
           "not-found",
-          `Buyer user data for id ${buyerId} not found`
+          `Buyer user data for id ${buyerId} not found`,
         );
       }
 
       if (!buyer.isEmailVerified) {
         throw new HttpsError(
           "failed-precondition",
-          "Email must be verified to create an order"
+          "Email must be verified to create an order",
         );
       }
 
@@ -44,7 +44,7 @@ export const createOrderFromListing = functions.https.onCall(
       if (!listing) {
         throw new HttpsError(
           "not-found",
-          `Listing data for id ${listingId} not found`
+          `Listing data for id ${listingId} not found`,
         );
       }
 
@@ -52,7 +52,7 @@ export const createOrderFromListing = functions.https.onCall(
       if (!seller) {
         throw new HttpsError(
           "not-found",
-          `Seller user data for id ${listing.sellerId} not found`
+          `Seller user data for id ${listing.sellerId} not found`,
         );
       }
 
@@ -69,8 +69,9 @@ export const createOrderFromListing = functions.https.onCall(
         // displayTime: undefined,
         sellerHasNotifs: true,
         buyerHasNotifs: true,
-        transactionDate: listing.transactionDate.toDate().toISOString(),
+        transactionDate: listing.transactionDate,
         isChatDeleted: false,
+        status: orderStatus.active,
       };
 
       const orderId = getOrderRoomName(newOrder);
@@ -79,7 +80,7 @@ export const createOrderFromListing = functions.https.onCall(
       if (orderSnapshot.exists) {
         throw new HttpsError(
           "already-exists",
-          `Order with id ${orderId} already exists`
+          `Order with id ${orderId} already exists`,
         );
       }
 
@@ -88,9 +89,13 @@ export const createOrderFromListing = functions.https.onCall(
         .firestore()
         .collection("listings")
         .doc(listingId);
-      transaction.delete(listingDoc);
+
+      const listingUpdate: Partial<Listing> = {
+        status: listingStatus.claimed,
+      };
+      transaction.update(listingDoc, listingUpdate);
 
       return newOrder;
     });
-  }
+  },
 );

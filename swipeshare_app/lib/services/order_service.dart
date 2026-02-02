@@ -74,12 +74,31 @@ class OrderService extends ChangeNotifier {
         updateMap['sellerHasNotifs'] = false;
     }
 
-    if (deletedChat) {
-      updateMap['chatDeleted'] = true;
+    // Order status is completed only if both users have submitted feedback
+    final bothDone = switch (orderData.currentUserRole) {
+      OrderRole.buyer => !orderData.sellerVisibility,
+      OrderRole.seller => !orderData.buyerVisibility,
+    };
+
+    if (bothDone) {
+      updateMap['status'] = OrderStatus.completed.name;
     }
 
-    final docRef = orderCol.doc(orderData.getRoomName());
+    if (deletedChat) {
+      updateMap['chatDeleted'] = true;
+      updateMap['status'] = OrderStatus.cancelled.name;
+    }
 
+    await orderCol.doc(orderData.getRoomName()).update(updateMap);
+  }
+
+  Future<void> updateOrderStatus(
+    String orderId,
+    OrderStatus newStatus, {
+    Transaction? transaction,
+  }) async {
+    final docRef = orderCol.doc(orderId);
+    final updateMap = {'status': newStatus.name};
     if (transaction != null) {
       transaction.update(docRef, updateMap);
     } else {

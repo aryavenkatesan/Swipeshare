@@ -26,11 +26,20 @@ export type SystemMessage = BaseMessage & {
 
 export type TimeProposal = BaseMessage & {
   messageType: "timeProposal";
-  proposedTime: string; // TimeOfDay formatted as string
+  proposedTime: TimeOfDayString;
   status: "pending" | "accepted" | "rejected";
 };
 
 export type Message = TextMessage | SystemMessage | TimeProposal;
+
+export const listingStatus = {
+  active: "active",
+  claimed: "claimed",
+  cancelled: "cancelled",
+  expired: "expired",
+} as const;
+
+export type ListingStatus = (typeof listingStatus)[keyof typeof listingStatus];
 
 export type Listing = {
   sellerId: string;
@@ -42,7 +51,16 @@ export type Listing = {
   sellerRating: number;
   paymentTypes: string[];
   price?: number;
+  status: ListingStatus;
 };
+
+export const orderStatus = {
+  active: "active",
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
+
+export type OrderStatus = (typeof orderStatus)[keyof typeof orderStatus];
 
 export type Order = {
   sellerId: string;
@@ -57,8 +75,9 @@ export type Order = {
   displayTime?: TimeOfDayString;
   sellerHasNotifs: boolean;
   buyerHasNotifs: boolean;
-  transactionDate: string; // ISO 8601 string
+  transactionDate: FirebaseFirestore.Timestamp;
   isChatDeleted: boolean;
+  status: OrderStatus;
 };
 
 export type User = {
