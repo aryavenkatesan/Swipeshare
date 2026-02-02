@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:swipeshare_app/utils/firestore_utils.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
+
+enum OrderRole { buyer, seller }
 
 enum OrderStatus { active, completed, cancelled }
 
@@ -21,6 +24,8 @@ class MealOrder {
   final bool buyerHasNotifs;
   final DateTime transactionDate;
   final bool isChatDeleted;
+  final Rating? ratingByBuyer;
+  final Rating? ratingBySeller;
   final OrderStatus status;
 
   MealOrder({
@@ -38,6 +43,8 @@ class MealOrder {
     required this.buyerHasNotifs,
     required this.transactionDate,
     this.isChatDeleted = false,
+    this.ratingByBuyer,
+    this.ratingBySeller,
     required this.status,
   });
 
@@ -52,6 +59,22 @@ class MealOrder {
         ? TimeFormatter.parseTimeOfDayString(displayTime!).minute
         : 0,
   );
+
+  OrderRole get currentUserRole {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      throw StateError('No user is currently signed in');
+    }
+
+    if (user.uid == sellerId) {
+      return OrderRole.seller;
+    } else if (user.uid == buyerId) {
+      return OrderRole.buyer;
+    } else {
+      throw StateError('Current user is neither the buyer nor the seller');
+    }
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -69,6 +92,8 @@ class MealOrder {
       'buyerHasNotifs': buyerHasNotifs,
       'transactionDate': Timestamp.fromDate(transactionDate),
       'isChatDeleted': isChatDeleted,
+      'ratingByBuyer': ratingByBuyer?.toMap(),
+      'ratingBySeller': ratingBySeller?.toMap(),
       'status': status.name,
     };
   }
@@ -89,6 +114,12 @@ class MealOrder {
       buyerHasNotifs: map['buyerHasNotifs'] ?? false,
       transactionDate: FirestoreUtils.parseTimestamp(map['transactionDate']),
       isChatDeleted: map['isChatDeleted'] ?? false,
+      ratingByBuyer: map['ratingByBuyer'] != null
+          ? Rating.fromMap(Map<String, dynamic>.from(map['ratingByBuyer']))
+          : null,
+      ratingBySeller: map['ratingBySeller'] != null
+          ? Rating.fromMap(Map<String, dynamic>.from(map['ratingBySeller']))
+          : null,
       status: map['status'] != null
           ? OrderStatus.values.byName(map['status'])
           : OrderStatus.cancelled,
@@ -129,5 +160,30 @@ class MealOrder {
 
     // One future, one past: future comes first
     return aIsFuture ? -1 : 1;
+  }
+}
+
+class Rating {
+  final int stars;
+  final String? extraInfo;
+  final DateTime timestamp;
+
+  Rating({required this.stars, this.extraInfo, DateTime? timestamp})
+    : timestamp = timestamp ?? DateTime.now();
+
+  Map<String, dynamic> toMap() {
+    return {
+      'stars': stars,
+      'extraInfo': extraInfo,
+      'timestamp': Timestamp.fromDate(timestamp),
+    };
+  }
+
+  factory Rating.fromMap(Map<String, dynamic> map) {
+    return Rating(
+      stars: map['stars'] as int,
+      extraInfo: map['extraInfo'] as String?,
+      timestamp: (map['timestamp'] as Timestamp).toDate(),
+    );
   }
 }
