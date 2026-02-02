@@ -11,6 +11,7 @@ class UserService {
 
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+  final _functions = FirebaseFunctions.instance;
 
   Future<UserModel> getUserData(String uid) async {
     try {
@@ -46,7 +47,7 @@ class UserService {
 
   Future<void> updateStarRating(String orderId, int incomingStar) async {
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable('updateStarRating');
+      final callable = _functions.httpsCallable('updateStarRating');
       final result = await callable.call({
         'orderId': orderId,
         'incomingStar': incomingStar,

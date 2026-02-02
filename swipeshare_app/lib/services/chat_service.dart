@@ -13,7 +13,7 @@ import 'package:swipeshare_app/services/user_service.dart';
 class ChatService extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
+  final _functions = FirebaseFunctions.instance;
   final _userService = UserService.instance;
   final _notificationService = NotificationService.instance;
   final _orderService = OrderService.instance;

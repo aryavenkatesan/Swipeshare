@@ -200,7 +200,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               children: [
                                 TextField(
                                   controller: nameController,
-                                  autofillHints: const [AutofillHints.givenName],
+                                  textInputAction: TextInputAction.next,
+                                  autofillHints: const [AutofillHints.name],
                                   decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(
@@ -226,6 +227,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   keyboardType:
                                       TextInputType.emailAddress, // Email keyboard
                                   textCapitalization: TextCapitalization.none,
+                                  textInputAction: TextInputAction.next,
                                   autofillHints: const [AutofillHints.email],
                                   decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
@@ -252,6 +254,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                   controller: passwordController,
                                   obscureText:
                                       _isPasswordObscured, // Use state variable
+                                  keyboardType: TextInputType.visiblePassword,
+                                  textInputAction: TextInputAction.next,
                                   autofillHints: const [AutofillHints.newPassword],
                                   decoration: InputDecoration(
                               enabledBorder: UnderlineInputBorder(
@@ -290,6 +294,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                   controller: confirmPasswordController,
                                   obscureText:
                                       _isConfirmPasswordObscured, // Use state variable
+                                  keyboardType: TextInputType.visiblePassword,
+                                  textInputAction: TextInputAction.done,
                                   autofillHints: const [AutofillHints.newPassword],
                                   onEditingComplete: () => signUp(),
                                   decoration: InputDecoration(
