@@ -14,7 +14,8 @@ import { dateToTimeOfDayString } from "../utils/time";
  * Call from shell: createOrderFromEmails({data: {sellerEmail: "...", buyerEmail: "...", secret: "your-secret"}})
  */
 export const createOrderFromEmails = functions.https.onCall(async (request) => {
-  const { sellerEmail, buyerEmail, diningHall, price, secret } = request.data ?? request;
+  const { sellerEmail, buyerEmail, diningHall, price, secret } =
+    request.data ?? request;
 
   if (secret !== process.env.ADMIN_SECRET) {
     throw new HttpsError("permission-denied", "Admin secret required");
