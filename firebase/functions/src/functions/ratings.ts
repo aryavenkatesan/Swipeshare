@@ -46,14 +46,14 @@ export const updateStarRating = functions.https.onCall(async (request) => {
     const orderData = await validateOrderParticipant(orderId, callerUid);
 
     // Prevent duplicate ratings
-    if (callerUid === orderData.buyerId && orderData.buyerHasRated) {
+    if (callerUid === orderData.buyerId && orderData.ratingByBuyer) {
       throw new functions.https.HttpsError(
         "already-exists",
         "You have already rated this order."
       );
     }
-    
-    if (callerUid === orderData.sellerId && orderData.sellerHasRated) {
+
+    if (callerUid === orderData.sellerId && orderData.ratingBySeller) {
       throw new functions.https.HttpsError(
         "already-exists",
         "You have already rated this order."
@@ -85,9 +85,12 @@ export const updateStarRating = functions.https.onCall(async (request) => {
       transactions_completed: admin.firestore.FieldValue.increment(1),
     });
 
-    const ratingField = callerUid === orderData.buyerId ? "buyerHasRated" : "sellerHasRated";
+    const ratingField = callerUid === orderData.buyerId ? "ratingByBuyer" : "ratingBySeller";
     await db.collection("orders").doc(orderId).update({
-      [ratingField]: true,
+      [ratingField]: {
+        stars: incomingStar,
+        timestamp: admin.firestore.Timestamp.now(),
+      },
     });
 
     console.log(

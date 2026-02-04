@@ -122,14 +122,9 @@ class OrderService extends ChangeNotifier {
 
     final docRef = orderCol.doc(orderData.getRoomName());
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      // Update peer's star rating
-      await _userService.updateStarRating(
-        recieverId,
-        rating.stars,
-        transaction: transaction,
-      );
+    await _userService.updateStarRating(recieverId, rating.stars);
 
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
       // Increment current user's transactions completed
       await _userService.incrementTransactionCount(transaction: transaction);
 
