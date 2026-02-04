@@ -13,9 +13,12 @@ class UserService {
   final _auth = FirebaseAuth.instance;
   final _functions = FirebaseFunctions.instance;
 
-  Future<UserModel> getUserData(String uid) async {
+  Future<UserModel> getUserData(String uid, {Transaction? transaction}) async {
     try {
-      final doc = await _firestore.collection('users').doc(uid).get();
+      final docRef = _firestore.collection('users').doc(uid);
+      final doc = transaction != null
+          ? await transaction.get(docRef)
+          : await docRef.get();
       return UserModel.fromFirestore(doc);
     } catch (e) {
       debugPrint('Error fetching user data: $e');
@@ -23,17 +26,26 @@ class UserService {
     }
   }
 
-  Future<UserModel> getCurrentUser() async {
+  Future<UserModel> getCurrentUser({Transaction? transaction}) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
       throw Exception('No user is currently signed in');
     }
-    return await getUserData(currentUser.uid);
+    return await getUserData(currentUser.uid, transaction: transaction);
   }
 
-  Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
+  Future<void> updateUserData(
+    String uid,
+    Map<String, dynamic> data, {
+    Transaction? transaction,
+  }) async {
     try {
-      await _firestore.collection('users').doc(uid).update(data);
+      final docRef = _firestore.collection('users').doc(uid);
+      if (transaction != null) {
+        transaction.update(docRef, data);
+      } else {
+        await docRef.update(data);
+      }
     } catch (e) {
       debugPrint('Error updating user data: $e');
       rethrow;
@@ -59,12 +71,14 @@ class UserService {
     }
   }
 
-  Future<void> incrementTransactionCount() async {
-    final currentUser = await getCurrentUser();
+  Future<void> incrementTransactionCount({Transaction? transaction}) async {
+    final currentUser = await getCurrentUser(transaction: transaction);
     int incrementedTransactionNumber = (currentUser.transactionsCompleted + 1);
-    await updateUserData(currentUser.id, {
-      'transactions_completed': incrementedTransactionNumber,
-    });
+    await updateUserData(
+      currentUser.id,
+      {'transactions_completed': incrementedTransactionNumber},
+      transaction: transaction,
+    );
   }
 
   Future<void> blockUser(MealOrder orderData) async {

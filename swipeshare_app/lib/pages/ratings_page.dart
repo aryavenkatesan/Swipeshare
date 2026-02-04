@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/order_service.dart';
-import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
 class RatingsPage extends StatefulWidget {
@@ -21,7 +20,6 @@ class RatingsPage extends StatefulWidget {
 class _RatingsPageState extends State<RatingsPage> {
   String? selectedFace;
   final TextEditingController _feedbackController = TextEditingController();
-  final _userService = UserService.instance;
   final _orderService = OrderService.instance;
 
   @override
@@ -49,102 +47,109 @@ class _RatingsPageState extends State<RatingsPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              // mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: 48),
-                // Pyramid arrangement of faces
-                Column(
-                  children: [
-                    // Top middle button
-                    _buildFaceButton(
-                      Icons.sentiment_neutral_rounded,
-                      'neutral',
-                    ),
-                    const SizedBox(height: 0),
-                    // Bottom row with left and right buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildFaceButton(
-                          Icons.sentiment_dissatisfied_rounded,
-                          'sad',
-                        ),
-                        const SizedBox(width: 80),
-
-                        _buildFaceButton(
-                          Icons.sentiment_very_satisfied_rounded,
-                          'happy',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 64),
-                SizedBox(
-                  width: 300,
-                  child: TextField(
-                    controller: _feedbackController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: 'Anything you want to add?...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                // mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: 48),
+                  // Pyramid arrangement of faces
+                  Column(
+                    children: [
+                      // Top middle button
+                      _buildFaceButton(
+                        Icons.sentiment_neutral_rounded,
+                        'neutral',
                       ),
-                      contentPadding: const EdgeInsets.all(12),
+                      const SizedBox(height: 0),
+                      // Bottom row with left and right buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildFaceButton(
+                            Icons.sentiment_dissatisfied_rounded,
+                            'sad',
+                          ),
+                          const SizedBox(width: 80),
+
+                          _buildFaceButton(
+                            Icons.sentiment_very_satisfied_rounded,
+                            'happy',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 64),
+                  SizedBox(
+                    width: 300,
+                    child: TextField(
+                      controller: _feedbackController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Anything you want to add?...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 72),
-                ElevatedButton(
-                  onPressed: () async {
-                    // sends the rating information to update the other person's star rating
-                    int rating = 5;
-                    if (selectedFace == 'sad') {
-                      rating = 2;
-                    } else if (selectedFace == 'neutral') {
-                      rating = 4;
-                    }
-                    await _userService.updateStarRating(
-                      widget.recieverId,
-                      rating,
-                    );
+                  const SizedBox(height: 72),
+                  ElevatedButton(
+                    onPressed: selectedFace == null
+                        ? null
+                        : () async {
+                            // sends the rating information to update the other person's star rating
+                            int stars = switch (selectedFace) {
+                              'happy' => 5,
+                              'neutral' => 3,
+                              'sad' => 1,
+                              _ => throw StateError('No face selected'),
+                            };
 
-                    // increments current user's transactions completed
-                    await _userService.incrementTransactionCount();
+                            await _orderService.closeOrder(
+                              widget.orderData,
+                              rating: Rating(
+                                stars: stars,
+                                extraInfo:
+                                    _feedbackController.text.trim().isEmpty
+                                    ? null
+                                    : _feedbackController.text,
+                              ),
+                            );
 
-                    // blocks this order from being seen by the current user
-                    await _orderService.updateVisibility(widget.orderData);
+                            await safeVibrate(HapticsType.success);
 
-                    //do something with the feedback text
+                            if (!context.mounted) return;
 
-                    //haptic feedback
-                    await safeVibrate(HapticsType.success);
+                            // navigate back to the homescreen
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
 
-                    //navigate back to the homescreen
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-
-                    // congratulations popup?
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Order complete, feedback submitted!'),
+                            // congratulations popup?
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Order complete, feedback submitted!',
+                                ),
+                              ),
+                            );
+                          },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
                     ),
+                    child: const Text('Send Feedback'),
                   ),
-                  child: const Text('Send Feedback'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
