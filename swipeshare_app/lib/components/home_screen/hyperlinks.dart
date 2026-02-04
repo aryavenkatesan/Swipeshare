@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart'; // Required for re-authentication
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/components/home_screen/deleting_account_screen.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -9,69 +10,29 @@ class Hyperlinks extends StatelessWidget {
   Hyperlinks({super.key});
 
   final _userService = UserService.instance;
-  final TextEditingController feedbackController = TextEditingController();
 
   // Method to show the feedback popup
-  void _showFeedbackDialog(BuildContext context) {
-    final TextEditingController localFeedbackController =
-        TextEditingController();
-
-    showDialog(
+  void _showFeedbackDialog(BuildContext context) async {
+    final feedbackText = await AdaptiveDialog.showTextInput(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text("Give us Feedback!"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "The Swipeshare team will review your feedback and get back to you as soon as possible!",
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: localFeedbackController,
-                maxLines: 4,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: "Enter your feedback...",
-                  hintStyle: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 14,
-                  ),
-                  border: const OutlineInputBorder(),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color.fromARGB(255, 30, 88, 181),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                String feedbackMessage = localFeedbackController.text;
-                _userService.sendFeedback(feedbackMessage);
-                Navigator.pop(dialogContext);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Successfully submitted!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-              child: const Text("Submit"),
-            ),
-          ],
-        );
-      },
+      title: 'Give us Feedback!',
+      description:
+          'The Swipeshare team will review your feedback and get back to you as soon as possible!',
+      hintText: 'Enter your feedback...',
+      submitText: 'Submit',
+      cancelText: 'Cancel',
+      maxLines: 4,
     );
+
+    if (feedbackText != null && context.mounted) {
+      _userService.sendFeedback(feedbackText);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Successfully submitted!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   Future<void> _showDeleteConfirmation(BuildContext context) async {

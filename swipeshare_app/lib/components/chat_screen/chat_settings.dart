@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -47,133 +48,66 @@ class ChatSettingsMenu extends StatelessWidget {
     );
   }
 
-  void _showReportDialog(BuildContext context) {
-    final TextEditingController reportController = TextEditingController();
-
-    showDialog(
+  void _showReportDialog(BuildContext context) async {
+    final reportText = await AdaptiveDialog.showTextInput(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Report User'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Please provide a reason for reporting this user:'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: reportController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter reason...',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-                maxLength: 200,
-              ),
-            ],
+      title: 'Report User',
+      description: 'Please provide a reason for reporting this user:',
+      hintText: 'Enter reason...',
+      submitText: 'Report',
+      cancelText: 'Close',
+      maxLines: 3,
+      maxLength: 200,
+    );
+
+    if (reportText != null && context.mounted) {
+      chatService.reportUser(reportText);
+      await safeVibrate(HapticsType.success);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Thank you for reporting, we will review your message and take action as soon as possible.',
           ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () async {
-                if (reportController.text.isNotEmpty) {
-                  chatService.reportUser(reportController.text);
-                  await safeVibrate(HapticsType.success);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Thank you for reporting, we will review your message and take action as soon as possible.',
-                      ),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please provide a reason')),
-                  );
-                }
-              },
-              child: const Text(
-                'Report',
-                style: TextStyle(color: Color.fromARGB(177, 96, 125, 139)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
+        ),
+      );
+    }
   }
 
-  void _showBlockDialog(BuildContext context) {
-    showDialog(
+  void _showBlockDialog(BuildContext context) async {
+    final confirmed = await AdaptiveDialog.showConfirmation(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Block User'),
-          content: const Text('Are you sure you want to block this User?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () async {
-                await safeVibrate(HapticsType.heavy);
-                UserService.instance.blockUser(orderData);
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Block',
-                style: TextStyle(color: Color.fromARGB(177, 96, 125, 139)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                debugPrint("Closing the Thingy");
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
+      title: 'Block User',
+      content: 'Are you sure you want to block this User?',
+      confirmText: 'Block',
+      cancelText: 'Close',
     );
+
+    if (confirmed == true && context.mounted) {
+      await safeVibrate(HapticsType.heavy);
+      UserService.instance.blockUser(orderData);
+      Navigator.of(context).pop();
+    }
   }
 
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
+  void _showDeleteDialog(BuildContext context) async {
+    final confirmed = await AdaptiveDialog.showConfirmation(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Chat'),
-          content: const Text('Are you sure you want to Delete the Chat?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () async {
-                await safeVibrate(HapticsType.heavy);
-                chatService.deleteChat(orderData);
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('The chat has been deleted.')),
-                );
-              },
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Color.fromARGB(177, 96, 125, 139)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
+      title: 'Delete Chat',
+      content: 'Are you sure you want to Delete the Chat?',
+      confirmText: 'Delete',
+      cancelText: 'Close',
+      isDestructive: true,
     );
+
+    if (confirmed == true && context.mounted) {
+      await safeVibrate(HapticsType.heavy);
+      chatService.deleteChat(orderData);
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('The chat has been deleted.')),
+        );
+      }
+    }
   }
 }

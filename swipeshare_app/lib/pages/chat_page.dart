@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/components/star_container.dart';
@@ -109,32 +113,10 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void sendTimePicker() async {
-    //send a popup to select the time, have cancel and send buttons
-    TimeOfDay? pickedTime = await showTimePicker(
+    TimeOfDay? pickedTime = await AdaptiveTimePicker.showAdaptiveTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            // Change the purple color (selected time, buttons, etc.)
-            colorScheme: ColorScheme.light(
-              primary: const Color.fromARGB(168, 81, 142, 248),
-              surface: const Color.fromARGB(255, 241, 241, 241),
-              onSurface: Colors.black,
-            ),
-            // Button colors
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.blue, // Cancel/Send button color
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-      initialEntryMode: TimePickerEntryMode.inputOnly,
       helpText: "What time would you like to propose?",
-      barrierColor: const Color.fromARGB(142, 72, 81, 97),
     );
 
     if (pickedTime != null) {
@@ -178,46 +160,24 @@ class _ChatPageState extends State<ChatPage> {
               IconButton(
                 onPressed: _isChatDeleted
                     ? null
-                    : () {
-                        showDialog(
+                    : () async {
+                        final confirmed = await AdaptiveDialog.showConfirmation(
                           context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Close Order'),
-                              content: const Text(
-                                'Are you sure you want to mark this order as complete? This action cannot be undone.',
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('No'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => RatingsPage(
-                                          recieverId: widget.receiverUserId,
-                                          orderData: widget.orderData,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text(
-                                    'Yes',
-                                    style: TextStyle(
-                                      color: Color.fromARGB(177, 96, 125, 139),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                          title: 'Close Order',
+                          content:
+                              'Are you sure you want to mark this order as complete? This action cannot be undone.',
                         );
+                        if (confirmed == true && context.mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RatingsPage(
+                                recieverId: widget.receiverUserId,
+                                orderData: widget.orderData,
+                              ),
+                            ),
+                          );
+                        }
                       },
                 icon: Icon(
                   Icons.task_alt,
@@ -486,25 +446,8 @@ class _ChatPageState extends State<ChatPage> {
             icon: Icon(Icons.lock_clock_outlined, size: 30),
           ),
 
-          //textfield
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              obscureText: false,
-              decoration: InputDecoration(
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                fillColor: const Color.fromARGB(11, 3, 168, 244),
-                filled: true,
-                hintText: "Enter Message",
-                hintStyle: const TextStyle(color: Colors.grey),
-              ),
-            ),
-          ),
+          //textfield - platform adaptive
+          Expanded(child: _buildAdaptiveTextField()),
 
           //send button
           IconButton(
@@ -514,5 +457,53 @@ class _ChatPageState extends State<ChatPage> {
         ],
       ),
     );
+  }
+
+  /// Builds a platform-adaptive text field
+  /// CupertinoTextField on iOS, Material TextField on Android
+  Widget _buildAdaptiveTextField() {
+    final textStyle = GoogleFonts.instrumentSans(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+    );
+    final placeholderStyle = GoogleFonts.instrumentSans(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      color: Colors.grey,
+    );
+
+    if (AdaptiveTimePicker.useCupertino) {
+      // iOS: CupertinoTextField for native look
+      return CupertinoTextField(
+        controller: _messageController,
+        placeholder: "Enter Message",
+        style: textStyle,
+        placeholderStyle: placeholderStyle,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(11, 3, 168, 244),
+          borderRadius: BorderRadius.circular(8),
+        ),
+      );
+    } else {
+      // Android: Material TextField
+      return TextField(
+        controller: _messageController,
+        obscureText: false,
+        style: textStyle,
+        decoration: InputDecoration(
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          fillColor: const Color.fromARGB(11, 3, 168, 244),
+          filled: true,
+          hintText: "Enter Message",
+          hintStyle: placeholderStyle,
+        ),
+      );
+    }
   }
 }

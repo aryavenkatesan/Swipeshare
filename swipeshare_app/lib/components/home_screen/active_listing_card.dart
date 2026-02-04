@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
@@ -54,42 +55,29 @@ class ActiveListingCard extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
+  void _showDeleteDialog(BuildContext context) async {
+    final confirmed = await AdaptiveDialog.showConfirmation(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Listing'),
-          content: const Text('Are you sure you want to Delete this Listing?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () async {
-                _listingService.updateListingStatus(
-                  currentListing.id,
-                  ListingStatus.cancelled,
-                );
-                await safeVibrate(HapticsType.heavy);
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('The Listing has been deleted.'),
-                  ),
-                );
-              },
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Color.fromARGB(177, 96, 125, 139)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
+      title: 'Delete Listing',
+      content: 'Are you sure you want to Delete this Listing?',
+      confirmText: 'Delete',
+      cancelText: 'Close',
+      isDestructive: true,
     );
+
+    if (confirmed == true && context.mounted) {
+      _listingService.updateListingStatus(
+        currentListing.id,
+        ListingStatus.cancelled,
+      );
+      await safeVibrate(HapticsType.heavy);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('The Listing has been deleted.'),
+          ),
+        );
+      }
+    }
   }
 }

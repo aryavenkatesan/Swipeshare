@@ -77,6 +77,8 @@ export type Order = {
   buyerHasNotifs: boolean;
   transactionDate: FirebaseFirestore.Timestamp;
   isChatDeleted: boolean;
+  ratingByBuyer?: Rating;
+  ratingBySeller?: Rating;
   status: OrderStatus;
 };
 
@@ -86,4 +88,10 @@ export type User = {
   fcmToken?: string;
   isEmailVerified: boolean;
   // other fields aren't relevant
+};
+
+export type Rating = {
+  stars: number;
+  extraInfo?: string;
+  timestamp: FirebaseFirestore.Timestamp;
 };
