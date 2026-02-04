@@ -1,119 +1,55 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v2";
-import { getUser, validateOrderParticipant } from "../utils/firestore";
+import { Order } from "../types";
+import { updateUserStars } from "../utils/firestore";
 
 /**
- * Updates a user's star rating after being rated in a transaction.
- * Caller (buyer or seller) rates the other party in the order.
- * Prevents duplicate ratings and maintains weighted average.
- * 
- * @param orderId - The order ID associated with this rating
- * @param incomingStar - Rating value (1-5)
+ * Updates a user's star rating when an order is updated with a new rating.
+ * Triggers when ratingByBuyer or ratingBySeller is added to an order.
  */
-export const updateStarRating = functions.https.onCall(async (request) => {  
-  const callerUid = request.auth?.uid;
+export const updateStarRatingOnOrderUpdate =
+  functions.firestore.onDocumentUpdated("orders/{orderId}", async (event) => {
+    const { orderId } = event.params;
+    const beforeData = event.data?.before.data() as Order | undefined;
+    const afterData = event.data?.after.data() as Order | undefined;
 
-  if (!callerUid) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "The function must be called while authenticated."
-    );
-  }
+    if (!beforeData || !afterData) {
+      console.log("Before or after data is missing.");
+      return;
+    }
 
-  const { orderId, incomingStar } = request.data;
-
-  if (!orderId || typeof orderId !== "string") {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "The function requires a valid 'orderId' parameter."
-    );
-  }
-
-  if (
-    typeof incomingStar !== "number" ||
-    incomingStar < 1 ||
-    incomingStar > 5
-  ) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "The 'incomingStar' parameter must be a number between 1 and 5."
-    );
-  }
-
-  try {
     const db = admin.firestore();
+    const updates: Promise<void>[] = [];
 
-    const orderData = await validateOrderParticipant(orderId, callerUid);
-
-    // Prevent duplicate ratings
-    if (callerUid === orderData.buyerId && orderData.ratingByBuyer) {
-      throw new functions.https.HttpsError(
-        "already-exists",
-        "You have already rated this order."
+    // Check if ratingByBuyer was added (buyer rated the seller)
+    if (!beforeData.ratingByBuyer && afterData.ratingByBuyer) {
+      updates.push(
+        updateUserStars(
+          db,
+          orderId,
+          afterData.sellerId,
+          afterData.ratingByBuyer,
+          "buyer",
+        ),
       );
     }
 
-    if (callerUid === orderData.sellerId && orderData.ratingBySeller) {
-      throw new functions.https.HttpsError(
-        "already-exists",
-        "You have already rated this order."
+    // Check if ratingBySeller was added (seller rated the buyer)
+    if (!beforeData.ratingBySeller && afterData.ratingBySeller) {
+      updates.push(
+        updateUserStars(
+          db,
+          orderId,
+          afterData.buyerId,
+          afterData.ratingBySeller,
+          "seller",
+        ),
       );
     }
 
-    const userIdToRate: string =
-      callerUid === orderData.buyerId ? orderData.sellerId : orderData.buyerId;
-
-    const userData = await getUser(userIdToRate);
-
-    if (!userData) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        `User with ID ${userIdToRate} does not exist.`
-      );
+    if (updates.length === 0) {
+      return;
     }
 
-    const currentStars = userData.stars ?? 5;
-    const transactionsCompleted = (userData as any).transactions_completed ?? 0;
-
-    // Weighted average: (previous_total + new_rating) / (total_count + 1)
-    const calculatedStarRating =
-      (transactionsCompleted * currentStars + incomingStar) /
-      (transactionsCompleted + 1);
-
-    await db.collection("users").doc(userIdToRate).update({
-      stars: calculatedStarRating,
-      transactions_completed: admin.firestore.FieldValue.increment(1),
-    });
-
-    const ratingField = callerUid === orderData.buyerId ? "ratingByBuyer" : "ratingBySeller";
-    await db.collection("orders").doc(orderId).update({
-      [ratingField]: {
-        stars: incomingStar,
-        timestamp: admin.firestore.Timestamp.now(),
-      },
-    });
-
-    console.log(
-      `User ${callerUid} rated user ${userIdToRate} with ${incomingStar} stars. ` +
-        `New rating: ${calculatedStarRating} (order: ${orderId})`
-    );
-
-    return {
-      success: true,
-      newRating: calculatedStarRating,
-      ratedUserId: userIdToRate,
-    };
-  } catch (error) {
-    console.error("Error updating star rating:", error);
-
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    }
-
-    throw new functions.https.HttpsError(
-      "internal",
-      "Failed to update star rating.",
-      error
-    );
-  }
-});
+    await Promise.all(updates);
+  });

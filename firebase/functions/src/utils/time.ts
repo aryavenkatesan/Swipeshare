@@ -1,3 +1,14 @@
+import { TimeOfDayString } from "../types";
+
+/**
+ * Converts a Date to a TimeOfDayString like "TimeOfDay(14:30)".
+ */
+export const dateToTimeOfDayString = (date: Date): TimeOfDayString => {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `TimeOfDay(${hours}:${minutes})`;
+};
+
 /**
  * Takes a time of day string like "TimeOfDay(14:30)" and converts it to a more
  * human-readable format like "2:30 PM".

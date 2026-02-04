@@ -131,36 +131,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _checkOrdersToRate() async {
-    // final ordersToRate = [
-    //   MealOrder(
-    //     sellerId: 'mock-seller-id',
-    //     sellerName: 'John Doe',
-    //     sellerStars: 4.5,
-    //     buyerId: _auth.currentUser!.uid,
-    //     buyerName: 'You',
-    //     buyerStars: 4.0,
-    //     diningHall: 'Dining Hall West',
-    //     displayTime: 'TimeOfDay(12:30)',
-    //     sellerHasNotifs: true,
-    //     buyerHasNotifs: true,
-    //     transactionDate: DateTime.now().subtract(const Duration(days: 1)),
-    //     status: OrderStatus.completed,
-    //   ),
-    //   MealOrder(
-    //     sellerId: _auth.currentUser!.uid,
-    //     sellerName: 'You',
-    //     sellerStars: 4.0,
-    //     buyerId: 'mock-buyer-id',
-    //     buyerName: 'Jane Smith',
-    //     buyerStars: 4.8,
-    //     diningHall: 'Dining Hall East',
-    //     displayTime: 'TimeOfDay(18:00)',
-    //     sellerHasNotifs: true,
-    //     buyerHasNotifs: true,
-    //     transactionDate: DateTime.now().subtract(const Duration(days: 2)),
-    //     status: OrderStatus.completed,
-    //   ),
-    // ];
     final ordersToRate = await _orderService.getOrdersToRate();
     if (ordersToRate.isNotEmpty && mounted) {
       RatingsBottomSheet.show(context, ordersToRate);

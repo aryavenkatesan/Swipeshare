@@ -3,8 +3,7 @@ export type MessageType = (typeof messageTypes)[number];
 
 // TimeOfDay string type matching Flutter's TimeFormatter.productionToString format
 // Format: "TimeOfDay(HH:MM)" where HH and MM are zero-padded
-type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-export type TimeOfDayString = `TimeOfDay(${Digit}${Digit}:${Digit}${Digit})`;
+export type TimeOfDayString = `TimeOfDay(${string}:${string})`;
 
 // Base message fields shared by all message types
 type BaseMessage = {
@@ -84,6 +83,7 @@ export type User = {
   stars: number;
   fcmToken?: string;
   isEmailVerified: boolean;
+  transactions_completed: number;
   // other fields aren't relevant
 };
 

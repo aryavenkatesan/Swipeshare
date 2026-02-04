@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/listing.dart';
@@ -12,7 +11,6 @@ class UserService {
 
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
-  final _functions = FirebaseFunctions.instance;
 
   Future<UserModel> getUserData(String uid, {Transaction? transaction}) async {
     try {
@@ -57,30 +55,6 @@ class UserService {
     String uid,
     List<String> paymentTypes,
   ) async => await updateUserData(uid, {'payment_types': paymentTypes});
-
-  Future<void> updateStarRating(String orderId, int incomingStar) async {
-    try {
-      final callable = _functions.httpsCallable('updateStarRating');
-      final result = await callable.call({
-        'orderId': orderId,
-        'incomingStar': incomingStar,
-      });
-      debugPrint('Rating is updated: ${result.data}');
-    } catch (e) {
-      debugPrint('Error updating star rating: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> incrementTransactionCount({Transaction? transaction}) async {
-    final currentUser = await getCurrentUser(transaction: transaction);
-    int incrementedTransactionNumber = (currentUser.transactionsCompleted + 1);
-    await updateUserData(
-      currentUser.id,
-      {'transactions_completed': incrementedTransactionNumber},
-      transaction: transaction,
-    );
-  }
 
   Future<void> blockUser(MealOrder orderData) async {
     final currentUser = await getCurrentUser();

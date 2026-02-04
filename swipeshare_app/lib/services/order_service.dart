@@ -106,39 +106,7 @@ class OrderService {
       OrderRole.seller => 'ratingBySeller',
     };
 
+    // Writing the rating triggers updateStarRatingOnOrderUpdate cloud function
     await orderCol.doc(orderData.getRoomName()).update({field: updateMap});
-    debugPrint("BOOOMMMMM");
   }
-
-  // Future<void> closeOrder(MealOrder orderData, {required Rating rating}) async {
-  //   final recieverId = switch (orderData.currentUserRole) {
-  //     OrderRole.buyer => orderData.sellerId,
-  //     OrderRole.seller => orderData.buyerId,
-  //   };
-
-  //   final updateMap = rating.toMap();
-  //   updateMap['timestamp'] = FieldValue.serverTimestamp();
-
-  //   final field = switch (orderData.currentUserRole) {
-  //     OrderRole.buyer => 'ratingByBuyer',
-  //     OrderRole.seller => 'ratingBySeller',
-  //   };
-
-  //   final docRef = orderCol.doc(orderData.getRoomName());
-
-  //   await FirebaseFirestore.instance.runTransaction((transaction) async {
-  //     // Update peer's star rating
-  //     await _userService.updateStarRating(
-  //       recieverId,
-  //       rating.stars,
-  //       transaction: transaction,
-  //     );
-
-  //     // Increment current user's transactions completed
-  //     await _userService.incrementTransactionCount(transaction: transaction);
-
-  //     // Update order document with rating
-  //     transaction.update(docRef, {field: updateMap});
-  //   });
-  // }
 }

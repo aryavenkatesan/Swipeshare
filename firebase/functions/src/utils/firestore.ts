@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
-import { Listing, Order, User } from "../types";
+import { Listing, Order, Rating, User } from "../types";
 
 /**
  * Retrieves a user document from Firestore with full logging, returning null if not found.
@@ -110,7 +110,7 @@ export const validateOrderParticipant = async (
 ): Promise<Order> => {
   // Import functions here to avoid circular dependency
   const functions = await import("firebase-functions/v2");
-  
+
   // Fetch the order
   const orderData = await getOrder(orderId);
 
@@ -134,4 +134,60 @@ export const validateOrderParticipant = async (
   }
 
   return orderData;
+};
+
+/**
+ * Updates a user's star rating based on a new rating received.
+ */
+export const updateUserStars = async (
+  db: FirebaseFirestore.Firestore,
+  orderId: string,
+  userIdToRate: string,
+  rating: Rating,
+  raterRole: "buyer" | "seller"
+): Promise<void> => {
+  try {
+    const userData = await getUser(userIdToRate);
+
+    if (!userData) {
+      console.error(`User ${userIdToRate} not found for rating update.`);
+      return;
+    }
+
+    const currentStars = userData.stars ?? 5;
+    const transactionsCompleted = userData.transactions_completed ?? 0;
+
+    const newStarRating = calculateNewStarRating(
+      currentStars,
+      transactionsCompleted,
+      rating.stars
+    );
+
+    await db.collection("users").doc(userIdToRate).update({
+      stars: newStarRating,
+    });
+
+    console.log(
+      `${raterRole} rated user ${userIdToRate} with ${rating.stars} stars. ` +
+        `New rating: ${newStarRating} (order: ${orderId})`
+    );
+  } catch (error) {
+    console.error(`Error updating stars for user ${userIdToRate}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Calculates the new weighted average star rating for a user.
+ * Formula: (transactionsCompleted * currentStars + newRating) / (transactionsCompleted + 1)
+ */
+export const calculateNewStarRating = (
+  currentStars: number,
+  transactionsCompleted: number,
+  newRating: number
+): number => {
+  return (
+    (transactionsCompleted * currentStars + newRating) /
+    (transactionsCompleted + 1)
+  );
 };
