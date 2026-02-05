@@ -63,7 +63,7 @@ jobs:
 
       - name: Create firebase_options.dart
         run: |
-          echo '${{ secrets.FIREBASE_OPTIONS_DART }}' > lib/firebase_options.dart
+          echo "${{ secrets.FIREBASE_OPTIONS_DART }}" | base64 --decode > lib/firebase_options.dart
 
       - name: Decode Keystore
         run: |
