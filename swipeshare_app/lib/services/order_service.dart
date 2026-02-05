@@ -1,17 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
-import 'package:swipeshare_app/services/user_service.dart';
 
-class OrderService extends ChangeNotifier {
+class OrderService {
   OrderService._();
   static final instance = OrderService._();
 
   final _functions = FirebaseFunctions.instance;
-  final _userService = UserService.instance;
+  final _auth = FirebaseAuth.instance;
 
   CollectionReference<MealOrder> get orderCol => FirebaseFirestore.instance
       .collection('orders')
@@ -58,40 +58,6 @@ class OrderService extends ChangeNotifier {
     }
   }
 
-  Future<void> updateVisibility(
-    MealOrder orderData, {
-    bool deletedChat = false,
-    Transaction? transaction,
-  }) async {
-    final updateMap = <String, dynamic>{};
-
-    switch (orderData.currentUserRole) {
-      case OrderRole.buyer:
-        updateMap['buyerVisibility'] = false;
-        updateMap['buyerHasNotifs'] = false;
-      case OrderRole.seller:
-        updateMap['sellerVisibility'] = false;
-        updateMap['sellerHasNotifs'] = false;
-    }
-
-    // Order status is completed only if both users have submitted feedback
-    final bothDone = switch (orderData.currentUserRole) {
-      OrderRole.buyer => !orderData.sellerVisibility,
-      OrderRole.seller => !orderData.buyerVisibility,
-    };
-
-    if (bothDone) {
-      updateMap['status'] = OrderStatus.completed.name;
-    }
-
-    if (deletedChat) {
-      updateMap['chatDeleted'] = true;
-      updateMap['status'] = OrderStatus.cancelled.name;
-    }
-
-    await orderCol.doc(orderData.getRoomName()).update(updateMap);
-  }
-
   Future<void> updateOrderStatus(
     String orderId,
     OrderStatus newStatus, {
@@ -106,12 +72,32 @@ class OrderService extends ChangeNotifier {
     }
   }
 
-  Future<void> closeOrder(MealOrder orderData, {required Rating rating}) async {
-    final recieverId = switch (orderData.currentUserRole) {
-      OrderRole.buyer => orderData.sellerId,
-      OrderRole.seller => orderData.buyerId,
-    };
+  Future<List<MealOrder>> getOrdersToRate() async {
+    if (_auth.currentUser == null) return [];
+    final currentUserId = _auth.currentUser!.uid;
 
+    final ordersToRate = await orderCol
+        .where('status', isEqualTo: OrderStatus.completed.name)
+        .where(
+          Filter.or(
+            Filter("buyerId", isEqualTo: currentUserId),
+            Filter("sellerId", isEqualTo: currentUserId),
+          ),
+        )
+        .get();
+
+    return ordersToRate.docs
+        .map((doc) => doc.data())
+        .where(
+          (order) => switch (order.currentUserRole) {
+            OrderRole.buyer => order.ratingByBuyer == null,
+            OrderRole.seller => order.ratingBySeller == null,
+          },
+        )
+        .toList();
+  }
+
+  Future<void> rateOrder(MealOrder orderData, Rating rating) async {
     final updateMap = rating.toMap();
     updateMap['timestamp'] = FieldValue.serverTimestamp();
 
@@ -120,19 +106,7 @@ class OrderService extends ChangeNotifier {
       OrderRole.seller => 'ratingBySeller',
     };
 
-    final docRef = orderCol.doc(orderData.getRoomName());
-
-    await _userService.updateStarRating(recieverId, rating.stars);
-
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      // Increment current user's transactions completed
-      await _userService.incrementTransactionCount(transaction: transaction);
-
-      // Update order visibility for current user
-      await updateVisibility(orderData, transaction: transaction);
-
-      // Update order document with rating
-      transaction.update(docRef, {field: updateMap});
-    });
+    // Writing the rating triggers updateStarRatingOnOrderUpdate cloud function
+    await orderCol.doc(orderData.getRoomName()).update({field: updateMap});
   }
 }

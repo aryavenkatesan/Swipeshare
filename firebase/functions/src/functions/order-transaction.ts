@@ -1,8 +1,110 @@
 import * as admin from "firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/https";
 import * as functions from "firebase-functions/v2";
 import { Listing, listingStatus, Order, orderStatus } from "../types";
 import { getListing, getOrderRoomName, getUser } from "../utils/firestore";
+import { dateToTimeOfDayString } from "../utils/time";
+
+/**
+ * Creates an order between two users identified by their email addresses.
+ * Transaction time is set to now. This is an admin/debug function.
+ *
+ * Set env var before running shell: ADMIN_SECRET=your-secret npm run shell
+ * Call from shell: createOrderFromEmails({data: {sellerEmail: "...", buyerEmail: "...", secret: "your-secret"}})
+ */
+export const createOrderFromEmails = functions.https.onCall(async (request) => {
+  const { sellerEmail, buyerEmail, diningHall, secret } = request.data ?? request;
+
+  if (secret !== process.env.ADMIN_SECRET) {
+    throw new HttpsError("permission-denied", "Admin secret required");
+  }
+
+  if (!sellerEmail || !buyerEmail) {
+    throw new HttpsError(
+      "invalid-argument",
+      "sellerEmail and buyerEmail are required",
+    );
+  }
+
+  // Look up users by email using Firebase Auth
+  let sellerAuth, buyerAuth;
+  try {
+    sellerAuth = await admin.auth().getUserByEmail(sellerEmail);
+  } catch {
+    throw new HttpsError(
+      "not-found",
+      `Seller with email ${sellerEmail} not found`,
+    );
+  }
+
+  try {
+    buyerAuth = await admin.auth().getUserByEmail(buyerEmail);
+  } catch {
+    throw new HttpsError(
+      "not-found",
+      `Buyer with email ${buyerEmail} not found`,
+    );
+  }
+
+  const sellerId = sellerAuth.uid;
+  const buyerId = buyerAuth.uid;
+
+  // Get user data from Firestore
+  const seller = await getUser(sellerId);
+  if (!seller) {
+    throw new HttpsError(
+      "not-found",
+      `Seller user data for ${sellerEmail} not found`,
+    );
+  }
+
+  const buyer = await getUser(buyerId);
+  if (!buyer) {
+    throw new HttpsError(
+      "not-found",
+      `Buyer user data for ${buyerEmail} not found`,
+    );
+  }
+
+  const now = new Date();
+  const transactionDate = Timestamp.fromDate(now);
+  const displayTime = dateToTimeOfDayString(now);
+
+  const newOrder: Order = {
+    sellerId,
+    sellerName: seller.name,
+    sellerStars: seller.stars,
+    buyerId,
+    buyerName: buyer.name,
+    buyerStars: buyer.stars,
+    diningHall: diningHall ?? "Test Dining Hall",
+    displayTime,
+    sellerHasNotifs: true,
+    buyerHasNotifs: true,
+    transactionDate,
+    status: orderStatus.active,
+  };
+
+  const orderId = getOrderRoomName(newOrder);
+  const orderDoc = admin.firestore().collection("orders").doc(orderId);
+  const orderSnapshot = await orderDoc.get();
+
+  if (orderSnapshot.exists) {
+    throw new HttpsError(
+      "already-exists",
+      `Order with id ${orderId} already exists`,
+    );
+  }
+
+  await orderDoc.set(newOrder);
+
+  console.log(
+    `Created order ${orderId} between seller ${sellerEmail} and buyer ${buyerEmail}`,
+  );
+
+  return { orderId, ...newOrder };
+});
 
 export const createOrderFromListing = functions.https.onCall(
   async (request) => {
@@ -59,18 +161,15 @@ export const createOrderFromListing = functions.https.onCall(
       const newOrder: Order = {
         sellerId: listing.sellerId,
         sellerName: listing.sellerName,
-        sellerVisibility: true,
         sellerStars: seller.stars,
         buyerId: buyerId,
         buyerName: buyer.name,
-        buyerVisibility: true,
         buyerStars: buyer.stars,
         diningHall: listing.diningHall,
         // displayTime: undefined,
         sellerHasNotifs: true,
         buyerHasNotifs: true,
         transactionDate: listing.transactionDate,
-        isChatDeleted: false,
         status: orderStatus.active,
       };
 

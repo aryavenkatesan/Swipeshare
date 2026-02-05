@@ -98,7 +98,6 @@ class SnackbarMessages {
         "Thanks for the feedback",
         "Got it! We appreciate your input",
         "Feedback received! Thank you",
-        "Get back to swiping, we've got this",
       ]);
 
   static const reportSubmitted = "Thanks for reporting! We'll review this ASAP";
