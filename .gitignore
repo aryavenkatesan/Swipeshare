@@ -40,3 +40,8 @@ swipeshare_app/ios/Runner/GoogleService-Info.plist
 **/captures/
 **/local.properties
 **/GeneratedPluginRegistrant.java
+
+# --- Signing ---
+**/key.properties
+**/*.keystore
+**/*.jks
