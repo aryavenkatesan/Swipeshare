@@ -26,38 +26,54 @@ async function completeOldOrdersLogic() {
   const batch = admin.firestore().batch();
   const usersRef = admin.firestore().collection("users");
 
-  const userIncrements = new Map<string, number>();
+  const WALK_IN_PRICE = 17;
+
+  type UserUpdates = {
+    transactions: number;
+    moneySaved: number;
+    moneyEarned: number;
+  };
+  const userUpdates = new Map<string, UserUpdates>();
+
+  const getOrCreate = (userId: string): UserUpdates => {
+    if (!userUpdates.has(userId)) {
+      userUpdates.set(userId, { transactions: 0, moneySaved: 0, moneyEarned: 0 });
+    }
+    return userUpdates.get(userId)!;
+  };
 
   snapshot.docs.forEach((doc) => {
     const order = doc.data() as Order;
+    const price = order.price ?? 0;
     console.log(
-      `Completing order ${doc.id} (seller: ${order.sellerId}, buyer: ${order.buyerId}, date: ${order.transactionDate.toDate().toISOString()})`,
+      `Completing order ${doc.id} (seller: ${order.sellerId}, buyer: ${order.buyerId}, price: $${price}, date: ${order.transactionDate.toDate().toISOString()})`,
     );
     batch.update(doc.ref, { status: orderStatus.completed });
 
-    userIncrements.set(
-      order.buyerId,
-      (userIncrements.get(order.buyerId) || 0) + 1,
-    );
-    userIncrements.set(
-      order.sellerId,
-      (userIncrements.get(order.sellerId) || 0) + 1,
-    );
+    const buyerUpdates = getOrCreate(order.buyerId);
+    buyerUpdates.transactions += 1;
+    buyerUpdates.moneySaved += WALK_IN_PRICE - price;
+
+    const sellerUpdates = getOrCreate(order.sellerId);
+    sellerUpdates.transactions += 1;
+    sellerUpdates.moneyEarned += price;
   });
 
-  userIncrements.forEach((incrementCount, userId) => {
+  userUpdates.forEach((updates, userId) => {
     const userRef = usersRef.doc(userId);
     batch.update(userRef, {
-      transactions_completed: FieldValue.increment(incrementCount),
+      transactions_completed: FieldValue.increment(updates.transactions),
+      moneySaved: FieldValue.increment(updates.moneySaved),
+      moneyEarned: FieldValue.increment(updates.moneyEarned),
     });
   });
 
   await batch.commit();
 
   console.log(`Successfully completed ${snapshot.size} orders.`);
-  console.log(`Updated transaction counts for ${userIncrements.size} users.`);
+  console.log(`Updated transaction counts for ${userUpdates.size} users.`);
 
-  return { completed: snapshot.size, usersUpdated: userIncrements.size };
+  return { completed: snapshot.size, usersUpdated: userUpdates.size };
 }
 
 /**

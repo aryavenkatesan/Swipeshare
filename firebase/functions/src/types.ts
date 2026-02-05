@@ -76,6 +76,7 @@ export type Order = {
   ratingByBuyer?: Rating;
   ratingBySeller?: Rating;
   status: OrderStatus;
+  price: number;
 };
 
 export type User = {
@@ -84,7 +85,8 @@ export type User = {
   fcmToken?: string;
   isEmailVerified: boolean;
   transactions_completed: number;
-  // other fields aren't relevant
+  moneySaved: number;
+  moneyEarned: number;
 };
 
 export type Rating = {
