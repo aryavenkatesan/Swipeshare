@@ -3,6 +3,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class RatingsPage extends StatefulWidget {
   final String recieverId;
@@ -133,10 +134,8 @@ class _RatingsPageState extends State<RatingsPage> {
 
                             // congratulations popup?
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Order complete, feedback submitted!',
-                                ),
+                              SnackBar(
+                                content: Text(SnackbarMessages.orderPlaced),
                               ),
                             );
                           },

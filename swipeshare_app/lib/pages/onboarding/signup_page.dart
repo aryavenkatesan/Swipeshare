@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class RegisterPage extends StatefulWidget {
   final void Function()? onTap;
@@ -36,7 +37,7 @@ class _RegisterPageState extends State<RegisterPage> {
         confirmPasswordController.text.isEmpty) {
       await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill out all required fields')),
+        SnackBar(content: Text(SnackbarMessages.fillAllFields)),
       );
       return;
     }
@@ -49,9 +50,7 @@ class _RegisterPageState extends State<RegisterPage> {
       await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "Please use a valid UNC email address (ending with @unc.edu)",
-          ),
+          content: Text(SnackbarMessages.uncEmailRequired),
         ),
       );
       return;
@@ -63,7 +62,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Passwords don't match")));
+      ).showSnackBar(SnackBar(content: Text(SnackbarMessages.passwordsDontMatch)));
       return;
     }
 
@@ -71,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (nameController.text.length > 18) {
       await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Name is too long, consider using a nickname!")),
+        SnackBar(content: Text(SnackbarMessages.nameToolong)),
       );
       return;
     }
@@ -80,7 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (ProfanityUtils.hasProfanityWord(nameController.text)) {
       await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Name contains profanity, please change.")),
+        SnackBar(content: Text(SnackbarMessages.profanityInName)),
       );
       return;
     }

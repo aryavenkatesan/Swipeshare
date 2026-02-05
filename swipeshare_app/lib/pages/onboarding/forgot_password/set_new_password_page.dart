@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class SetNewPasswordPage extends StatefulWidget {
   final String email;
@@ -28,8 +29,8 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
 
     if (password.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Password must be at least 8 characters."),
+        SnackBar(
+          content: Text(SnackbarMessages.passwordTooShort),
         ),
       );
       return;
@@ -38,7 +39,7 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
     if (password != confirm) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Passwords do not match.")));
+      ).showSnackBar(SnackBar(content: Text(SnackbarMessages.passwordsDontMatch)));
       return;
     }
 
@@ -60,10 +61,8 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
         // Return to login screen
         Navigator.of(context).popUntil((route) => route.isFirst);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Password updated! Please log in with your new password.",
-            ),
+          SnackBar(
+            content: Text(SnackbarMessages.passwordResetSuccess),
           ),
         );
       }

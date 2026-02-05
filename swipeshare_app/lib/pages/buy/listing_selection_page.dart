@@ -12,6 +12,7 @@ import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class ListingSelectionPage extends StatefulWidget {
   final List<String> locations;
@@ -459,7 +460,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       await _orderService.postOrder(listing);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order was placed successfully!')),
+          SnackBar(content: Text(SnackbarMessages.orderPlaced)),
         );
         Navigator.pop(context);
         Navigator.pop(context);
@@ -470,7 +471,7 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to process order: $e')));
+        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.orderFailed(e.toString()))));
       }
     }
   }

@@ -6,6 +6,7 @@ import 'package:swipeshare_app/components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class ActiveListingCard extends StatelessWidget {
@@ -72,11 +73,9 @@ class ActiveListingCard extends StatelessWidget {
       );
       await safeVibrate(HapticsType.heavy);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('The Listing has been deleted.'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.listingDeleted)));
       }
     }
   }
