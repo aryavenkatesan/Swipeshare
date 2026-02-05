@@ -72,6 +72,20 @@ class OrderService {
     }
   }
 
+  Future<void> cancelOrder(String orderId, OrderRole cancelledBy) async {
+    await orderCol.doc(orderId).update({
+      'status': OrderStatus.cancelled.name,
+      'cancelledBy': cancelledBy.name,
+      'cancellationAcknowledged': false,
+    });
+  }
+
+  Future<void> acknowledgeCancellation(String orderId) async {
+    await orderCol.doc(orderId).update({
+      'cancellationAcknowledged': true,
+    });
+  }
+
   Future<List<MealOrder>> getOrdersToRate() async {
     if (_auth.currentUser == null) return [];
     final currentUserId = _auth.currentUser!.uid;

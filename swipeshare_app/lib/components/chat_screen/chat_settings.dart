@@ -3,11 +3,12 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
-enum SettingsItems { report, block }
+enum SettingsItems { report, block, cancelOrder }
 
 class ChatSettingsMenu extends StatelessWidget {
   final ChatService chatService;
@@ -28,6 +29,8 @@ class ChatSettingsMenu extends StatelessWidget {
             _showReportDialog(context);
           case SettingsItems.block:
             _showBlockDialog(context);
+          case SettingsItems.cancelOrder:
+            _showCancelOrderDialog(context);
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<SettingsItems>>[
@@ -38,6 +41,10 @@ class ChatSettingsMenu extends StatelessWidget {
         const PopupMenuItem<SettingsItems>(
           value: SettingsItems.block,
           child: Text('Block This User'),
+        ),
+        const PopupMenuItem<SettingsItems>(
+          value: SettingsItems.cancelOrder,
+          child: Text('Cancel Order'),
         ),
       ],
     );
@@ -58,9 +65,11 @@ class ChatSettingsMenu extends StatelessWidget {
     if (reportText != null && context.mounted) {
       chatService.reportUser(reportText);
       await safeVibrate(HapticsType.success);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(SnackbarMessages.reportSubmitted)),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(SnackbarMessages.reportSubmitted)),
+        );
+      }
     }
   }
 
@@ -76,7 +85,26 @@ class ChatSettingsMenu extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       await safeVibrate(HapticsType.heavy);
       UserService.instance.blockUser(orderData);
-      Navigator.of(context).pop();
+      if (context.mounted) Navigator.of(context).pop();
+    }
+  }
+
+  void _showCancelOrderDialog(BuildContext context) async {
+    final confirmed = await AdaptiveDialog.showConfirmation(
+      context: context,
+      title: 'Cancel Order',
+      content: 'Are you sure you want to cancel this order?',
+      confirmText: 'Cancel Order',
+      cancelText: 'Close',
+    );
+
+    if (confirmed == true && context.mounted) {
+      await safeVibrate(HapticsType.heavy);
+      await OrderService.instance.cancelOrder(
+        orderData.getRoomName(),
+        orderData.currentUserRole,
+      );
+      if (context.mounted) Navigator.of(context).pop();
     }
   }
 }

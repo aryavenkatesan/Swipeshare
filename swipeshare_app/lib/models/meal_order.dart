@@ -25,6 +25,8 @@ class MealOrder {
   final Rating? ratingBySeller;
   final OrderStatus status;
   final double price;
+  final OrderRole? cancelledBy;
+  final bool cancellationAcknowledged;
 
   MealOrder({
     required this.sellerId,
@@ -42,6 +44,8 @@ class MealOrder {
     this.ratingBySeller,
     required this.status,
     this.price = 0,
+    this.cancelledBy,
+    this.cancellationAcknowledged = false,
   });
 
   DateTime get datetime => DateTime(
@@ -89,6 +93,8 @@ class MealOrder {
       'ratingBySeller': ratingBySeller?.toMap(),
       'status': status.name,
       'price': price,
+      'cancelledBy': cancelledBy?.name,
+      'cancellationAcknowledged': cancellationAcknowledged,
     };
   }
 
@@ -115,6 +121,10 @@ class MealOrder {
           ? OrderStatus.values.byName(map['status'])
           : OrderStatus.cancelled,
       price: (map['price'] as num?)?.toDouble() ?? 0,
+      cancelledBy: map['cancelledBy'] != null
+          ? OrderRole.values.byName(map['cancelledBy'])
+          : null,
+      cancellationAcknowledged: map['cancellationAcknowledged'] ?? false,
     );
   }
 
