@@ -220,15 +220,23 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     final stars = _selectedStars[index];
     if (stars == null) return;
 
-    await _orderService.rateOrder(
-      order,
-      Rating(
-        stars: stars,
-        extraInfo: _feedbackControllers[index]?.text.isEmpty ?? true
-            ? null
-            : _feedbackControllers[index]!.text,
-      ),
-    );
+    try {
+      await _orderService.rateOrder(
+        order,
+        Rating(
+          stars: stars,
+          extraInfo: _feedbackControllers[index]?.text.isEmpty ?? true
+              ? null
+              : _feedbackControllers[index]!.text,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(SnackbarMessages.genericError(e.toString()))),
+      );
+      return;
+    }
 
     await safeVibrate(HapticsType.success);
 
