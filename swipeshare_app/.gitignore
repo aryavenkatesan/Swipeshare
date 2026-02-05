@@ -46,3 +46,8 @@ app.*.map.json
 
 # Web build output
 /web/
+
+# Signing
+android/key.properties
+android/app/*.keystore
+android/app/*.jks
