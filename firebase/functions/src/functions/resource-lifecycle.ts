@@ -2,6 +2,7 @@ import * as admin from "firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v2";
 import { Listing, listingStatus, Order, orderStatus } from "../types";
+import { WALK_IN_PRICE } from "../utils/constants";
 
 /** Core logic for completing old orders - shared between scheduled and callable */
 async function completeOldOrdersLogic() {
@@ -25,8 +26,6 @@ async function completeOldOrdersLogic() {
 
   const batch = admin.firestore().batch();
   const usersRef = admin.firestore().collection("users");
-
-  const WALK_IN_PRICE = 17;
 
   type UserUpdates = {
     transactions: number;
