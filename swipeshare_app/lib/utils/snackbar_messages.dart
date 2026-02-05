@@ -68,6 +68,13 @@ class SnackbarMessages {
         "All clean! Chat has been removed",
       ]);
 
+  // ========== LISTING MESSAGES ==========
+  static String get listingDeleted => _randomPick([
+        "Listing deleted successfully",
+        "Listing's gone! Like it never happened",
+        "All clean! Listing has been removed",
+      ]);
+
   // ========== VERIFICATION MESSAGES ==========
   static const enterAllDigits = "Hold up! Need all 6 digits";
 

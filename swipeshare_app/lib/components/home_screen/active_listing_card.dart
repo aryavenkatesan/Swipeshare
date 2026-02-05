@@ -75,7 +75,7 @@ class ActiveListingCard extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.chatDeleted)));
+        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.listingDeleted)));
       }
     }
   }
