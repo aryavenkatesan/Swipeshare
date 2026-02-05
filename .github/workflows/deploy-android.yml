@@ -52,10 +52,12 @@ jobs:
       - name: Calculate version code
         id: version
         run: |
-          # Use total commit count as version code (always increases)
-          VERSION_CODE=$(git rev-list --count HEAD)
+          # Use total commit count + offset to ensure higher than existing Play Store versions
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          OFFSET=10  # Adjust if needed to be higher than current Play Store version
+          VERSION_CODE=$((COMMIT_COUNT + OFFSET))
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "Calculated version code: $VERSION_CODE"
+          echo "Calculated version code: $VERSION_CODE (commits: $COMMIT_COUNT + offset: $OFFSET)"
 
       - name: Decode google-services.json
         run: |
