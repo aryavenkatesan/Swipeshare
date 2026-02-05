@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/services/chat_service.dart';
 
 class OrderService {
   OrderService._();
@@ -28,8 +27,6 @@ class OrderService {
 
       final orderData = result.data as Map<String, dynamic>;
       final newOrder = MealOrder.fromMap(orderData);
-
-      await ChatService(newOrder.getRoomName()).newOrderSystemMessage();
 
       return newOrder;
     } catch (e, s) {
@@ -81,9 +78,7 @@ class OrderService {
   }
 
   Future<void> acknowledgeCancellation(String orderId) async {
-    await orderCol.doc(orderId).update({
-      'cancellationAcknowledged': true,
-    });
+    await orderCol.doc(orderId).update({'cancellationAcknowledged': true});
   }
 
   Future<List<MealOrder>> getOrdersToRate() async {

@@ -1,8 +1,15 @@
 import * as admin from "firebase-admin";
-import { Timestamp } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/https";
 import * as functions from "firebase-functions/v2";
-import { Listing, listingStatus, Order, orderStatus } from "../types";
+import {
+  Listing,
+  listingStatus,
+  Order,
+  orderStatus,
+  SystemMessage,
+} from "../types";
+import { NEW_ORDER_SYSTEM_MESSAGE_CONTENT } from "../utils/constants";
 import { getListing, getOrderRoomName, getUser } from "../utils/firestore";
 import { dateToTimeOfDayString } from "../utils/time";
 
@@ -187,15 +194,32 @@ export const createOrderFromListing = functions.https.onCall(
       }
 
       transaction.set(orderDoc, newOrder);
+
       const listingDoc = admin
         .firestore()
         .collection("listings")
         .doc(listingId);
-
       const listingUpdate: Partial<Listing> = {
         status: listingStatus.claimed,
       };
       transaction.update(listingDoc, listingUpdate);
+
+      // Send welcome system message
+      const messageDoc = orderDoc.collection("messages").doc();
+
+      const messageData: SystemMessage = {
+        messageType: "system",
+        senderId: "system",
+        senderEmail: "system@swipeshare.app",
+        senderName: "SwipeShare",
+        content: NEW_ORDER_SYSTEM_MESSAGE_CONTENT,
+      };
+      transaction.set(messageDoc, {
+        ...messageData,
+        timestamp: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`New order system message sent for order ${orderId}`);
 
       return newOrder;
     });
