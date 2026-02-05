@@ -45,6 +45,8 @@ class UserModel {
   final String? verificationCode;
   final DateTime? verificationCodeExpires;
   final UserStatus status;
+  final double moneySaved;
+  final double moneyEarned;
 
   UserModel({
     required this.id,
@@ -59,6 +61,8 @@ class UserModel {
     this.verificationCode,
     this.verificationCodeExpires,
     this.status = UserStatus.active,
+    this.moneySaved = 0,
+    this.moneyEarned = 0,
   });
 
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
@@ -79,6 +83,8 @@ class UserModel {
       status: data['status'] != null
           ? UserStatus.values.byName(data['status'])
           : UserStatus.active,
+      moneySaved: (data['moneySaved'] ?? 0).toDouble(),
+      moneyEarned: (data['moneyEarned'] ?? 0).toDouble(),
     );
   }
 
