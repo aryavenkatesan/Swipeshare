@@ -6,8 +6,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
-import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -284,172 +284,187 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-          // ========== CARD FRONT (Always Visible) ==========
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _expandedListingId = isExpanded ? null : listing.id;
-              });
-            },
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Dining Hall and Star Rating
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          listing.diningHall,
-                          style: HeaderStyle.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                          children: [
-                            const TextSpan(text: "⭑ "),
-                            TextSpan(
-                              text: listing.sellerRating.toStringAsFixed(2),
-                              style: const TextStyle(
-                                color: Color.fromARGB(198, 0, 0, 0),
-                              ),
+            // ========== CARD FRONT (Always Visible) ==========
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _expandedListingId = isExpanded ? null : listing.id;
+                });
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Dining Hall and Star Rating
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            listing.diningHall,
+                            style: HeaderStyle.copyWith(
+                              fontWeight: FontWeight.w600,
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Time Range
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RichText(
+                        RichText(
                           text: TextSpan(
-                            style: AppTextStyles.listingText,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                             children: [
-                              const TextSpan(text: "From  "),
+                              const TextSpan(text: "⭑ "),
                               TextSpan(
-                                text: _formatTime(listing.timeStart),
+                                text: listing.sellerRating.toStringAsFixed(2),
                                 style: const TextStyle(
-                                  color: Color.fromARGB(255, 65, 137, 200),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const TextSpan(text: "  to  "),
-                              TextSpan(
-                                text: _formatTime(listing.timeEnd),
-                                style: const TextStyle(
-                                  color: Color.fromARGB(255, 65, 137, 200),
-                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromARGB(198, 0, 0, 0),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      AnimatedRotation(
-                        turns: isExpanded ? 0.5 : 0.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          Icons.expand_more,
-                          color: Colors.grey[600],
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ========== EXPANDABLE CONTENT (Inside Card) ==========
-          ClipRect(
-            child: AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignment: Alignment.topLeft,
-              child: isExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                        Divider(height: 1, thickness: 1, color: Colors.black12),
-                        const SizedBox(height: 12),
-
-                        // Payment Types
-                        Text(
-                          "Payment Types:",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          listing.paymentTypes.join(", "),
-                          style: AppTextStyles.viewListingSubText,
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // Price
-                        Text(
-                          "Price:",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          "\$${listing.price ?? '7'}",
-                          style: AppTextStyles.viewListingSubText,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Select Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: CupertinoButton(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            color: const Color.fromARGB(192, 131, 199, 255),
-                            borderRadius: BorderRadius.circular(8),
-                            onPressed: () async {
-                              await safeVibrate(HapticsType.success);
-                              _handleListingSelection(listing);
-                            },
-                            child: Text(
-                              "Select This Listing",
-                              style: AppTextStyles.viewListingSubText.copyWith(
-                                color: const Color.fromARGB(255, 61, 61, 61),
-                                fontWeight: FontWeight.w400,
-                              ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Time Range
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              style: AppTextStyles.listingText,
+                              children: [
+                                const TextSpan(text: "From  "),
+                                TextSpan(
+                                  text: _formatTime(listing.timeStart),
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 65, 137, 200),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const TextSpan(text: "  to  "),
+                                TextSpan(
+                                  text: _formatTime(listing.timeEnd),
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 65, 137, 200),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                        AnimatedRotation(
+                          turns: isExpanded ? 0.5 : 0.0,
+                          duration: const Duration(milliseconds: 300),
+                          child: Icon(
+                            Icons.expand_more,
+                            color: Colors.grey[600],
+                            size: 20,
+                          ),
+                        ),
                       ],
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+
+            // ========== EXPANDABLE CONTENT (Inside Card) ==========
+            ClipRect(
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topLeft,
+                child: isExpanded
+                    ? Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: Colors.black12,
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Payment Types
+                            Text(
+                              "Payment Types:",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              listing.paymentTypes.join(", "),
+                              style: AppTextStyles.viewListingSubText,
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Price
+                            Text(
+                              "Price:",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              "\$${listing.price ?? '7'}",
+                              style: AppTextStyles.viewListingSubText,
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Select Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: CupertinoButton(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                color: const Color.fromARGB(192, 131, 199, 255),
+                                borderRadius: BorderRadius.circular(8),
+                                onPressed: () async {
+                                  await safeVibrate(HapticsType.success);
+                                  _handleListingSelection(listing);
+                                },
+                                child: Text(
+                                  "Select This Listing",
+                                  style: AppTextStyles.viewListingSubText
+                                      .copyWith(
+                                        color: const Color.fromARGB(
+                                          255,
+                                          61,
+                                          61,
+                                          61,
+                                        ),
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -459,9 +474,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
     try {
       await _orderService.postOrder(listing);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(SnackbarMessages.orderPlaced)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.orderPlaced)));
         Navigator.pop(context);
         Navigator.pop(context);
       }
@@ -469,9 +484,9 @@ class _ListingSelectionPageState extends State<ListingSelectionPage> {
       debugPrint('Error: $e');
       debugPrint('Stack: $s');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.orderFailed(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(SnackbarMessages.orderFailed(e.toString()))),
+        );
       }
     }
   }

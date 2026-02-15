@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
-import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/adaptive/adaptive_time_picker.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/shared_constants.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 
 class TimePickerComponent extends StatefulWidget {
   final TimeOfDay? startTime;
@@ -314,7 +314,7 @@ class _TimePickerComponentState extends State<TimePickerComponent> {
         if (end && widget.endTime == null) {
           widget.onEndTimeChanged(const TimeOfDay(hour: 17, minute: 0));
         }
-        
+
         showStartPicker = start;
         showEndPicker = end;
       }

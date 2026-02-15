@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart'; // Required for re-authentication
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
-import 'package:swipeshare_app/components/home_screen/deleting_account_screen.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/adaptive/adaptive_dialog.dart';
+import 'package:swipeshare_app/old_components/home_screen/deleting_account_screen.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
 import 'package:url_launcher/url_launcher.dart';

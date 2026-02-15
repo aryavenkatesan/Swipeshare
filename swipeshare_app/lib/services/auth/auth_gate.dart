@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/pages/home_page.dart';
+import 'package:swipeshare_app/pages/bottom_bar.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_carousel.dart';
 import 'package:swipeshare_app/services/auth/login_or_register.dart';
 
@@ -47,7 +47,9 @@ class AuthGate extends StatelessWidget {
           .doc(user.uid)
           .snapshots()
           .handleError((error, stackTrace) {
-            debugPrint('Firestore error in auth_gate.dart: $error\nThis is expected during logout (auth token race condition)');
+            debugPrint(
+              'Firestore error in auth_gate.dart: $error\nThis is expected during logout (auth token race condition)',
+            );
           }),
       builder: (context, userSnapshot) {
         // Show loading while fetching user data
@@ -80,7 +82,7 @@ class AuthGate extends StatelessWidget {
 
         // Route based on verification status
         if (isEmailVerified) {
-          return const HomeScreen(key: ValueKey('home'));
+          return const BottomBar(key: ValueKey('home'));
         } else {
           return const OnboardingCarousel(key: ValueKey('onboarding'));
         }

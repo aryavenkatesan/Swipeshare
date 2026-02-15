@@ -87,6 +87,7 @@ export type User = {
   transactions_completed: number;
   moneySaved: number;
   moneyEarned: number;
+  // other fields aren't relevant
 };
 
 export type Rating = {

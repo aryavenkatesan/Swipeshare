@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
@@ -13,7 +12,6 @@ import 'package:swipeshare_app/services/user_service.dart';
 class ChatService extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
-  final _functions = FirebaseFunctions.instance;
   final _userService = UserService.instance;
   final _notificationService = NotificationService.instance;
   final _orderService = OrderService.instance;
@@ -69,9 +67,6 @@ class ChatService extends ChangeNotifier {
     await chatDoc.set(messageData);
     return message;
   }
-
-  // Note: System messages are now sent via Cloud Functions for security.
-  // Use sendNewOrderSystemMessage() or sendChatDeletedSystemMessage() cloud functions instead.
 
   Future<TimeProposal> sendTimeProposal(
     TimeOfDay proposedTime, {
@@ -142,19 +137,6 @@ class ChatService extends ChangeNotifier {
     reportData['timestamp'] = FieldValue.serverTimestamp();
 
     await _firestore.collection('reports').add(reportData);
-  }
-
-  Future<void> newOrderSystemMessage({
-    Transaction? transaction,
-  }) async {
-    // Note: transaction parameter is no longer used since this is now a cloud function
-    try {
-      final callable = _functions.httpsCallable('sendNewOrderSystemMessage');
-      await callable.call({'orderId': orderId});
-    } catch (e) {
-      debugPrint('Error sending new order system message: $e');
-      rethrow;
-    }
   }
 
   Future<void> readNotifications() async {

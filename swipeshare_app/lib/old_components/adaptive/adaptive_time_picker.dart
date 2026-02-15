@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/colors.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
 
 /// Utility class for platform-adaptive time picking.
 /// Uses Cupertino-style pickers on iOS/macOS, Material-style on Android.
@@ -99,10 +99,7 @@ class AdaptiveTimePicker {
       initialTime: initialTime,
       helpText: helpText,
       builder: (context, child) {
-        return Theme(
-          data: buildMaterialTimePickerTheme(),
-          child: child!,
-        );
+        return Theme(data: buildMaterialTimePickerTheme(), child: child!);
       },
       barrierColor: const Color.fromARGB(142, 72, 81, 97),
     );
@@ -117,9 +114,7 @@ class AdaptiveTimePicker {
         onSurface: AppColors.primaryText,
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.accentBlue,
-        ),
+        style: TextButton.styleFrom(foregroundColor: AppColors.accentBlue),
       ),
       timePickerTheme: TimePickerThemeData(
         backgroundColor: AppColors.background,

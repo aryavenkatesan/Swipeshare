@@ -7,4 +7,3 @@ export * from "./functions/notifications";
 export * from "./functions/order-transaction";
 export * from "./functions/ratings";
 export * from "./functions/resource-lifecycle";
-export * from "./functions/system-messages";

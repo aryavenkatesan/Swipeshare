@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 
 class SellValidationComponent extends StatelessWidget {
   final List<String> selectedLocations;

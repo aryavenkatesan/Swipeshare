@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/shared_constants.dart';
 
 /// Base button component for consistent styling across the app
 class MyButton extends StatelessWidget {
@@ -41,7 +41,9 @@ class MyButton extends StatelessWidget {
           foregroundColor: textColor ?? AppColors.white,
           elevation: elevation ?? 0,
           shape: RoundedRectangleBorder(
-            borderRadius: borderRadius ?? BorderRadius.circular(BuySwipesConstants.borderRadius),
+            borderRadius:
+                borderRadius ??
+                BorderRadius.circular(BuySwipesConstants.borderRadius),
           ),
           padding: padding ?? BuySwipesConstants.buttonPadding,
         ),
@@ -58,14 +60,8 @@ class MyButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    icon!,
-                    const SizedBox(width: 8),
-                  ],
-                  Text(
-                    text,
-                    style: textStyle ?? AppTextStyles.buttonText,
-                  ),
+                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
+                  Text(text, style: textStyle ?? AppTextStyles.buttonText),
                 ],
               ),
       ),

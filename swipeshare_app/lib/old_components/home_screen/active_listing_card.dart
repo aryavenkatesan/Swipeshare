@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/adaptive/adaptive_dialog.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
@@ -73,9 +73,9 @@ class ActiveListingCard extends StatelessWidget {
       );
       await safeVibrate(HapticsType.heavy);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(SnackbarMessages.listingDeleted)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(SnackbarMessages.listingDeleted)),
+        );
       }
     }
   }

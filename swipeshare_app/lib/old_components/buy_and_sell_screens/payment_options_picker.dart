@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
-import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/shared_constants.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/models/user.dart';
 

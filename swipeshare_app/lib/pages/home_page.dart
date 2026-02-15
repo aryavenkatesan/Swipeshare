@@ -8,25 +8,25 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
-import 'package:swipeshare_app/components/home_screen/active_listing_card.dart';
-import 'package:swipeshare_app/components/home_screen/active_order_card.dart';
-import 'package:swipeshare_app/components/home_screen/hyperlinks.dart';
-import 'package:swipeshare_app/components/home_screen/place_order_card.dart';
-import 'package:swipeshare_app/components/home_screen/ratings_bottom_sheet.dart';
-import 'package:swipeshare_app/components/star_container.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/payment_options_picker.dart';
+import 'package:swipeshare_app/old_components/home_screen/active_listing_card.dart';
+import 'package:swipeshare_app/old_components/home_screen/active_order_card.dart';
+import 'package:swipeshare_app/old_components/home_screen/hyperlinks.dart';
+import 'package:swipeshare_app/old_components/home_screen/place_order_card.dart';
+import 'package:swipeshare_app/old_components/home_screen/ratings_bottom_sheet.dart';
+import 'package:swipeshare_app/old_components/star_container.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
-import 'package:swipeshare_app/utils/snackbar_messages.dart';
-import 'package:swipeshare_app/pages/buy/buy_swipes.dart';
+import 'package:swipeshare_app/pages/old_pages/buy/buy_swipes.dart';
 import 'package:swipeshare_app/pages/onboarding/tutorial_carousel.dart';
-import 'package:swipeshare_app/pages/sell/sell_post.dart';
+import 'package:swipeshare_app/pages/old_pages/sell/sell_post.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -445,7 +445,10 @@ class _HomeScreenState extends State<HomeScreen>
               Filter('buyerId', isEqualTo: userId),
             ),
           )
-          .where('status', isEqualTo: OrderStatus.active.name)
+          .where(
+            'status',
+            whereIn: [OrderStatus.active.name, OrderStatus.cancelled.name],
+          )
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.error != null) {
@@ -456,7 +459,18 @@ class _HomeScreenState extends State<HomeScreen>
         }
 
         final orders =
-            snapshot.data?.docs.map((doc) => doc.data()).toList() ?? [];
+            (snapshot.data?.docs.map((doc) => doc.data()) ?? <MealOrder>[])
+                .where((order) {
+                  if (order.status == OrderStatus.active) return true;
+                  if (order.status == OrderStatus.cancelled) {
+                    // Show cancelled orders only to the user who didn't cancel
+                    // and only if they haven't acknowledged it yet
+                    return order.cancelledBy != order.currentUserRole &&
+                        !order.cancellationAcknowledged;
+                  }
+                  return false;
+                })
+                .toList();
 
         if (orders.isEmpty) {
           return Container(

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/dates.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/dining_halls.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/payment_options_picker.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/shared_constants.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker.dart';
-import 'package:swipeshare_app/components/buy_and_sell_screens/time_picker_validation.dart';
-import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
-import 'package:swipeshare_app/pages/buy/listing_selection_page.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/dates.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/dining_halls.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/payment_options_picker.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/shared_constants.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/time_picker.dart';
+import 'package:swipeshare_app/old_components/buy_and_sell_screens/time_picker_validation.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
+import 'package:swipeshare_app/pages/old_pages/buy/listing_selection_page.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
 class BuySwipeScreen extends StatefulWidget {
