@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/text_styles.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 
 class Page5 extends StatelessWidget {
   const Page5({super.key});

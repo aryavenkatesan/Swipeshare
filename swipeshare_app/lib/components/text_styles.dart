@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:swipeshare_app/components/colors.dart';
+import 'package:swipeshare_app/old_components/colors.dart';
 
 /// App-wide text styles using consistent typography
 class AppTextStyles {
