@@ -1,134 +1,128 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:swipeshare_app/old_components/colors.dart';
+import 'package:swipeshare_app/components/colors.dart';
 
-/// App-wide text styles using consistent typography
-class AppTextStyles {
-  // Header styles
-  static final headerStyle = GoogleFonts.instrumentSans(
-    color: AppColors.headerText,
-    fontSize: 24,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0,
-    decoration: TextDecoration.none,
-  );
+const String leagueSpartan = 'LeagueSpartan';
+const String lexend = 'Lexend';
 
-  static final greyHeaderStyle = GoogleFonts.instrumentSans(
-    color: AppColors.greyText,
-    fontSize: 24,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-    decoration: TextDecoration.none,
-  );
+const TextTheme swipeshareTextTheme = TextTheme(
+  // ------------------------------------------------------------------
+  // Display / Page greeting  →  "Hi, Arya"
+  // League Spartan Bold | 34sp | tracking 0.4
+  // ------------------------------------------------------------------
+  displayLarge: TextStyle(
+    fontFamily: leagueSpartan,
+    fontWeight: FontWeight.w700,
+    fontSize: 34,
+    letterSpacing: 0.4,
+    color: Color(0xFF5856D6),
+  ),
 
-  static final subHeaderStyle = GoogleFonts.instrumentSans(
-    color: AppColors.headerText,
-    fontSize: 24,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-    decoration: TextDecoration.none,
-  );
-
-  // Page title style
-  static final pageTitle = GoogleFonts.instrumentSans(
+  // ------------------------------------------------------------------
+  // Section headings  →  "Active Orders", "Your Listings"
+  // League Spartan SemiBold | 28sp | tracking 0.38
+  // ------------------------------------------------------------------
+  headlineMedium: TextStyle(
+    fontFamily: leagueSpartan,
+    fontWeight: FontWeight.w600,
     fontSize: 28,
-    fontWeight: FontWeight.w600,
-    letterSpacing: -1.0,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
+    letterSpacing: 0.38,
+    color: SwipeshareColors.onBackground,
+  ),
 
-  // Body text styles
-  static final bodyText = GoogleFonts.instrumentSans(
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
+  // ------------------------------------------------------------------
+  // Screen / nav bar title  →  "Sell Swipes", "Your Listing"
+  // League Spartan Bold | 34sp | tracking 0.4
+  // Reuses displayLarge metrics; mapped to titleLarge for AppBar use.
+  // ------------------------------------------------------------------
+  titleLarge: TextStyle(
+    fontFamily: leagueSpartan,
+    fontWeight: FontWeight.w700,
+    fontSize: 34,
+    letterSpacing: 0.4,
+    color: SwipeshareColors.onBackground,
+  ),
 
-  static final subText = GoogleFonts.instrumentSans(
-    color: AppColors.subText,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    letterSpacing: -0.56,
-    decoration: TextDecoration.none,
-  );
-
-  // Button text styles
-  static final buttonText = GoogleFonts.instrumentSans(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: AppColors.white,
-    decoration: TextDecoration.none,
-  );
-
-  // Component-specific styles
-  static final locationText = GoogleFonts.instrumentSans(
-    fontSize: 16,
+  // ------------------------------------------------------------------
+  // Card primary text  →  "Chase 1/13" (bold part)
+  // Lexend Medium | 20sp | leading 34 | tracking 0.38
+  // ------------------------------------------------------------------
+  titleMedium: TextStyle(
+    fontFamily: lexend,
     fontWeight: FontWeight.w500,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
+    fontSize: 20,
+    height: 34 / 20,
+    letterSpacing: 0.38,
+    color: SwipeshareColors.onBackground,
+  ),
 
-  static final locationTextSelected = GoogleFonts.instrumentSans(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
+  // ------------------------------------------------------------------
+  // Card secondary / form field label  →  "From 3:30 PM to 4:00 PM",
+  //                                       "Select a day", "Payment Options"
+  // Lexend Light | 17sp | leading 34 | tracking 0.38
+  // ------------------------------------------------------------------
+  bodyLarge: TextStyle(
+    fontFamily: lexend,
+    fontWeight: FontWeight.w300,
+    fontSize: 17,
+    height: 34 / 17,
+    letterSpacing: 0.38,
+    color: SwipeshareColors.onBackground,
+  ),
 
-  static final datePillText = GoogleFonts.instrumentSans(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
-
-  static final timeLabelText = GoogleFonts.instrumentSans(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
-
-  static final timeValueText = GoogleFonts.instrumentSans(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
-
-  static final validationText = GoogleFonts.instrumentSans(
-    fontSize: 14,
+  // ------------------------------------------------------------------
+  // General body / form hints  →  "Tap to select payment methods",
+  //                                description text on listing creation
+  // Lexend Regular | 17sp
+  // ------------------------------------------------------------------
+  bodyMedium: TextStyle(
+    fontFamily: lexend,
     fontWeight: FontWeight.w400,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
+    fontSize: 17,
+    color: SwipeshareColors.onBackground,
+  ),
 
-  static final successText = GoogleFonts.instrumentSans(
-    fontSize: 16,
+  // ------------------------------------------------------------------
+  // Dropdown / expandable row label  →  "View Past Listings"
+  // Lexend Regular | 20sp
+  // ------------------------------------------------------------------
+  bodySmall: TextStyle(
+    fontFamily: lexend,
     fontWeight: FontWeight.w400,
-    color: AppColors.primaryText,
-    decoration: TextDecoration.none,
-  );
+    fontSize: 20,
+    color: SwipeshareColors.onBackground,
+  ),
 
-  static final listingText = GoogleFonts.instrumentSans(
-    fontSize: 16,
+  // ------------------------------------------------------------------
+  // Button label  →  "Next", "Post Listing", "Send Feedback"
+  // Lexend Regular | 20sp | white on primary
+  // ------------------------------------------------------------------
+  labelLarge: TextStyle(
+    fontFamily: lexend,
     fontWeight: FontWeight.w400,
-    color: const Color.fromARGB(171, 27, 27, 27),
-    decoration: TextDecoration.none,
-  );
+    fontSize: 20,
+    color: SwipeshareColors.onPrimary,
+  ),
 
-  static final viewListingSubText = GoogleFonts.instrumentSans(
-    fontSize: 18,
-    fontWeight: FontWeight.w500,
-    color: const Color.fromARGB(221, 54, 54, 54),
-    decoration: TextDecoration.none,
-  );
-}
+  // ------------------------------------------------------------------
+  // Tab bar label  →  "Dashboard", "Swipes", "Inbox", "Profile"
+  // Lexend Regular | 10sp
+  // ------------------------------------------------------------------
+  labelSmall: TextStyle(
+    fontFamily: lexend,
+    fontWeight: FontWeight.w400,
+    fontSize: 10,
+    color: SwipeshareColors.onBackground,
+  ),
 
-// Legacy exports for backward compatibility
-final HeaderStyle = AppTextStyles.headerStyle;
-final GreyHeaderStyle = AppTextStyles.greyHeaderStyle;
-final SubHeaderStyle = AppTextStyles.subHeaderStyle;
-final SubTextStyle = AppTextStyles.subText;
+  // ------------------------------------------------------------------
+  // Inline secondary label  →  date stamp "1/6/25", form sub-labels
+  // Lexend Light | 17sp | tracking 0.38
+  // ------------------------------------------------------------------
+  labelMedium: TextStyle(
+    fontFamily: lexend,
+    fontWeight: FontWeight.w300,
+    fontSize: 17,
+    letterSpacing: 0.38,
+    color: SwipeshareColors.onBackground,
+  ),
+);

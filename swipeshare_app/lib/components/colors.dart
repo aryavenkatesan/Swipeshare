@@ -1,26 +1,60 @@
 import 'package:flutter/material.dart';
 
-/// App-wide color constants
-class AppColors {
-  // Primary colors
-  static const Color primaryText = Color.fromARGB(255, 27, 27, 27);
-  static const Color accentBlue = Color(0xFF98D2EB);
-  static const Color background = Color(0xFFFEF8FF);
+// ---------------------------------------------------------------------------
+// Swipeshare 2026 – Design Tokens
+// ---------------------------------------------------------------------------
 
-  // Secondary colors
-  static const Color borderGrey = Color(0xFFE7E7E7);
-  static const Color subText = Color(0xFF6C7278);
-  static const Color headerText = Color(0xFF111827);
-  static const Color greyText = Color.fromARGB(108, 55, 58, 64);
+class SwipeshareColors {
+  SwipeshareColors._();
 
-  // Interactive colors
-  static const Color white = Colors.white;
-  static const Color black = Colors.black;
+  static const Color primary = Color(0xFF5856D6);
+  static const Color onPrimary = Color(0xFFFFFFFF);
 
-  // Opacity variants
-  static Color accentBlueLight = accentBlue.withValues(alpha: 0.1);
-  static Color accentBlueMedium = accentBlue.withValues(alpha: 0.2);
-  static Color accentBlueIndicator = accentBlue.withValues(alpha: 0.3);
-  static Color whiteTransparent = white.withValues(alpha: 0.6);
-  static Color primaryTextLight = primaryText.withValues(alpha: 0.7);
+  static const Color background = Color(0xFFFFFFFF);
+  static const Color onBackground = Color(0xFF000000);
+
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color onSurface = Color(0xFF000000);
+
+  static const Color outline = Color(0xFF000000);
+  static const Color outlineVariant = Color.fromARGB(255, 182, 182, 182);
+
+  /// Grey left-bar accent used on active order cards.
+  static const Color cardAccent = Color(0xFF999999);
+
+  /// Rating chip / secondary container background.
+  static const Color secondaryContainer = Color(0xFFDDDDDD);
+  static const Color onSecondaryContainer = Color(0xFF000000);
+
+  static const Color secondary = Color(0xFF21272A);
+  static const Color onSecondary = Color(0xFFFFFFFF);
+
+  static const Color error = Color(0xFFB00020);
+  static const Color onError = Color(0xFFFFFFFF);
+
+  static const Color shadow = Color(0x4D000000);
 }
+
+// ---------------------------------------------------------------------------
+// ColorScheme
+// ---------------------------------------------------------------------------
+
+const ColorScheme swipeshareColorScheme = ColorScheme(
+  brightness: Brightness.light,
+  primary: SwipeshareColors.primary,
+  onPrimary: SwipeshareColors.onPrimary,
+  primaryContainer: SwipeshareColors.primary,
+  onPrimaryContainer: SwipeshareColors.onPrimary,
+  secondary: SwipeshareColors.secondary,
+  onSecondary: SwipeshareColors.onSecondary,
+  secondaryContainer: SwipeshareColors.secondaryContainer,
+  onSecondaryContainer: SwipeshareColors.onSecondaryContainer,
+  surface: SwipeshareColors.surface,
+  onSurface: SwipeshareColors.onSurface,
+  error: SwipeshareColors.error,
+  onError: SwipeshareColors.onError,
+  outline: SwipeshareColors.outline,
+  outlineVariant: SwipeshareColors.outlineVariant,
+  shadow: SwipeshareColors.shadow,
+  surfaceTint: SwipeshareColors.cardAccent,
+);
