@@ -5,6 +5,7 @@ import 'package:swipeshare_app/components/listing_form/payment_options_field.dar
 import 'package:swipeshare_app/components/listing_form/price_stepper_field.dart';
 import 'package:swipeshare_app/components/listing_form/time_range_selector.dart';
 import 'package:swipeshare_app/models/listing.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 
 /// Holds the validated values collected by [ListingForm].
 class ListingFormData {
@@ -89,7 +90,15 @@ class _ListingFormState extends State<ListingForm> {
       _timeEnd = l.timeEnd;
       _price = l.price?.round() ?? 5;
       _paymentTypes = List.from(l.paymentTypes);
+    } else {
+      _loadDefaultPaymentTypes();
     }
+  }
+
+  Future<void> _loadDefaultPaymentTypes() async {
+    final user = await UserService.instance.getCurrentUser();
+    if (!mounted) return;
+    setState(() => _paymentTypes = List.from(user.paymentTypes));
   }
 
   void _submit() {
