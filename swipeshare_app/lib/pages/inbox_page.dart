@@ -31,49 +31,6 @@ class _InboxPageState extends State<InboxPage> {
   final _auth = FirebaseAuth.instance;
   final _orderService = OrderService.instance;
 
-  Widget _buildPastChatsHeader(
-    BuildContext context,
-    ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
-    return GestureDetector(
-      onTap: () => setState(() => _pastExpanded = !_pastExpanded),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Text(
-                  "Past Chats",
-                  style: textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  _pastExpanded
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_right,
-                  color: colorScheme.onSurface,
-                  size: 24,
-                ),
-              ],
-            ),
-          ),
-          const Divider(
-            height: 1,
-            color: Color(0xFFE0E0E0),
-            indent: 12,
-            endIndent: 12,
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -87,14 +44,14 @@ class _InboxPageState extends State<InboxPage> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(
-            Icons.chevron_left,
-            color: colorScheme.onSurface,
-            size: 30,
-          ),
-          onPressed: () => Navigator.maybePop(context),
-        ),
+        // leading: IconButton(
+        //   icon: Icon(
+        //     Icons.chevron_left,
+        //     color: colorScheme.onSurface,
+        //     size: 30,
+        //   ),
+        //   onPressed: () => Navigator.maybePop(context),
+        // ),
         title: Text(
           "Inbox",
           style: textTheme.headlineMedium!.copyWith(
@@ -156,9 +113,26 @@ class _InboxPageState extends State<InboxPage> {
             children: [
               ...active.map((o) => _InboxOrderTile(order: o, isActive: true)),
               if (past.isNotEmpty)
-                _buildPastChatsHeader(context, colorScheme, textTheme),
-              if (_pastExpanded)
-                ...past.map((o) => _InboxOrderTile(order: o, isActive: false)),
+                ExpansionTile(
+                  initiallyExpanded: true,
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 20),
+                  childrenPadding: EdgeInsets.zero,
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  iconColor: colorScheme.onSurface,
+                  collapsedIconColor: colorScheme.onSurface,
+                  title: Text(
+                    "Past Chats",
+                    style: textTheme.titleMedium!.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  children: past
+                      .map((o) => _InboxOrderTile(order: o, isActive: false))
+                      .toList(),
+                ),
             ],
           );
         },
