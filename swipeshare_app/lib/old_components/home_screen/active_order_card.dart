@@ -84,7 +84,7 @@ class ActiveOrderCard extends StatelessWidget {
                       isCancelled
                           ? 'Cancelled'
                           : orderData.displayTime != null
-                          ? "${TimeFormatter.formatTimeOfDayString(orderData.displayTime!)}    ${TimeFormatter.formatToMMDD(orderData.transactionDate)} "
+                          ? "${TimeFormatter.formatTimeOfDay(orderData.displayTime!)}    ${TimeFormatter.formatToMMDD(orderData.transactionDate)} "
                           : "${TimeFormatter.formatToMMDD(orderData.transactionDate)}, TBD",
                       style: GreyHeaderStyle,
                     ),

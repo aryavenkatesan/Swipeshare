@@ -45,3 +45,6 @@ swipeshare_app/ios/Runner/GoogleService-Info.plist
 **/key.properties
 **/*.keystore
 **/*.jks
+
+
+.CLAUDE.md

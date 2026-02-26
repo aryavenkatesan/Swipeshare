@@ -254,7 +254,7 @@ class _ChatPageState extends State<ChatPage> {
             children: [
               // Main message
               Text(
-                "${proposal.senderName} proposes this time: ${TimeFormatter.formatTimeOfDayString(TimeFormatter.productionToString(proposal.proposedTime))}",
+                "${proposal.senderName} proposes this time: ${TimeFormatter.formatTimeOfDay(TimeFormatter.productionToString(proposal.proposedTime))}",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.blueGrey,
