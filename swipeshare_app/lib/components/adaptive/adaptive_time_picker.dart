@@ -105,6 +105,100 @@ class AdaptiveTimePicker {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Date picker
+  // ---------------------------------------------------------------------------
+
+  /// Shows a platform-appropriate date picker dialog.
+  ///
+  /// [initialDate] must be >= [firstDate]. Callers are responsible for
+  /// clamping before passing (e.g. use today when the stored date is past).
+  /// Returns the selected [DateTime] (time zeroed to midnight), or null if
+  /// the user cancelled.
+  static Future<DateTime?> showAdaptiveDatePicker({
+    required BuildContext context,
+    required DateTime initialDate,
+    required DateTime firstDate,
+    required DateTime lastDate,
+  }) async {
+    assert(!initialDate.isBefore(firstDate),
+        'initialDate must be >= firstDate');
+    if (useCupertino) {
+      return _showCupertinoDatePicker(
+        context: context,
+        initialDate: initialDate,
+        firstDate: firstDate,
+        lastDate: lastDate,
+      );
+    } else {
+      return _showMaterialDatePicker(
+        context: context,
+        initialDate: initialDate,
+        firstDate: firstDate,
+        lastDate: lastDate,
+      );
+    }
+  }
+
+  static Future<DateTime?> _showCupertinoDatePicker({
+    required BuildContext context,
+    required DateTime initialDate,
+    required DateTime firstDate,
+    required DateTime lastDate,
+  }) async {
+    DateTime picked = initialDate;
+
+    return showCupertinoModalPopup<DateTime>(
+      context: context,
+      builder: (ctx) => Container(
+        height: 300,
+        color: CupertinoColors.systemBackground.resolveFrom(ctx),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CupertinoButton(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.of(ctx).pop(null),
+                ),
+                CupertinoButton(
+                  child: const Text('Done'),
+                  onPressed: () => Navigator.of(ctx).pop(picked),
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: initialDate,
+                minimumDate: firstDate,
+                maximumDate: lastDate,
+                onDateTimeChanged: (dt) => picked = dt,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Future<DateTime?> _showMaterialDatePicker({
+    required BuildContext context,
+    required DateTime initialDate,
+    required DateTime firstDate,
+    required DateTime lastDate,
+  }) {
+    return showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+
   /// Builds a Material theme for time pickers that matches the app's design
   static ThemeData buildMaterialTimePickerTheme() {
     return ThemeData.light().copyWith(
