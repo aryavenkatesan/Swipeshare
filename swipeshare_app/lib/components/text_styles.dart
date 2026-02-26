@@ -49,7 +49,7 @@ const TextTheme swipeshareTextTheme = TextTheme(
   titleMedium: TextStyle(
     fontFamily: lexend,
     fontWeight: FontWeight.w500,
-    fontSize: 20,
+    fontSize: 28,
     height: 34 / 20,
     letterSpacing: 0.38,
     color: SwipeshareColors.onBackground,
