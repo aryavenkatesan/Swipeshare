@@ -75,13 +75,16 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: Colors.black, size: 30),
+          icon: Icon(Icons.chevron_left, color: colorScheme.onSurface, size: 30),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -92,31 +95,11 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // // --- Logo clipped inside grey circle ---
-              // Container(
-              //   width: 120,
-              //   height: 120,
-              //   decoration: const BoxDecoration(
-              //     color: Color(0xFFD9D9D9),
-              //     shape: BoxShape.circle,
-              //   ),
-              //   clipBehavior: Clip.antiAlias,
-              //   child: Image.asset(
-              //     'assets/logo.png',
-              //     width: 120,
-              //     height: 120,
-              //     fit: BoxFit.cover,
-              //   ),
-              // ),
-              // const SizedBox(height: 16),
-
               // --- Title ---
-              const Text(
+              Text(
                 "Set Password",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5C4DB7),
+                style: textTheme.headlineMedium!.copyWith(
+                  color: colorScheme.primary,
                 ),
               ),
 
@@ -124,7 +107,9 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
 
               Text(
                 "Please enter and confirm your new password below.",
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
+                style: textTheme.bodyMedium!.copyWith(
+                  color: Colors.grey.shade600,
+                ),
                 textAlign: TextAlign.center,
               ),
 
@@ -136,21 +121,21 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
                 obscureText: _isPasswordObscured,
                 decoration: InputDecoration(
                   hintText: "New Password",
-                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  hintStyle: TextStyle(color: colorScheme.outlineVariant),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade400),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF5C4DB7),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
                       width: 1.5,
                     ),
                   ),
@@ -178,21 +163,21 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
                 obscureText: _isConfirmPasswordObscured,
                 decoration: InputDecoration(
                   hintText: "Confirm Password",
-                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  hintStyle: TextStyle(color: colorScheme.outlineVariant),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade400),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF5C4DB7),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
                       width: 1.5,
                     ),
                   ),
@@ -222,27 +207,24 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleReset,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5C4DB7),
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(
-                      0xFF5C4DB7,
-                    ).withValues(alpha: 0.6),
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    disabledBackgroundColor: colorScheme.primary.withValues(
+                      alpha: 0.6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 0,
-                    textStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    textStyle: textTheme.labelLarge,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                           ),
                         )
                       : const Text("Reset Password"),

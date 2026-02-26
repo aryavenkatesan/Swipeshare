@@ -97,20 +97,21 @@ class _RegisterPageState extends State<RegisterPage> {
   InputDecoration _outlinedInputDecoration({
     required String hintText,
     Widget? suffixIcon,
+    required ColorScheme colorScheme,
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(color: Colors.grey.shade400),
+      hintStyle: TextStyle(color: colorScheme.outlineVariant),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colorScheme.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.grey.shade400),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF5C4DB7), width: 1.5),
+        borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
       ),
       suffixIcon: suffixIcon,
     );
@@ -118,8 +119,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       body: Center(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -131,8 +135,8 @@ class _RegisterPageState extends State<RegisterPage> {
               Container(
                 width: 120,
                 height: 120,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFD9D9D9),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
                   shape: BoxShape.circle,
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -147,12 +151,10 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 16),
 
               // --- "Sign Up" title ---
-              const Text(
+              Text(
                 "Sign Up",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5C4DB7),
+                style: textTheme.titleLarge!.copyWith(
+                  color: colorScheme.primary,
                 ),
               ),
 
@@ -168,6 +170,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       autofillHints: const [AutofillHints.name],
                       decoration: _outlinedInputDecoration(
                         hintText: "First Name",
+                        colorScheme: colorScheme,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -179,7 +182,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       textCapitalization: TextCapitalization.none,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
-                      decoration: _outlinedInputDecoration(hintText: "Email"),
+                      decoration: _outlinedInputDecoration(
+                        hintText: "Email",
+                        colorScheme: colorScheme,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -192,6 +198,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       autofillHints: const [AutofillHints.newPassword],
                       decoration: _outlinedInputDecoration(
                         hintText: "Password",
+                        colorScheme: colorScheme,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isPasswordObscured
@@ -219,6 +226,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       onEditingComplete: () => signUp(),
                       decoration: _outlinedInputDecoration(
                         hintText: "Confirm Password",
+                        colorScheme: colorScheme,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isConfirmPasswordObscured
@@ -251,16 +259,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: ElevatedButton(
                   onPressed: () => signUp(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5C4DB7),
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 0,
-                    textStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    textStyle: textTheme.labelLarge,
                   ),
                   child: const Text("Register"),
                 ),
@@ -278,10 +283,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   GestureDetector(
                     onTap: widget.onTap,
-                    child: const Text(
+                    child: Text(
                       "Log in",
                       style: TextStyle(
-                        color: Color(0xFF5C4DB7),
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),

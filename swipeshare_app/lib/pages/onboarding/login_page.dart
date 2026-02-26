@@ -55,8 +55,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       body: Center(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -68,8 +71,8 @@ class _LoginPageState extends State<LoginPage> {
               Container(
                 width: 120,
                 height: 120,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFD9D9D9),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
                   shape: BoxShape.circle,
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -84,12 +87,10 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 16),
 
               // --- "Login" title ---
-              const Text(
+              Text(
                 "Login",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5C4DB7),
+                style: textTheme.titleLarge!.copyWith(
+                  color: colorScheme.primary,
                 ),
               ),
 
@@ -102,21 +103,21 @@ class _LoginPageState extends State<LoginPage> {
                 textCapitalization: TextCapitalization.none,
                 decoration: InputDecoration(
                   hintText: "Email",
-                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  hintStyle: TextStyle(color: colorScheme.outlineVariant),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade400),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF5C4DB7),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
                       width: 1.5,
                     ),
                   ),
@@ -131,21 +132,21 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: _isPasswordObscured,
                 decoration: InputDecoration(
                   hintText: "Password",
-                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                  hintStyle: TextStyle(color: colorScheme.outlineVariant),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 18,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade400),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF5C4DB7),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
                       width: 1.5,
                     ),
                   ),
@@ -186,8 +187,8 @@ class _LoginPageState extends State<LoginPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          side: BorderSide(color: Colors.grey.shade500),
-                          activeColor: const Color(0xFF5C4DB7),
+                          side: BorderSide(color: colorScheme.outlineVariant),
+                          activeColor: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -211,9 +212,9 @@ class _LoginPageState extends State<LoginPage> {
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text(
+                    child: Text(
                       "Forgot password?",
-                      style: TextStyle(color: Color(0xFF5C4DB7), fontSize: 14),
+                      style: TextStyle(color: colorScheme.primary, fontSize: 14),
                     ),
                   ),
                 ],
@@ -230,16 +231,13 @@ class _LoginPageState extends State<LoginPage> {
                     signIn();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5C4DB7),
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 0,
-                    textStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    textStyle: textTheme.labelLarge,
                   ),
                   child: const Text("Log in"),
                 ),
@@ -257,10 +255,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   GestureDetector(
                     onTap: widget.onTap,
-                    child: const Text(
+                    child: Text(
                       "Sign up",
                       style: TextStyle(
-                        color: Color(0xFF5C4DB7),
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
