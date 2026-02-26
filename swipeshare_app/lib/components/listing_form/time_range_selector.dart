@@ -20,8 +20,23 @@ class TimeRangeSelector extends StatelessWidget {
     required this.onEndChanged,
   });
 
+  static int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  bool get _hasRangeError =>
+      timeStart != null &&
+      timeEnd != null &&
+      _toMinutes(timeStart!) >= _toMinutes(timeEnd!);
+
+  TimeOfDay _initialEndTime() {
+    if (timeStart == null) return timeEnd ?? const TimeOfDay(hour: 17, minute: 0);
+    if (timeEnd != null && _toMinutes(timeEnd!) > _toMinutes(timeStart!)) return timeEnd!;
+    return timeStart!;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final rangeError = _hasRangeError;
+
     return Row(
       children: [
         Expanded(
@@ -40,9 +55,10 @@ class TimeRangeSelector extends StatelessWidget {
           child: _TimeTile(
             label: 'End at',
             time: timeEnd,
+            hasError: rangeError,
             onTap: () => _pick(
               context,
-              timeEnd ?? const TimeOfDay(hour: 17, minute: 0),
+              _initialEndTime(),
               onEndChanged,
             ),
           ),
@@ -118,39 +134,47 @@ class _TimeTile extends StatelessWidget {
   final String label;
   final TimeOfDay? time;
   final VoidCallback onTap;
+  final bool hasError;
 
   const _TimeTile({
     required this.label,
     required this.time,
     required this.onTap,
+    this.hasError = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).colorScheme;
+    final iconColor = hasError ? colors.error : colors.onSurface;
 
     return ListingFieldCard(
       onTap: onTap,
       child: Row(
         children: [
-          Icon(Icons.access_time, size: 24, color: colors.onSurface),
+          Icon(Icons.access_time, size: 24, color: iconColor),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(label, style: textTheme.bodyMedium),
+                Text(
+                  label,
+                  style: textTheme.bodyMedium
+                      ?.copyWith(color: hasError ? colors.error : null),
+                ),
                 if (time != null)
                   Text(
                     TimeFormatter.formatTOD(time!),
-                    style: textTheme.bodyLarge,
+                    style: textTheme.bodyLarge
+                        ?.copyWith(color: hasError ? colors.error : null),
                   ),
               ],
             ),
           ),
-          Icon(Icons.keyboard_arrow_down, size: 24, color: colors.onSurface),
+          Icon(Icons.keyboard_arrow_down, size: 24, color: iconColor),
         ],
       ),
     );

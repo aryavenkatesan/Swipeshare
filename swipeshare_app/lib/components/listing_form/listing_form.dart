@@ -63,12 +63,20 @@ class _ListingFormState extends State<ListingForm> {
   int _price = 5;
   List<String> _paymentTypes = [];
 
+  bool get _isValidTimeRange {
+    if (_timeStart == null || _timeEnd == null) return true;
+    final s = _timeStart!.hour * 60 + _timeStart!.minute;
+    final e = _timeEnd!.hour * 60 + _timeEnd!.minute;
+    return e > s;
+  }
+
   bool get _isComplete =>
       _diningHall != null &&
       _transactionDate != null &&
       _timeStart != null &&
       _timeEnd != null &&
-      _paymentTypes.isNotEmpty;
+      _paymentTypes.isNotEmpty &&
+      _isValidTimeRange;
 
   @override
   void initState() {
