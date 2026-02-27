@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/old_components/adaptive/adaptive_dialog.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/listing_service.dart';

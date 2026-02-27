@@ -47,4 +47,9 @@ class TimeFormatter {
     // Combine into the desired format
     return 'TimeOfDay($hour:$minute)';
   }
+
+  /// Formats a [TimeOfDay] directly to "h:mm a" (e.g. "1:00 PM").
+  static String formatTOD(TimeOfDay time) {
+    return formatTimeOfDay(productionToString(time));
+  }
 }

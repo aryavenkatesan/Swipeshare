@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/old_components/adaptive/adaptive_time_picker.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/old_components/star_container.dart';

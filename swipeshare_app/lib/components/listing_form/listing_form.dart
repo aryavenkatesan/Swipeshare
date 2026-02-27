@@ -34,6 +34,10 @@ class ListingForm extends StatefulWidget {
   /// Pre-fills all fields when editing an existing listing.
   final Listing? initialListing;
 
+  /// Seeds the payment types when creating a new listing (e.g. from user profile).
+  /// Ignored when [initialListing] is provided.
+  final List<String>? initialPaymentTypes;
+
   /// Called when the user successfully submits the form.
   final void Function(ListingFormData data) onSubmit;
 
@@ -46,6 +50,7 @@ class ListingForm extends StatefulWidget {
   const ListingForm({
     super.key,
     this.initialListing,
+    this.initialPaymentTypes,
     required this.onSubmit,
     this.submitLabel = 'Save',
     this.isLoading = false,
@@ -75,12 +80,17 @@ class _ListingFormState extends State<ListingForm> {
     super.initState();
     final l = widget.initialListing;
     if (l != null) {
+      // Edit mode: pre-fill everything from the existing listing.
       _diningHall = l.diningHall;
       _transactionDate = l.transactionDate;
       _timeStart = l.timeStart;
       _timeEnd = l.timeEnd;
       _price = l.price?.round() ?? 5;
       _paymentTypes = List.from(l.paymentTypes);
+    } else {
+      // Create mode: default date to today; seed payment types from profile if provided.
+      _transactionDate = DateTime.now();
+      _paymentTypes = List.from(widget.initialPaymentTypes ?? []);
     }
   }
 

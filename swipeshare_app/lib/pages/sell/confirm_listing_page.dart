@@ -1,27 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/listing_form/listing_form.dart';
 import 'package:swipeshare_app/components/page_app_bar.dart';
 import 'package:swipeshare_app/components/sell_listing_preview_card.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
 class ConfirmListingPage extends StatelessWidget {
-  final String location;
-  final DateTime date;
-  final TimeOfDay startTime;
-  final TimeOfDay endTime;
-  final double price;
-  final List<String> paymentOptions;
+  final ListingFormData data;
 
-  const ConfirmListingPage({
-    super.key,
-    required this.location,
-    required this.date,
-    required this.startTime,
-    required this.endTime,
-    required this.price,
-    required this.paymentOptions,
-  });
+  const ConfirmListingPage({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +31,12 @@ class ConfirmListingPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   SellListingPreviewCard(
-                    diningHall: location,
-                    date: date,
-                    timeStart: startTime,
-                    timeEnd: endTime,
-                    paymentTypes: paymentOptions,
-                    price: price,
+                    diningHall: data.diningHall,
+                    date: data.transactionDate,
+                    timeStart: data.timeStart,
+                    timeEnd: data.timeEnd,
+                    paymentTypes: data.paymentTypes,
+                    price: data.price,
                   ),
                 ],
               ),
@@ -68,11 +56,11 @@ class ConfirmListingPage extends StatelessWidget {
 
   Future<void> _postListing(BuildContext context) async {
     ListingService.instance.postListing(
-      location,
-      startTime,
-      endTime,
-      date,
-      paymentOptions,
+      data.diningHall,
+      data.timeStart,
+      data.timeEnd,
+      data.transactionDate,
+      data.paymentTypes,
     );
     await safeVibrate(HapticsType.success);
     if (!context.mounted) return;
@@ -84,14 +72,14 @@ class ConfirmListingPage extends StatelessWidget {
   void _showConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Successfully Placed Listing!'),
         content: const Text(
           'Check back again soon once someone contacts you for the order!',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('OK'),
           ),
         ],

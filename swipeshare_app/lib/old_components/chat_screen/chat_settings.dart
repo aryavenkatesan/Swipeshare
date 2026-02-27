@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:swipeshare_app/old_components/adaptive/adaptive_dialog.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
