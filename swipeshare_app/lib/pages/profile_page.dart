@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/profile/profile_page_actions.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -9,16 +10,14 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        toolbarHeight: 70,
         backgroundColor: Colors.white,
         elevation: 0,
-        // This was part of the Figma, but do we need it?
-        // leading: IconButton(
-        //   icon: const Icon(Icons.chevron_left, color: Colors.black, size: 30),
-        //   onPressed: () {
-        //   },
-        // ),
         centerTitle: true,
-        title: Text("Profile", style: textTheme.displayLarge),
+        title: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text("Profile", style: textTheme.displayLarge),
+        ),
       ),
       body: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -37,30 +36,41 @@ class ProfilePage extends StatelessWidget {
                 _SettingsTile(
                   icon: Icons.notifications_none_rounded,
                   label: "Notifications",
-                  onTap: () {
-                    // TODO
-                  },
+                  onTap: () =>
+                      ProfilePageActions.navigateToNotifications(context),
                 ),
                 _SettingsTile(
                   icon: Icons.password_rounded,
                   label: "Change Password",
-                  onTap: () {
-                    // TODO
-                  },
+                  onTap: () =>
+                      ProfilePageActions.navigateToChangePassword(context),
                 ),
                 _SettingsTile(
                   icon: Icons.account_balance_wallet_outlined,
                   label: "Update Payment Options",
-                  onTap: () {
-                    // TODO
-                  },
+                  onTap: () =>
+                      ProfilePageActions.navigateToUpdatePayment(context),
                 ),
                 _SettingsTile(
                   icon: Icons.chat_bubble_outline_rounded,
                   label: "Share Feedback",
-                  onTap: () {
-                    // TODO
-                  },
+                  onTap: () => ProfilePageActions.navigateToFeedback(context),
+                  showDivider: false,
+                ),
+              ],
+            ),
+
+             const SizedBox(height: 28),
+
+            // --- Replay Tutorial Section ---
+            Text("Replay Tutorial", style: textTheme.titleMedium),
+            const SizedBox(height: 12),
+            _SectionCard(
+              children: [
+                _SettingsTile(
+                  icon: Icons.play_arrow_outlined,
+                  label: "Swipeology 101",
+                  onTap: () => ProfilePageActions.navigateToTutorial(context),
                   showDivider: false,
                 ),
               ],
@@ -76,38 +86,18 @@ class ProfilePage extends StatelessWidget {
                 _SettingsTile(
                   icon: Icons.logout_rounded,
                   label: "Sign Out",
-                  onTap: () {
-                    // TODO
-                  },
+                  onTap: () => ProfilePageActions.signOut(context),
                 ),
                 _SettingsTile(
                   icon: Icons.delete_outline_rounded,
                   label: "Delete Account",
-                  onTap: () {
-                    // TODO
-                  },
+                  onTap: () =>
+                      ProfilePageActions.navigateToDeleteAccount(context),
                   showDivider: false,
                 ),
               ],
             ),
 
-            const SizedBox(height: 28),
-
-            // --- Replay Tutorial Section ---
-            Text("Replay Tutorial", style: textTheme.titleMedium),
-            const SizedBox(height: 12),
-            _SectionCard(
-              children: [
-                _SettingsTile(
-                  icon: Icons.play_arrow_outlined,
-                  label: "Swipeology 101",
-                  onTap: () {
-                    // TODO
-                  },
-                  showDivider: false,
-                ),
-              ],
-            ),
 
             const SizedBox(height: 32),
 
@@ -116,9 +106,7 @@ class ProfilePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () {
-                    // TODO
-                  },
+                  onPressed: () => ProfilePageActions.launchPrivacyPolicy(),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.grey,
                     textStyle: const TextStyle(fontSize: 13),
@@ -133,9 +121,7 @@ class ProfilePage extends StatelessWidget {
                   style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
                 TextButton(
-                  onPressed: () {
-                    // TODO
-                  },
+                  onPressed: () => ProfilePageActions.launchTermsOfService(),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.grey,
                     textStyle: const TextStyle(fontSize: 13),

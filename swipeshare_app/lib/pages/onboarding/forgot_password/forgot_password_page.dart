@@ -8,7 +8,9 @@ import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+  final bool isChangePassword;
+
+  const ForgotPasswordPage({super.key, this.isChangePassword = false});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
@@ -114,7 +116,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left, color: colorScheme.onSurface, size: 30),
+          icon: Icon(
+            Icons.chevron_left,
+            color: colorScheme.onSurface,
+            size: 30,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -125,9 +131,28 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (widget.isChangePassword)
+              
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 24),
+              
               // --- Title ---
               Text(
-                "Forgot Password?",
+                widget.isChangePassword ? "Change Password" : "Forgot Password?",
                 style: textTheme.headlineMedium!.copyWith(
                   color: colorScheme.primary,
                 ),
@@ -246,7 +271,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       : Text(!_isCodeShowing ? "Send Code" : "Verify Code"),
                 ),
               ),
-              SizedBox(height: 48),
+              SizedBox(height: widget.isChangePassword ? 180 : 140),
             ],
           ),
         ),
