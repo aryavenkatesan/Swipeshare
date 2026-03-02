@@ -8,35 +8,32 @@ import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+  final bool isChangePassword;
+
+  const ForgotPasswordPage({super.key, this.isChangePassword = false});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  // Logic states
   bool _isCodeShowing = false;
   bool _isLoading = false;
 
-  // Controllers
   final emailController = TextEditingController();
   final codeController = TextEditingController();
 
-  // Service instance
   final EmailCodeVerificationService _verificationService =
       EmailCodeVerificationService();
 
   @override
   void initState() {
     super.initState();
-    // FIX: Listener to hide the code field if the user changes their email
     emailController.addListener(_onEmailChanged);
   }
 
   @override
   void dispose() {
-    // FIX: Clean up controllers to prevent memory leaks
     emailController.removeListener(_onEmailChanged);
     emailController.dispose();
     codeController.dispose();
@@ -51,8 +48,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       });
     }
   }
-
-  // Inside _ForgotPasswordPageState in forgot_password_page.dart
 
   Future<void> handleAction() async {
     final email = emailController.text.trim();
@@ -77,7 +72,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           throw Exception("Please enter the full 6-digit code.");
         }
 
-        // FIX: Call the service once and get the token
         String? token = await _verificationService.verifyForgotPasswordCode(
           email: email,
           code: code,
@@ -87,7 +81,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           await safeVibrate(HapticsType.success);
 
           if (mounted) {
-            // Navigate to the final reset page with the email and token
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -114,166 +107,174 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // Gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFB8E1F5),
-                  Color(0xFFE8F2FF),
-                  Color(0xFFE8F2FF),
-                  Color(0xFFC4C1ED),
-                ],
-                stops: [0.0, 0.3, 0.75, 1.0],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.chevron_left,
+            color: colorScheme.onSurface,
+            size: 30,
           ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.isChangePassword)
+              
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 24),
+              
+              // --- Title ---
+              Text(
+                widget.isChangePassword ? "Change Password" : "Forgot Password?",
+                style: textTheme.headlineMedium!.copyWith(
+                  color: colorScheme.primary,
+                ),
+              ),
 
-          Center(
-            child: SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.symmetric(vertical: 40.0),
-              child: Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                    child: Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            "Forgot Password?",
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.left,
-                          ),
-                          const SizedBox(height: 24),
+              const SizedBox(height: 12),
 
-                          const Text(
-                            "We'll send a verification code to your email.",
-                            textAlign: TextAlign.left,
-                          ),
-                          const SizedBox(height: 16),
+              Text(
+                "We'll send a verification code to your email.",
+                style: textTheme.bodyMedium!.copyWith(
+                  color: Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+              ),
 
-                          TextField(
-                            controller: emailController,
-                            obscureText: false,
-                            keyboardType: TextInputType.emailAddress,
-                            textCapitalization: TextCapitalization.none,
-                            decoration: InputDecoration(
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                              focusedBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 30, 88, 181),
-                                ),
-                              ),
-                              fillColor: Colors.transparent,
-                              filled: true,
-                              hintText: "Student Email",
-                              hintStyle: const TextStyle(color: Colors.grey),
-                            ),
-                          ),
+              const SizedBox(height: 16),
 
-                          if (_isCodeShowing)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: 32.0,
-                                left: 16.0,
-                                right: 16.0,
-                              ),
-                              child: TextField(
-                                controller: codeController,
-                                keyboardType: TextInputType.number,
-                                textAlign: TextAlign.center,
-                                maxLength: 6,
-                                textInputAction: TextInputAction.done,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  letterSpacing: 16,
-                                ),
-                                decoration: InputDecoration(
-                                  counterText: "",
-                                  hintText: "------",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 24,
-                                    letterSpacing: 16,
-                                    color: Colors.grey,
-                                  ),
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.grey.shade400,
-                                    ),
-                                  ),
-                                  focusedBorder: const UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Color.fromARGB(255, 30, 88, 181),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+              const SizedBox(height: 32),
 
-                          const SizedBox(height: 36),
-
-                          ElevatedButton(
-                            onPressed: _isLoading ? null : handleAction,
-                            child: Center(
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : Text(
-                                      !_isCodeShowing
-                                          ? "Send Code"
-                                          : "Verify Code",
-                                    ),
-                            ),
-                          ),
-                        ],
-                      ),
+              // --- Email field ---
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
+                decoration: InputDecoration(
+                  hintText: "Email",
+                  hintStyle: TextStyle(color: colorScheme.outlineVariant),
+                  filled: true,
+                  fillColor: colorScheme.surface,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 1.5,
                     ),
                   ),
                 ),
               ),
-            ),
+
+              // --- Code field (conditionally shown) ---
+              if (_isCodeShowing) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: codeController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  maxLength: 6,
+                  textInputAction: TextInputAction.done,
+                  style: const TextStyle(fontSize: 24, letterSpacing: 16),
+                  decoration: InputDecoration(
+                    counterText: "",
+                    hintText: "------",
+                    hintStyle: const TextStyle(
+                      fontSize: 24,
+                      letterSpacing: 16,
+                      color: Colors.grey,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.surface,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: colorScheme.outlineVariant),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 32),
+
+              // --- Action button ---
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : handleAction,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    disabledBackgroundColor: colorScheme.primary.withValues(
+                      alpha: 0.6,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                    textStyle: textTheme.labelLarge,
+                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colorScheme.onPrimary,
+                          ),
+                        )
+                      : Text(!_isCodeShowing ? "Send Code" : "Verify Code"),
+                ),
+              ),
+              SizedBox(height: widget.isChangePassword ? 180 : 140),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

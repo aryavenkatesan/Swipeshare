@@ -56,6 +56,17 @@ class UserService {
     List<String> paymentTypes,
   ) async => await updateUserData(uid, {'payment_types': paymentTypes});
 
+  Future<void> updateNotificationPreferences(
+    String uid, {
+    required bool orderReminders,
+    required bool messages,
+    required bool offersFromBuyers,
+  }) async => await updateUserData(uid, {
+    'notif_order_reminders': orderReminders,
+    'notif_messages': messages,
+    'notif_offers_from_buyers': offersFromBuyers,
+  });
+
   Future<void> blockUser(MealOrder orderData) async {
     final currentUser = await getCurrentUser();
     final String otherUserId = orderData.buyerId != currentUser.id
