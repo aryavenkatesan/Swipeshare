@@ -1,5 +1,7 @@
 # Swipeshare
 
+Arya Venkatesan, Vidur Shah, Nicolas Asanov, Cindy Nguyen
+
 Swipeshare is a meal-swipe sharing app designed to reduce wasted dining swipes and help students who need an extra meal get one quickly and safely.
 
 ## Problem Statement
