@@ -17,23 +17,18 @@ class ListingFieldCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    final container = Container(
-      height: height,
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.outline),
-        borderRadius: BorderRadius.circular(12),
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: height,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16, right: 9, top: 4, bottom: 4),
+            child: child,
+          ),
+        ),
       ),
-      padding: const EdgeInsets.only(left: 16, right: 9, top: 4, bottom: 4),
-      child: child,
-    );
-
-    if (onTap == null) return container;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: container,
     );
   }
 }

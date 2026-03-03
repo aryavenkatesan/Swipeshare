@@ -5,6 +5,7 @@ import 'package:swipeshare_app/components/listing_form/payment_options_field.dar
 import 'package:swipeshare_app/components/listing_form/price_stepper_field.dart';
 import 'package:swipeshare_app/components/listing_form/time_range_selector.dart';
 import 'package:swipeshare_app/models/listing.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 
 /// Holds the validated values collected by [ListingForm].
 class ListingFormData {
@@ -68,12 +69,20 @@ class _ListingFormState extends State<ListingForm> {
   int _price = 5;
   List<String> _paymentTypes = [];
 
+  bool get _isValidTimeRange {
+    if (_timeStart == null || _timeEnd == null) return true;
+    final s = _timeStart!.hour * 60 + _timeStart!.minute;
+    final e = _timeEnd!.hour * 60 + _timeEnd!.minute;
+    return e > s;
+  }
+
   bool get _isComplete =>
       _diningHall != null &&
       _transactionDate != null &&
       _timeStart != null &&
       _timeEnd != null &&
-      _paymentTypes.isNotEmpty;
+      _paymentTypes.isNotEmpty &&
+      _isValidTimeRange;
 
   @override
   void initState() {
@@ -90,8 +99,14 @@ class _ListingFormState extends State<ListingForm> {
     } else {
       // Create mode: default date to today; seed payment types from profile if provided.
       _transactionDate = DateTime.now();
-      _paymentTypes = List.from(widget.initialPaymentTypes ?? []);
+      _loadDefaultPaymentTypes();
     }
+  }
+
+  Future<void> _loadDefaultPaymentTypes() async {
+    final user = await UserService.instance.getCurrentUser();
+    if (!mounted) return;
+    setState(() => _paymentTypes = List.from(user.paymentTypes));
   }
 
   void _submit() {

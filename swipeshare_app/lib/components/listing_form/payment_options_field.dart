@@ -36,15 +36,10 @@ class _PaymentOptionsFieldState extends State<PaymentOptionsField> {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.outline),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(11), // 1px inset to sit inside border
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Header (always visible)
           GestureDetector(
@@ -116,7 +111,6 @@ class _PaymentOptionsFieldState extends State<PaymentOptionsField> {
                 : const SizedBox.shrink(),
           ),
         ],
-        ),
       ),
     );
   }
