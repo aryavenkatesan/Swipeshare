@@ -18,15 +18,11 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool rememberMe = false;
-  // controls whether the password is obscured
   bool _isPasswordObscured = true;
-  //text controller
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  //sign in user
   void signIn() async {
-    // Validate that email and password are not empty
     if (emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty) {
       await safeVibrate(HapticsType.error);
@@ -38,7 +34,6 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    //get the auth service
     final authService = Provider.of<AuthServices>(context, listen: false);
 
     try {
@@ -60,211 +55,220 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // This property is true by default, which is what we want
-      // when using a SingleChildScrollView.
-      // resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // Gradient background (remains fixed)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFB8E1F5), // Lightened from 0xFF98D2EB
-                  Color(0xFFE8F2FF), // Lightened from 0xFFDCEAFF
-                  Color(0xFFE8F2FF), // Lightened from 0xFFDCEAFF
-                  Color(0xFFC4C1ED),
-                ],
-                stops: [0.0, 0.3, 0.75, 1.0],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-          // This makes the card scrollable when the keyboard appears
-          Center(
-            child: SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              //scrollview is important so when the onscreen keyboard comes up, the app doesn't blow up
-              padding: const EdgeInsets.symmetric(vertical: 40.0),
-              child: Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                    child: Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // child: Image.asset(
-                              Image.asset(
-                                'assets/logo.png',
-                                width: 60,
-                                height: 60,
-                              ),
-                              // SizedBox(width: 8),
-                              // Text("Swipeshare", style: SubHeaderStyle),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            "Login",
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            "Enter your email and password to log in.",
-                            style: TextStyle(color: Colors.black87),
-                            textAlign: TextAlign.center, // Good for aesthetics
-                          ),
-                          const SizedBox(height: 24),
-                          TextField(
-                            controller: emailController,
-                            obscureText: false,
-                            keyboardType: TextInputType.emailAddress,
-                            textCapitalization: TextCapitalization.none,
-                            decoration: InputDecoration(
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                              focusedBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 30, 88, 181),
-                                ),
-                              ),
-                              fillColor: const Color.fromARGB(0, 3, 168, 244),
-                              filled: true,
-                              hintText: "Student Email",
-                              hintStyle: const TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: passwordController,
-                            obscureText: _isPasswordObscured,
-                            decoration: InputDecoration(
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                              focusedBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 30, 88, 181),
-                                ), // Highlight when focused
-                              ),
-                              // --- End of UI Change ---
-                              fillColor: const Color.fromARGB(0, 3, 168, 244),
-                              filled: true,
-                              hintText: "Password",
-                              hintStyle: const TextStyle(color: Colors.grey),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isPasswordObscured
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordObscured = !_isPasswordObscured;
-                                  });
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Checkbox(
-                                    value: rememberMe,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        rememberMe = value ?? false;
-                                      });
-                                    },
-                                  ),
-                                  const Text("Remember me"),
-                                ],
-                              ),
-                              Flexible(
-                                // Using Flexible is better here
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ForgotPasswordPage(),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text(
-                                    "Forgot Password?",
-                                    textAlign: TextAlign.end,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () async {
-                              signIn();
-                            },
-                            child: const Center(child: Text("Log In")),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            "Or",
-                            style: TextStyle(color: Colors.black45),
-                          ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: widget.onTap,
-                            child: const Text(
-                              "Register Now",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: Center(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // --- Logo clipped inside grey circle ---
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // --- "Login" title ---
+              Text(
+                "Login",
+                style: textTheme.titleLarge!.copyWith(
+                  color: colorScheme.primary,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // --- Email field ---
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
+                decoration: InputDecoration(
+                  hintText: "Email",
+                  hintStyle: TextStyle(color: colorScheme.outlineVariant),
+                  filled: true,
+                  fillColor: colorScheme.surface,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 1.5,
                     ),
                   ),
                 ),
               ),
-            ),
+
+              const SizedBox(height: 16),
+
+              // --- Password field ---
+              TextField(
+                controller: passwordController,
+                obscureText: _isPasswordObscured,
+                decoration: InputDecoration(
+                  hintText: "Password",
+                  hintStyle: TextStyle(color: colorScheme.outlineVariant),
+                  filled: true,
+                  fillColor: colorScheme.surface,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 1.5,
+                    ),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordObscured
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: Colors.grey.shade600,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordObscured = !_isPasswordObscured;
+                      });
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              // --- Remember me + Forgot password row ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: rememberMe,
+                          onChanged: (value) {
+                            setState(() {
+                              rememberMe = value ?? false;
+                            });
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          side: BorderSide(color: colorScheme.outlineVariant),
+                          activeColor: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Remember me",
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordPage(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      "Forgot password?",
+                      style: TextStyle(color: colorScheme.primary, fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // --- Log in button ---
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    signIn();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                    textStyle: textTheme.labelLarge,
+                  ),
+                  child: const Text("Log in"),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // --- "or Sign up" ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "or ",
+                    style: TextStyle(color: Colors.black54, fontSize: 15),
+                  ),
+                  GestureDetector(
+                    onTap: widget.onTap,
+                    child: Text(
+                      "Sign up",
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

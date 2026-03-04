@@ -47,6 +47,9 @@ class UserModel {
   final UserStatus status;
   final double moneySaved;
   final double moneyEarned;
+  final bool notifOrderReminders;
+  final bool notifMessages;
+  final bool notifOffersFromBuyers;
 
   UserModel({
     required this.id,
@@ -63,6 +66,9 @@ class UserModel {
     this.status = UserStatus.active,
     this.moneySaved = 0,
     this.moneyEarned = 0,
+    this.notifOrderReminders = true,
+    this.notifMessages = true,
+    this.notifOffersFromBuyers = true,
   });
 
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
@@ -85,6 +91,9 @@ class UserModel {
           : UserStatus.active,
       moneySaved: (data['moneySaved'] ?? 0).toDouble(),
       moneyEarned: (data['moneyEarned'] ?? 0).toDouble(),
+      notifOrderReminders: data['notif_order_reminders'] ?? true,
+      notifMessages: data['notif_messages'] ?? true,
+      notifOffersFromBuyers: data['notif_offers_from_buyers'] ?? true,
     );
   }
 

@@ -110,6 +110,7 @@ class _ChatPageState extends State<ChatPage> {
         forceMaterialTransparency: true,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0.0,
+        toolbarHeight: 72,
         leadingWidth: 130,
         leading: Row(
           mainAxisSize: MainAxisSize.min,
@@ -378,6 +379,22 @@ class _ChatPageState extends State<ChatPage> {
 
   //build message input
   Widget _buildMessageInput() {
+    if (widget.orderData.status != OrderStatus.active) {
+      return Container(
+        // width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        ),
+        child: Text(
+          "This conversation has finished or been cancelled.",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+        ),
+      );
+    }
+
     final double vw = MediaQuery.of(context).size.width;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: vw * 0.01),

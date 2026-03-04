@@ -17,74 +17,62 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  //text controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final nameController = TextEditingController();
   final referralController = TextEditingController();
 
-  // State variables for password visibility
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
 
-  //sign up user
   void signUp() async {
-    // Validate that all required fields are filled out
     if (nameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
       await safeVibrate(HapticsType.error);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(SnackbarMessages.fillAllFields)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(SnackbarMessages.fillAllFields)));
       return;
     }
 
-    // make it unc email only
     if (!emailController.text.trim().toLowerCase().endsWith('unc.edu') ||
         (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
             referralController.text.isNotEmpty)) {
-      // Changed from != ''
       await safeVibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(SnackbarMessages.uncEmailRequired),
-        ),
+        SnackBar(content: Text(SnackbarMessages.uncEmailRequired)),
       );
       return;
     }
 
-    //password matching check
     if (passwordController.text != confirmPasswordController.text) {
       await safeVibrate(HapticsType.error);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(SnackbarMessages.passwordsDontMatch)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(SnackbarMessages.passwordsDontMatch)),
+      );
       return;
     }
 
-    //make sure name isn't too long (18 characters or less)
     if (nameController.text.length > 18) {
       await safeVibrate(HapticsType.error);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(SnackbarMessages.nameToolong)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(SnackbarMessages.nameToolong)));
       return;
     }
 
-    //make sure name is appropriate
     if (ProfanityUtils.hasProfanityWord(nameController.text)) {
       await safeVibrate(HapticsType.error);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(SnackbarMessages.profanityInName)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(SnackbarMessages.profanityInName)));
       return;
     }
 
-    //get auth service
     final authService = Provider.of<AuthServices>(context, listen: false);
 
     try {
@@ -105,280 +93,210 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
+  // --- Reusable input decoration to keep fields consistent ---
+  InputDecoration _outlinedInputDecoration({
+    required String hintText,
+    Widget? suffixIcon,
+    required ColorScheme colorScheme,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(color: colorScheme.outlineVariant),
+      filled: true,
+      fillColor: colorScheme.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+      ),
+      suffixIcon: suffixIcon,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFB8E1F5),
-                  Color(0xFFE8F2FF),
-                  Color(0xFFE8F2FF),
-                  Color(0xFFC4C1ED),
-                ],
-                stops: [0.0, 0.3, 0.75, 1.0],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      backgroundColor: colorScheme.surface,
+      body: Center(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // --- Logo clipped inside grey circle ---
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-          ),
 
-          // Frosted glass card
-          Center(
-            child: SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.symmetric(vertical: 40.0),
-              child: Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-                    child: Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
+              const SizedBox(height: 16),
+
+              // --- "Sign Up" title ---
+              Text(
+                "Sign Up",
+                style: textTheme.titleLarge!.copyWith(
+                  color: colorScheme.primary,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // --- Name Field ---
+              AutofillGroup(
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.name],
+                      decoration: _outlinedInputDecoration(
+                        hintText: "First Name",
+                        colorScheme: colorScheme,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // child: Image.asset(
-                              Image.asset(
-                                'assets/logo.png',
-                                width: 60,
-                                height: 60,
-                              ),
-                              // SizedBox(width: 8),
-                              // Text("Swipeshare", style: SubHeaderStyle),
-                            ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Email Field ---
+                    TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textCapitalization: TextCapitalization.none,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                      decoration: _outlinedInputDecoration(
+                        hintText: "Email",
+                        colorScheme: colorScheme,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Password Field ---
+                    TextField(
+                      controller: passwordController,
+                      obscureText: _isPasswordObscured,
+                      keyboardType: TextInputType.visiblePassword,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.newPassword],
+                      decoration: _outlinedInputDecoration(
+                        hintText: "Password",
+                        colorScheme: colorScheme,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordObscured
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: Colors.grey.shade600,
                           ),
-                          const SizedBox(height: 24),
-                          Center(
-                            child: Column(
-                              children: const [
-                                Text(
-                                  "Sign Up",
-                                  style: TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  "Create an account to continue!",
-                                  style: TextStyle(color: Colors.black87),
-                                ),
-                              ],
-                            ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordObscured = !_isPasswordObscured;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Confirm Password Field ---
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: _isConfirmPasswordObscured,
+                      keyboardType: TextInputType.visiblePassword,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.newPassword],
+                      onEditingComplete: () => signUp(),
+                      decoration: _outlinedInputDecoration(
+                        hintText: "Confirm Password",
+                        colorScheme: colorScheme,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isConfirmPasswordObscured
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: Colors.grey.shade600,
                           ),
-                          const SizedBox(height: 24),
+                          onPressed: () {
+                            setState(() {
+                              _isConfirmPasswordObscured =
+                                  !_isConfirmPasswordObscured;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                          // --- Name Field ---
-                          AutofillGroup(
-                            child: Column(
-                              children: [
-                                TextField(
-                                  controller: nameController,
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [AutofillHints.name],
-                                  decoration: InputDecoration(
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                              focusedBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 30, 88, 181),
-                                ),
-                              ),
-                              fillColor: const Color.fromARGB(0, 3, 168, 244),
-                              filled: true,
-                              hintText: "First Name*",
-                              hintStyle: const TextStyle(color: Colors.grey),
-                            ),
-                                ),
-                                const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-                                // --- Email Field ---
-                                TextField(
-                                  controller: emailController,
-                                  keyboardType:
-                                      TextInputType.emailAddress, // Email keyboard
-                                  textCapitalization: TextCapitalization.none,
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [AutofillHints.email],
-                                  decoration: InputDecoration(
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                              focusedBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 30, 88, 181),
-                                ),
-                              ),
-                              fillColor: const Color.fromARGB(0, 3, 168, 244),
-                              filled: true,
-                              hintText: "Student Email*",
-                              hintStyle: const TextStyle(color: Colors.grey),
-                            ),
-                                ),
+              // --- Referral field (currently commented out in original) ---
+              // TODO: Uncomment and style referral field if needed
 
-                                const SizedBox(height: 16),
+              // --- Register button ---
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () => signUp(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                    textStyle: textTheme.labelLarge,
+                  ),
+                  child: const Text("Register"),
+                ),
+              ),
 
-                                // --- Password Field ---
-                                TextField(
-                                  controller: passwordController,
-                                  obscureText:
-                                      _isPasswordObscured, // Use state variable
-                                  keyboardType: TextInputType.visiblePassword,
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [AutofillHints.newPassword],
-                                  decoration: InputDecoration(
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                              focusedBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 30, 88, 181),
-                                ),
-                              ),
-                              fillColor: const Color.fromARGB(0, 3, 168, 244),
-                              filled: true,
-                              hintText: "Password*",
-                              hintStyle: const TextStyle(color: Colors.grey),
-                              // Eye Icon Toggle
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isPasswordObscured
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordObscured = !_isPasswordObscured;
-                                  });
-                                },
-                              ),
-                            ),
-                                ),
-                                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                                // --- Confirm Password Field ---
-                                TextField(
-                                  controller: confirmPasswordController,
-                                  obscureText:
-                                      _isConfirmPasswordObscured, // Use state variable
-                                  keyboardType: TextInputType.visiblePassword,
-                                  textInputAction: TextInputAction.done,
-                                  autofillHints: const [AutofillHints.newPassword],
-                                  onEditingComplete: () => signUp(),
-                                  decoration: InputDecoration(
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
-                              focusedBorder: const UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 30, 88, 181),
-                                ),
-                              ),
-                              fillColor: const Color.fromARGB(0, 3, 168, 244),
-                              filled: true,
-                              hintText: "Confirm Password*",
-                              hintStyle: const TextStyle(color: Colors.grey),
-                              // Eye Icon Toggle
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isConfirmPasswordObscured
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isConfirmPasswordObscured =
-                                        !_isConfirmPasswordObscured;
-                                  });
-                                },
-                                ),
-                              ),
-                            ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // --- Referral Field ---
-                          // TextField(
-                          //   controller: referralController,
-                          //   keyboardType:
-                          //       TextInputType.emailAddress, // Email keyboard
-                          //   decoration: InputDecoration(
-                          //     enabledBorder: UnderlineInputBorder(
-                          //       borderSide: BorderSide(
-                          //         color: Colors.grey.shade400,
-                          //       ),
-                          //     ),
-                          //     focusedBorder: const UnderlineInputBorder(
-                          //       borderSide: BorderSide(
-                          //         color: Color.fromARGB(255, 30, 88, 181),
-                          //       ),
-                          //     ),
-                          //     fillColor: const Color.fromARGB(0, 3, 168, 244),
-                          //     filled: true,
-                          //     hintText: "Referral Email (Optional)",
-                          //     hintStyle: const TextStyle(color: Colors.grey),
-                          //   ),
-                          // ),
-                          // const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: () => signUp(),
-                            child: const Center(child: Text("Register")),
-                          ),
-                          const SizedBox(height: 12),
-                          Center(
-                            child: GestureDetector(
-                              onTap: widget.onTap,
-                              child: const Text(
-                                "Login Now",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ],
+              // --- "or Log in" link (not shown in screenshot but preserving existing functionality) ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "or ",
+                    style: TextStyle(color: Colors.black54, fontSize: 15),
+                  ),
+                  GestureDetector(
+                    onTap: widget.onTap,
+                    child: Text(
+                      "Log in",
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
