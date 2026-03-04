@@ -145,23 +145,19 @@ class _InboxPageState extends State<InboxPage> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        toolbarHeight: 90,
-        backgroundColor: colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
+        toolbarHeight: 70,
+        backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 5,
         centerTitle: true,
         title: Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(top: 8),
           child: Text(
             "Inbox",
             style: textTheme.displayLarge
           ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE0E0E0)),
         ),
       ),
       body: _buildBody(colorScheme, textTheme),
@@ -197,6 +193,7 @@ class _InboxPageState extends State<InboxPage> {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
+        const Divider(height: 1, color: Color(0xFFE0E0E0), endIndent: 20.0, indent: 20.0,),
         Padding(
             padding: const EdgeInsets.only(top: 12, left: 20, right: 20, bottom: 6),
             child: Text(
