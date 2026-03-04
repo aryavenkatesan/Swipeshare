@@ -410,20 +410,23 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFE2ECF9) : Colors.white,
-          border: Border.all(color: Colors.black),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.lexend(
-            fontWeight: FontWeight.w300,
-            fontSize: 20,
+    return Material(
+      color: selected ? const Color(0xFFE2ECF9) : Colors.white,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.black),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+          child: Text(
+            label,
+            style: GoogleFonts.lexend(
+              fontWeight: FontWeight.w300,
+              fontSize: 20,
+            ),
           ),
         ),
       ),
@@ -460,23 +463,24 @@ class _SwipeListingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ViewListingPage(listing: listing),
-          ),
-        );
-      },
-      child: Container(
-        // ── Card padding: adjust vertical value (8) to tweak spacing ──
-        padding: const EdgeInsets.fromLTRB(15, 8, 15, 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black),
-          borderRadius: BorderRadius.circular(12),
-        ),
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.black),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ViewListingPage(listing: listing),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 8, 15, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -515,6 +519,7 @@ class _SwipeListingCard extends StatelessWidget {
               child: Text(_formatDisplayTime(_timeRange), style: textTheme.bodyLarge?.copyWith(fontSize: 18.5, color: Colors.black, height: 1)),
             ),
           ],
+        ),
         ),
       ),
     );

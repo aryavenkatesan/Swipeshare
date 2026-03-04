@@ -58,6 +58,7 @@ class _ViewListingPageState extends State<ViewListingPage> {
         children: [
           Expanded(
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
               child: ListingDetailCard(listing: widget.listing),
             ),

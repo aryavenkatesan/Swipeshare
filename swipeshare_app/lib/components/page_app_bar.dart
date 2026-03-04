@@ -19,6 +19,7 @@ class PageAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: const BackButton(),
       title: Text(title, style: textTheme.displayLarge),
       centerTitle: true,
+      scrolledUnderElevation: 5,
       bottom: const PreferredSize(
         preferredSize: Size.fromHeight(1),
         child: Divider(height: 1),
