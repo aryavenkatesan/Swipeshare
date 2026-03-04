@@ -11,6 +11,7 @@ import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/view_listing_page.dart';
 import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class SwipesPage extends StatefulWidget {
@@ -351,7 +352,7 @@ class _FilterPillRow extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: onOpenSheet,
-            child: Icon(Icons.tune, color: SwipeshareColors.primary, size: 24),
+            child: Icon(Icons.tune, color: SwipeshareColors.primary, size: 32),
           ),
           const SizedBox(width: 8),
           _Pill(
@@ -420,9 +421,10 @@ class _Pill extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w300,
-              ),
+          style: GoogleFonts.lexend(
+            fontWeight: FontWeight.w300,
+            fontSize: 20,
+          ),
         ),
       ),
     );
@@ -486,17 +488,20 @@ class _SwipeListingCard extends StatelessWidget {
                 children: [
                   TextSpan(
                     text: '${listing.diningHall} ',
-                    style: textTheme.titleMedium?.copyWith(
+                    style: GoogleFonts.lexend(
+                      fontWeight: FontWeight.w500,
                       fontSize: 23,
                       height: 1,
+                      color: textTheme.titleMedium?.color,
                     ),
                   ),
                   TextSpan(
                     text: _date,
-                    style: textTheme.titleMedium?.copyWith(
+                    style: GoogleFonts.lexend(
                       fontWeight: FontWeight.w300,
                       fontSize: 23,
                       height: 1,
+                      color: textTheme.titleMedium?.color,
                     ),
                   ),
                 ],

@@ -132,6 +132,7 @@ class _ListingFormState extends State<ListingForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 12),
           Text(
             'Set up your swipe listing with location, time, and payment preferences.',
             style: textTheme.bodyLarge,

@@ -167,7 +167,7 @@ class _TimeTile extends StatelessWidget {
                 ),
                 if (time != null)
                   Text(
-                    TimeFormatter.productionToString(time!),
+                    TimeFormatter.formatTOD(time!),
                     style: textTheme.bodyLarge
                         ?.copyWith(color: hasError ? colors.error : null),
                   ),
