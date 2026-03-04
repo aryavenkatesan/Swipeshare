@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/listing_form/time_range_selector.dart';
+import 'package:swipeshare_app/components/swipes_page/date_range_picker_chip.dart';
+import 'package:swipeshare_app/components/swipes_page/filter_chip.dart';
 import 'package:swipeshare_app/models/user.dart';
 
 /// Holds all filter values for the swipes listing page.
@@ -115,30 +117,6 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
     });
   }
 
-  Future<void> _tapOtherRange() async {
-    // Toggle off if already set
-    if (_otherRange != null) {
-      setState(() => _otherRange = null);
-      return;
-    }
-    await _pickOtherRange();
-  }
-
-  Future<void> _pickOtherRange() async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final lastDate = today.add(const Duration(days: 30));
-
-    final result = await showDateRangePicker(
-      context: context,
-      firstDate: today,
-      lastDate: lastDate,
-      initialDateRange: _otherRange,
-    );
-
-    if (result != null) setState(() => _otherRange = result);
-  }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -189,18 +167,19 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
               // ── Location ──
               Text(
                 'Location',
-                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                style: textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  _FilterChip(
+                  SwipesFilterChip(
                     label: 'Lenoir',
                     selected: _locations.contains('Lenoir'),
                     onTap: () => _toggle(_locations, 'Lenoir'),
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
+                  SwipesFilterChip(
                     label: 'Chase',
                     selected: _locations.contains('Chase'),
                     onTap: () => _toggle(_locations, 'Chase'),
@@ -212,49 +191,37 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
               // ── Date ──
               Text(
                 'Date',
-                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                style: textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  _FilterChip(
+                  SwipesFilterChip(
                     label: 'Today',
                     selected: _dates.contains('Today'),
                     onTap: () => _toggle(_dates, 'Today'),
                   ),
                   const SizedBox(width: 8),
-                  _FilterChip(
+                  SwipesFilterChip(
                     label: 'Tomorrow',
                     selected: _dates.contains('Tomorrow'),
                     onTap: () => _toggle(_dates, 'Tomorrow'),
                   ),
                   const SizedBox(width: 8),
-                  // "Other" — chip when range selected, plain text link when not
-                  if (_otherRange != null)
-                    _FilterChip(
-                      label:
-                          '${_otherRange!.start.month}/${_otherRange!.start.day}–'
-                          '${_otherRange!.end.month}/${_otherRange!.end.day}',
-                      selected: true,
-                      onTap: _tapOtherRange,
-                    )
-                  else
-                    GestureDetector(
-                      onTap: _tapOtherRange,
-                      child: Text(
-                        'Other',
-                        style: textTheme.bodyLarge
-                            ?.copyWith(color: SwipeshareColors.primary),
-                      ),
-                    ),
+                  DateRangePickerChip(
+                    value: _otherRange,
+                    onChanged: (r) => setState(() => _otherRange = r),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // ── Time (deactivated until user picks; null = no filter) ──
+              // ── Time ──
               Text(
                 'Time',
-                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                style: textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 6),
               TimeRangeSelector(
@@ -284,10 +251,11 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
               ),
               const SizedBox(height: 16),
 
-              // ── Payment Options (horizontal scroll) ──
+              // ── Payment Options ──
               Text(
                 'Payment Options',
-                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                style: textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 6),
               SingleChildScrollView(
@@ -297,7 +265,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                     for (final opt in PaymentOption.allPaymentOptions)
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: _FilterChip(
+                        child: SwipesFilterChip(
                           label: opt.name,
                           selected: _paymentTypes.contains(opt.name),
                           onTap: () => _toggle(_paymentTypes, opt.name),
@@ -324,43 +292,6 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A toggleable pill chip. Both selected and unselected always show a black border
-/// (matches Figma 621:1270 spec). Selected = blue bg, unselected = white bg.
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFE2ECF9) : Colors.white,
-          border: Border.all(color: Colors.black),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w300,
-              ),
         ),
       ),
     );
