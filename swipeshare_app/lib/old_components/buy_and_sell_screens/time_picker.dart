@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/old_components/adaptive/adaptive_time_picker.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 import 'package:swipeshare_app/old_components/buy_and_sell_screens/shared_constants.dart';
 import 'package:swipeshare_app/old_components/colors.dart';
 import 'package:swipeshare_app/old_components/text_styles.dart';
