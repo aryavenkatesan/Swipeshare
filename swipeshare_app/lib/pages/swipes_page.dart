@@ -149,6 +149,91 @@ class _SwipesPageState extends State<SwipesPage> {
     return true;
   }
 
+  /// Scores how closely a filtered-out listing matches the active filters.
+  ///
+  /// Weights: Payment=4, Time=3, Hall=2, Date=1.
+  /// time+hall (5) intentionally beats payment alone (4), while payment is
+  /// still the highest-weighted individual criterion.
+  /// Ties are broken by [_calculateTimeDistance] — the continuous metric from
+  /// the old listing_selection_page logic.
+  int _similarityScore(Listing l, DateTime today) {
+    int score = 0;
+
+    // Payment (4)
+    final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
+    final paymentFilterActive = _filterData.paymentTypes.isNotEmpty &&
+        !_filterData.paymentTypes.containsAll(allPayNames);
+    if (paymentFilterActive &&
+        l.paymentTypes.any(_filterData.paymentTypes.contains)) {
+      score += 4;
+    }
+
+    // Time (3) — overlap: listing [A,B] overlaps filter [S,E] when A<E && B>S
+    final startAt = _filterData.startAt;
+    final endAt = _filterData.endAt;
+    if (startAt != null || endAt != null) {
+      final ls = l.timeStart.hour * 60 + l.timeStart.minute;
+      final le = l.timeEnd.hour * 60 + l.timeEnd.minute;
+      final fs = startAt != null ? startAt.hour * 60 + startAt.minute : 0;
+      final fe = endAt != null ? endAt.hour * 60 + endAt.minute : 24 * 60;
+      if (ls < fe && le > fs) score += 3;
+    }
+
+    // Hall (2)
+    if (_filterData.locations.isNotEmpty &&
+        _filterData.locations.contains(l.diningHall)) {
+      score += 2;
+    }
+
+    // Date (1)
+    final tomorrow = today.add(const Duration(days: 1));
+    final todaySelected = _filterData.dates.contains('Today');
+    final tomorrowSelected = _filterData.dates.contains('Tomorrow');
+    final otherRange = _filterData.otherRange;
+    if (todaySelected || tomorrowSelected || otherRange != null) {
+      final d = DateTime(
+        l.transactionDate.year,
+        l.transactionDate.month,
+        l.transactionDate.day,
+      );
+      bool dateMatch = false;
+      if (todaySelected && d == today) dateMatch = true;
+      if (tomorrowSelected && d == tomorrow) dateMatch = true;
+      if (otherRange != null) {
+        final rs = DateTime(
+          otherRange.start.year, otherRange.start.month, otherRange.start.day,
+        );
+        final re = DateTime(
+          otherRange.end.year, otherRange.end.month, otherRange.end.day,
+        );
+        if (!d.isBefore(rs) && !d.isAfter(re)) dateMatch = true;
+      }
+      if (dateMatch) score += 1;
+    }
+
+    return score;
+  }
+
+  /// Continuous time-distance metric adapted from listing_selection_page.
+  /// Returns negative for overlapping windows (closer to 0 = more overlap),
+  /// positive for non-overlapping (larger = further away).
+  /// Used to break ties between listings with the same similarity score.
+  int _calculateTimeDistance(Listing l) {
+    final startAt = _filterData.startAt;
+    final endAt = _filterData.endAt;
+    if (startAt == null && endAt == null) return 0;
+
+    final ls = l.timeStart.hour * 60 + l.timeStart.minute;
+    final le = l.timeEnd.hour * 60 + l.timeEnd.minute;
+    final fs = startAt != null ? startAt.hour * 60 + startAt.minute : 0;
+    final fe = endAt != null ? endAt.hour * 60 + endAt.minute : 24 * 60;
+
+    if (le <= fs) return fs - le;         // listing entirely before filter
+    if (ls >= fe) return ls - fe;         // listing entirely after filter
+    if (ls < fs) return fs - le;          // listing starts before filter (negative)
+    return ls - fe;                       // listing starts inside filter (negative)
+  }
+
   void _processSnapshot(QuerySnapshot snapshot, DateTime today) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
@@ -169,7 +254,15 @@ class _SwipesPageState extends State<SwipesPage> {
     }
 
     included.sort(Listing.bySoonest);
-    excluded.sort(Listing.bySoonest);
+    excluded.sort((a, b) {
+      final scoreDiff =
+          _similarityScore(b, today) - _similarityScore(a, today);
+      if (scoreDiff != 0) return scoreDiff;
+      final timeDiff =
+          _calculateTimeDistance(a) - _calculateTimeDistance(b);
+      if (timeDiff != 0) return timeDiff;
+      return Listing.bySoonest(a, b);
+    });
 
     if (mounted) {
       setState(() {
