@@ -48,18 +48,20 @@ class ListingDetailPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ListingDetailCard(listing: listing),
-            const SizedBox(height: 16),
-            _ListingActionButton(
-              icon: Icons.edit_outlined,
-              label: 'Edit Listing',
-              onPressed: onEdit,
-            ),
-            const SizedBox(height: 12),
-            _ListingActionButton(
-              icon: Icons.delete_outline,
-              label: 'Delete Listing',
-              onPressed: onDelete,
-            ),
+            if (listing.status == ListingStatus.active) ...[
+              const SizedBox(height: 16),
+              _ListingActionButton(
+                icon: Icons.edit_outlined,
+                label: 'Edit Listing',
+                onPressed: onEdit,
+              ),
+              const SizedBox(height: 12),
+              _ListingActionButton(
+                icon: Icons.delete_outline,
+                label: 'Delete Listing',
+                onPressed: onDelete,
+              ),
+            ],
           ],
         ),
       ),
