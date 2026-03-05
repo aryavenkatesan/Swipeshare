@@ -7,15 +7,8 @@ class ListingDetailCard extends StatelessWidget {
 
   const ListingDetailCard({super.key, required this.listing});
 
-  String get _timeRange {
-    final start = TimeFormatter.formatTimeOfDay(
-      TimeFormatter.productionToString(listing.timeStart),
-    );
-    final end = TimeFormatter.formatTimeOfDay(
-      TimeFormatter.productionToString(listing.timeEnd),
-    );
-    return 'From $start to $end';
-  }
+  String get _timeRangeText =>
+      TimeFormatter.formatTimeRange(listing.timeStart, listing.timeEnd);
 
   String get _date {
     final d = listing.transactionDate;
@@ -25,6 +18,7 @@ class ListingDetailCard extends StatelessWidget {
   String get _price {
     if (listing.price == null) return 'N/A';
     final p = listing.price!;
+    // `p % 1 == 0` checks if p is a whole number (e.g., 5.0)
     return '\$${p % 1 == 0 ? p.toInt() : p.toStringAsFixed(2)}';
   }
 
@@ -58,7 +52,7 @@ class ListingDetailCard extends StatelessWidget {
 
             // Time
             Text('Time:', style: labelStyle),
-            Text(_timeRange, style: valueStyle),
+            Text(_timeRangeText, style: valueStyle),
             const SizedBox(height: 8),
 
             const Divider(height: 1, color: Color(0xFFD9D9D9)),

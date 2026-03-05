@@ -70,13 +70,48 @@ class ListingService {
     String docId,
     ListingStatus newStatus, {
     Transaction? transaction,
+  }) => updateListing(docId, status: newStatus, transaction: transaction);
+
+  Future<void> deleteListing(String docId, {Transaction? transaction}) =>
+      updateListing(
+        docId,
+        status: ListingStatus.cancelled,
+        transaction: transaction,
+      );
+
+  Future<void> updateListing(
+    String docId, {
+    String? diningHall,
+    TimeOfDay? timeStart,
+    TimeOfDay? timeEnd,
+    DateTime? transactionDate,
+    List<String>? paymentTypes,
+    double? price,
+    ListingStatus? status,
+    Transaction? transaction,
   }) async {
+    final updates = <String, dynamic>{};
+    if (diningHall != null) updates['diningHall'] = diningHall;
+    if (timeStart != null) updates['timeStart'] = Listing.toMinutes(timeStart);
+    if (timeEnd != null) updates['timeEnd'] = Listing.toMinutes(timeEnd);
+    if (transactionDate != null) {
+      updates['transactionDate'] = Timestamp.fromDate(
+        DateTime(
+          transactionDate.year,
+          transactionDate.month,
+          transactionDate.day,
+        ),
+      );
+    }
+    if (paymentTypes != null) updates['paymentTypes'] = paymentTypes;
+    if (price != null) updates['price'] = price;
+    if (status != null) updates['status'] = status.name;
+
     final docRef = listingCol.doc(docId);
-    final updateMap = {'status': newStatus.name};
     if (transaction != null) {
-      transaction.update(docRef, updateMap);
+      transaction.update(docRef, updates);
     } else {
-      await docRef.update(updateMap);
+      await docRef.update(updates);
     }
   }
 }

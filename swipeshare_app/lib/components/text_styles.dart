@@ -11,7 +11,7 @@ TextTheme swipeshareTextTheme = TextTheme(
     fontWeight: FontWeight.w700,
     fontSize: 34,
     letterSpacing: 0.4,
-    color: const Color(0xFF5856D6),
+    color: SwipeshareColors.primary,
   ),
 
   // ------------------------------------------------------------------
@@ -42,7 +42,7 @@ TextTheme swipeshareTextTheme = TextTheme(
   // ------------------------------------------------------------------
   titleMedium: GoogleFonts.lexend(
     fontWeight: FontWeight.w500,
-    fontSize: 28,
+    fontSize: 20,
     height: 34 / 20,
     letterSpacing: 0.38,
     color: SwipeshareColors.onBackground,

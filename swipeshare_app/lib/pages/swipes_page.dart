@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/components/swipe_filter_sheet.dart';
 import 'package:swipeshare_app/models/listing.dart';
@@ -11,7 +12,6 @@ import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/view_listing_page.dart';
 import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
 import 'package:swipeshare_app/services/user_service.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class SwipesPage extends StatefulWidget {
@@ -71,19 +71,19 @@ class _SwipesPageState extends State<SwipesPage> {
         )
         .snapshots()
         .listen(
-      (snapshot) {
-        _processSnapshot(snapshot, today);
-      },
-      onError: (e) {
-        debugPrint('SwipesPage stream error: $e');
-        if (mounted) {
-          setState(() {
-            _error = 'Failed to load listings. Please try again.';
-            _isLoading = false;
-          });
-        }
-      },
-    );
+          (snapshot) {
+            _processSnapshot(snapshot, today);
+          },
+          onError: (e) {
+            debugPrint('SwipesPage stream error: $e');
+            if (mounted) {
+              setState(() {
+                _error = 'Failed to load listings. Please try again.';
+                _isLoading = false;
+              });
+            }
+          },
+        );
   }
 
   void _processSnapshot(QuerySnapshot snapshot, DateTime today) {
@@ -131,7 +131,9 @@ class _SwipesPageState extends State<SwipesPage> {
         if (rangeStart != null &&
             rangeEnd != null &&
             !d.isBefore(rangeStart) &&
-            !d.isAfter(rangeEnd)) return true;
+            !d.isAfter(rangeEnd)) {
+          return true;
+        }
         return false;
       }).toList();
     }
@@ -164,13 +166,12 @@ class _SwipesPageState extends State<SwipesPage> {
 
     // Payment filter
     final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
-    final applyPayFilter = _filterData.paymentTypes.isNotEmpty &&
+    final applyPayFilter =
+        _filterData.paymentTypes.isNotEmpty &&
         !_filterData.paymentTypes.containsAll(allPayNames);
     if (applyPayFilter) {
       listings = listings
-          .where(
-            (l) => l.paymentTypes.any(_filterData.paymentTypes.contains),
-          )
+          .where((l) => l.paymentTypes.any(_filterData.paymentTypes.contains))
           .toList();
     }
 
@@ -218,74 +219,52 @@ class _SwipesPageState extends State<SwipesPage> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 70,
-        title: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Text('Swipes', style: textTheme.displayLarge),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: Text('Available Swipes', style: textTheme.headlineMedium),
         ),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Divider(height: 1, color: Color(0xFFE0E0E0), indent: 20, endIndent: 20,),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                        child: Text('Available Swipes', style: textTheme.headlineMedium),
-                      ),
-                      _FilterPillRow(
-                        filterData: _filterData,
-                        onToggleLocation: _toggleLocation,
-                        onToggleDate: _toggleDate,
-                        onOpenSheet: _openFilterSheet,
-                      ),
-                      const SizedBox(height: 28),
-                    ],
-                  ),
+        _FilterPillRow(
+          filterData: _filterData,
+          onToggleLocation: _toggleLocation,
+          onToggleDate: _toggleDate,
+          onOpenSheet: _openFilterSheet,
+        ),
+        const SizedBox(height: 28),
+        _buildBody(textTheme),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CreateSwipeListingPage(),
                 ),
-                _buildSliverBody(textTheme),
-              ],
-            ),
+              );
+            },
+            icon: const Icon(CupertinoIcons.add, color: Colors.white, size: 28),
+            label: const Text('Sell a Swipe'),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const CreateSwipeListingPage(),
-                  ),
-                );
-              },
-              icon: const Icon(CupertinoIcons.add, color: Colors.white, size: 28,),
-              label: const Text('Sell a Swipe'),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildSliverBody(TextTheme textTheme) {
+  Widget _buildBody(TextTheme textTheme) {
     if (_isLoading) {
-      return const SliverFillRemaining(
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
         child: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null) {
-      return SliverFillRemaining(
-        child: Center(
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -302,26 +281,28 @@ class _SwipesPageState extends State<SwipesPage> {
     }
 
     if (_listings.isEmpty) {
-      return SliverFillRemaining(
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: Center(
           child: Text('No listings available', style: textTheme.bodyLarge),
         ),
       );
     }
 
-    return SliverPadding(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      sliver: SliverGrid(
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
           mainAxisExtent: 90,
         ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => _SwipeListingCard(listing: _listings[index]),
-          childCount: _listings.length,
-        ),
+        itemCount: _listings.length,
+        itemBuilder: (context, index) =>
+            _SwipeListingCard(listing: _listings[index]),
       ),
     );
   }
@@ -359,7 +340,6 @@ class _FilterPillRow extends StatelessWidget {
             label: ' Lenoir ',
             selected: filterData.locations.contains('Lenoir'),
             onTap: () => onToggleLocation('Lenoir'),
-            
           ),
           const SizedBox(width: 8),
           _Pill(
@@ -481,45 +461,52 @@ class _SwipeListingCard extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.fromLTRB(15, 8, 15, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Hall (medium) + date (light) — both 20sp, Figma 621:1278
-            RichText(
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${listing.diningHall} ',
-                    style: GoogleFonts.lexend(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 23,
-                      height: 1,
-                      color: textTheme.titleMedium?.color,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Hall (medium) + date (light) — both 20sp, Figma 621:1278
+              RichText(
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${listing.diningHall} ',
+                      style: GoogleFonts.lexend(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 23,
+                        height: 1,
+                        color: textTheme.titleMedium?.color,
+                      ),
                     ),
-                  ),
-                  TextSpan(
-                    text: _date,
-                    style: GoogleFonts.lexend(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 23,
-                      height: 1,
-                      color: textTheme.titleMedium?.color,
+                    TextSpan(
+                      text: _date,
+                      style: GoogleFonts.lexend(
+                        fontWeight: FontWeight.w300,
+                        fontSize: 23,
+                        height: 1,
+                        color: textTheme.titleMedium?.color,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // Time range — Lexend Light 17sp, always shows fully
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(_formatDisplayTime(_timeRange), style: textTheme.bodyLarge?.copyWith(fontSize: 18.5, color: Colors.black, height: 1)),
-            ),
-          ],
-        ),
+              const SizedBox(height: 16),
+              // Time range — Lexend Light 17sp, always shows fully
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _formatDisplayTime(_timeRange),
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontSize: 18.5,
+                    color: Colors.black,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
