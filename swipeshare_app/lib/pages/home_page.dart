@@ -100,16 +100,6 @@ class _HomeScreenState extends State<HomeScreen>
         await Future.delayed(Duration(milliseconds: 500));
       }
 
-      if (user.name.isEmpty) {
-        debugPrint('DEBUG: User name is still empty after retries.');
-        setState(() {
-          error =
-              'Unable to load your profile details. Please try again later.';
-          isLoading = false;
-        });
-        return;
-      }
-
       setState(() {
         userData = user;
         _paymentTypes = user.paymentTypes;
@@ -266,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen>
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          "Hi, ${userData?.name ?? 'null'}",
+                          "Hi, ${(userData?.name.isNotEmpty == true) ? userData!.name : (_auth.currentUser?.email?.split('@').first ?? '')}",
                           style: GoogleFonts.instrumentSans(
                             fontSize: 48,
                             fontWeight: FontWeight.w600,
