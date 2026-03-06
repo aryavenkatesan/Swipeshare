@@ -10,6 +10,7 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_7.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
@@ -49,11 +50,14 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    // final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Color(0xFFFEF8FF),
-        title: Text("Hello!"),
+        title: Text("Hello!", style: textTheme.displayLarge,),
         actions: [
           //signout button
           IconButton(onPressed: signOut, icon: const Icon(Icons.logout)),
@@ -69,7 +73,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
               controller: _controller,
               onPageChanged: (index) {
                 setState(() {
-                  onLastPage = (index == 5);
+                  onLastPage = (index == 6);
                 });
               },
               children: [
@@ -78,8 +82,9 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                 Page3(),
                 Page4(),
                 Page5(),
-                // Pass the code controller to the new Page6
-                Page6(tutorial: false, codeController: _codeController),
+                Page6(),
+                // Pass the code controller to the new Page7
+                Page7(tutorial: false, codeController: _codeController),
               ],
             ),
           ),
@@ -97,7 +102,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                   !onLastPage
                       ? GestureDetector(
                           onTap: () {
-                            _controller.jumpToPage(5);
+                            _controller.jumpToPage(6);
                           },
                           child: Text("skip"),
                         )
@@ -115,7 +120,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
                   SmoothPageIndicator(
                     controller: _controller,
-                    count: 6,
+                    count: 7,
                     effect: WormEffect(
                       dotHeight: 20,
                       dotWidth: 20,

@@ -13,18 +13,21 @@ class Page2 extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: vh > 767 ? (vh * 0.14) : (vh * 0.1)),
-          Image.asset('assets/onboarding2.png', fit: BoxFit.fitWidth),
+          SizedBox(height: vh > 767 ? (vh * 0.05) : (vh * 0.0)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Image.asset('assets/onboarding2.png', fit: BoxFit.fitWidth),
+          ),
 
-          SizedBox(height: vh > 767 ? 100 : 50),
+          SizedBox(height: vh > 767 ? 75 : 50),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
             child: Column(
               children: [
-                Text("Buy Swipes", style: AppTextStyles.subHeaderStyle),
+                Text("How to Buy Swipes", style: AppTextStyles.subHeaderStyle),
                 SizedBox(height: vh * 0.02),
                 Text(
-                  "If you want to be swiped in, select your availability and connect with a seller!",
+                  "Click on an available swipe to fix details with seller!\nYou can also filter these listings :0",
                   style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),

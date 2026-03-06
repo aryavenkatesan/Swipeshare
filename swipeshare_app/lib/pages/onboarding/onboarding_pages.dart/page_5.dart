@@ -14,22 +14,22 @@ class Page5 extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: vh > 767 ? (vh * 0.14) : (vh * 0.12)),
+          SizedBox(height: vh > 767 ? (vh * 0.09) : (vh * 0.05)),
           Image.asset(
             'assets/onboarding5.png',
-            width: vw * 0.4,
+            width: vw * 0.8,
             fit: BoxFit.fitWidth,
           ),
 
-          SizedBox(height: vh > 767 ? 150 : 80),
+          SizedBox(height: vh > 767 ? 100 : 50),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
             child: Column(
               children: [
-                Text("Cost", style: AppTextStyles.subHeaderStyle),
+                Text("Communicate", style: AppTextStyles.subHeaderStyle),
                 SizedBox(height: vh * 0.02),
                 Text(
-                  "All swipes cost \$7, buyers will pay before sellers swipe them in.",
+                  "Coordinate with your partner for the finer details.",
                   style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),
