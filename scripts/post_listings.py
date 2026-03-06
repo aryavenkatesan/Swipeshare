@@ -2,15 +2,54 @@
 """
 Script to post 6 test listings to Swipeshare as eunjilee@unc.edu.
 Uses Firebase REST API — no SDK needed, just: pip install requests
+
+USAGE:
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python scripts/post_listings.py
+
 """
 
 import requests
-import json
+import re
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
-# ── Firebase config (from firebase_options.dart) ──────────────────────────────
-API_KEY = "AIzaSyCtHAYKfPVLZXTDaX59e9wnoXt2nqI3SvY"
-PROJECT_ID = "swipeshare-c24d1"
+# ── Firebase config (loaded from firebase_options.dart) ───────────────────────
+FIREBASE_OPTIONS_PATH = (
+    Path(__file__).resolve().parents[1] / "swipeshare_app" / "lib" / "firebase_options.dart"
+)
+
+
+def load_firebase_config(path: Path) -> tuple[str, str]:
+    """Returns (api_key, project_id) parsed from Flutter firebase_options.dart."""
+    content = path.read_text(encoding="utf-8")
+
+    # Prefer iOS config since this script previously used the iOS API key.
+    ios_block_match = re.search(
+        r"static\s+const\s+FirebaseOptions\s+ios\s*=\s*FirebaseOptions\((.*?)\);",
+        content,
+        flags=re.DOTALL,
+    )
+    if ios_block_match:
+        ios_block = ios_block_match.group(1)
+        api_key_match = re.search(r"apiKey:\s*'([^']+)'", ios_block)
+        project_id_match = re.search(r"projectId:\s*'([^']+)'", ios_block)
+        if api_key_match and project_id_match:
+            return api_key_match.group(1), project_id_match.group(1)
+
+    # Fallback to first matches in file (works when only one platform is configured).
+    api_key_match = re.search(r"apiKey:\s*'([^']+)'", content)
+    project_id_match = re.search(r"projectId:\s*'([^']+)'", content)
+    if not api_key_match or not project_id_match:
+        raise ValueError(f"Could not parse apiKey/projectId from {path}")
+
+    return api_key_match.group(1), project_id_match.group(1)
+
+
+API_KEY, PROJECT_ID = load_firebase_config(FIREBASE_OPTIONS_PATH)
 
 EMAIL = "eunjilee@unc.edu"
 PASSWORD = "password"
