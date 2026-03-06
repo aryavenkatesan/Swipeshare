@@ -16,7 +16,7 @@ class TimeFormatter {
     return TimeOfDay(hour: hour, minute: minute);
   }
 
-  static String formatTimeOfDay(String timeOfDayString) {
+  static String formatTimeOfDayString(String timeOfDayString) {
     // Parse "TimeOfDay(14:30)" format to h:mm a
     final timeString = timeOfDayString
         .replaceAll('TimeOfDay(', '')
@@ -38,6 +38,10 @@ class TimeFormatter {
     return formatted;
   }
 
+  static String formatTimeRange(TimeOfDay start, TimeOfDay end) {
+    return 'From ${formatTOD(start)} to ${formatTOD(end)}';
+  }
+
   static String productionToString(TimeOfDay time) {
     // Pad the hour with a leading zero if it's less than 10
     final String hour = time.hour.toString().padLeft(2, '0');
@@ -50,6 +54,6 @@ class TimeFormatter {
 
   /// Formats a [TimeOfDay] directly to "h:mm a" (e.g. "1:00 PM").
   static String formatTOD(TimeOfDay time) {
-    return formatTimeOfDay(productionToString(time));
+    return formatTimeOfDayString(productionToString(time));
   }
 }

@@ -57,13 +57,15 @@ class _InboxPageState extends State<InboxPage> {
           (snapshot) {
             final orders = snapshot.docs.map((doc) => doc.data()).toList();
 
-            final active =
-                orders.where((o) => o.status == OrderStatus.active).toList();
+            final active = orders
+                .where((o) => o.status == OrderStatus.active)
+                .toList();
 
-            final past = orders
-                .where((o) => o.status != OrderStatus.active)
-                .toList()
-              ..sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+            final past =
+                orders.where((o) => o.status != OrderStatus.active).toList()
+                  ..sort(
+                    (a, b) => b.transactionDate.compareTo(a.transactionDate),
+                  );
 
             // Set up per-room message subscriptions so we can sort by
             // most-recent activity whenever Firebase delivers a new message.
@@ -101,17 +103,16 @@ class _InboxPageState extends State<InboxPage> {
     for (final order in activeOrders) {
       final room = order.getRoomName();
       if (_msgSubs.containsKey(room)) continue;
-      _msgSubs[room] = ChatService(room)
-          .chatCol
+      _msgSubs[room] = ChatService(room).chatCol
           .orderBy('timestamp', descending: true)
           .limit(1)
           .snapshots()
           .listen((snap) {
-        if (!mounted) return;
-        setState(() {
-          _lastMsgTimes[room] = snap.docs.firstOrNull?.data().timestamp;
-        });
-      });
+            if (!mounted) return;
+            setState(() {
+              _lastMsgTimes[room] = snap.docs.firstOrNull?.data().timestamp;
+            });
+          });
     }
   }
 
@@ -144,24 +145,7 @@ class _InboxPageState extends State<InboxPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        toolbarHeight: 70,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 5,
-        centerTitle: true,
-        title: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(
-            "Inbox",
-            style: textTheme.displayLarge
-          ),
-        ),
-      ),
-      body: _buildBody(colorScheme, textTheme),
-    );
+    return _buildBody(colorScheme, textTheme);
   }
 
   Widget _buildBody(ColorScheme colorScheme, TextTheme textTheme) {
@@ -182,28 +166,33 @@ class _InboxPageState extends State<InboxPage> {
           child: Text(
             "No conversations yet.\nComplete an order to start chatting!",
             textAlign: TextAlign.center,
-            style: textTheme.bodyMedium!.copyWith(
-              color: Colors.grey.shade500,
-            ),
+            style: textTheme.bodyMedium!.copyWith(color: Colors.grey.shade500),
           ),
         ),
       );
     }
 
     return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       children: [
-        const Divider(height: 1, color: Color(0xFFE0E0E0), endIndent: 20.0, indent: 20.0,),
         Padding(
-            padding: const EdgeInsets.only(top: 12, left: 20, right: 20, bottom: 6),
-            child: Text(
-              "Active Chats",
-              style: textTheme.titleMedium
-            ),
+          padding: const EdgeInsets.only(
+            top: 12,
+            left: 20,
+            right: 20,
+            bottom: 6,
           ),
-          
+          child: Text("Active Chats", style: textTheme.titleMedium),
+        ),
+
         if (active.isNotEmpty) ...[
-          Divider(height: 1, color: const Color(0xFFE0E0E0), indent: 12, endIndent: 12),
+          Divider(
+            height: 1,
+            color: const Color(0xFFE0E0E0),
+            indent: 12,
+            endIndent: 12,
+          ),
           ...active.map(
             (o) => _InboxOrderTile(
               key: ValueKey(o.getRoomName()),
@@ -222,7 +211,12 @@ class _InboxPageState extends State<InboxPage> {
             ),
           ),
         ],
-          Divider(height: 1, color: const Color(0xFFE0E0E0), indent: 12, endIndent: 12),
+        Divider(
+          height: 1,
+          color: const Color(0xFFE0E0E0),
+          indent: 12,
+          endIndent: 12,
+        ),
         if (past.isNotEmpty)
           ExpansionTile(
             initiallyExpanded: true,
@@ -232,10 +226,7 @@ class _InboxPageState extends State<InboxPage> {
             collapsedShape: const Border(),
             iconColor: colorScheme.onSurface,
             collapsedIconColor: colorScheme.onSurface,
-            title: Text(
-              "Past Chats",
-              style: textTheme.titleMedium
-            ),
+            title: Text("Past Chats", style: textTheme.titleMedium),
             children: past
                 .map(
                   (o) => _InboxOrderTile(

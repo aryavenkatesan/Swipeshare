@@ -143,6 +143,18 @@ class MealOrder {
     return '${sellerId}_${buyerId}_${transactionDate.millisecondsSinceEpoch}';
   }
 
+  /// Determines if this order is active or needs acknowledgment.
+  /// Returns true for active orders and cancelled orders that:
+  /// - Were cancelled by the other party
+  /// - Haven't been acknowledged yet by the current user
+  bool isActiveOrUnacknowledged() {
+    if (status == OrderStatus.active) return true;
+    if (status == OrderStatus.cancelled) {
+      return cancelledBy != currentUserRole && !cancellationAcknowledged;
+    }
+    return false;
+  }
+
   /// Comparator to sort MealOrders by soonest transaction date
   static int bySoonest(MealOrder a, MealOrder b) {
     final now = DateTime.now();

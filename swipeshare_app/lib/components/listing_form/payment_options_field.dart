@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 
 /// An expandable payment options picker.
 ///
@@ -31,11 +31,11 @@ class _PaymentOptionsFieldState extends State<PaymentOptionsField> {
     return '$count method${count > 1 ? 's' : ''} selected';
   }
 
+  TextTheme get textTheme => Theme.of(context).textTheme;
+  ColorScheme get colors => Theme.of(context).colorScheme;
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).colorScheme;
-
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -43,7 +43,10 @@ class _PaymentOptionsFieldState extends State<PaymentOptionsField> {
         children: [
           // Header (always visible)
           GestureDetector(
-            onTap: () => setState(() => _expanded = !_expanded),
+            onTap: () async {
+              await safeVibrate(HapticsType.selection);
+              setState(() => _expanded = !_expanded);
+            },
             behavior: HitTestBehavior.opaque,
             child: SizedBox(
               height: 75,
@@ -56,7 +59,11 @@ class _PaymentOptionsFieldState extends State<PaymentOptionsField> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.payments_outlined, size: 24, color: colors.onSurface),
+                    Icon(
+                      Icons.payments_outlined,
+                      size: 24,
+                      color: colors.onSurface,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -155,9 +162,7 @@ class _OptionTile extends StatelessWidget {
           children: [
             Icon(option.icon, size: 20, color: colors.primary),
             const SizedBox(width: 16),
-            Expanded(
-              child: Text(option.name, style: textTheme.bodyMedium),
-            ),
+            Expanded(child: Text(option.name, style: textTheme.bodyMedium)),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Icon(

@@ -2,19 +2,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:swipeshare_app/components/colors.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
+import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_bubble.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/old_components/star_container.dart';
-import 'package:swipeshare_app/models/meal_order.dart';
-import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
-import 'package:swipeshare_app/utils/time_formatter.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class ChatPage extends StatefulWidget {
   final MealOrder orderData;
@@ -240,109 +241,123 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildTimeProposal(TimeProposal proposal) {
-    String statusString = switch (proposal.status) {
-      ProposalStatus.accepted => "You accepted this time proposal.",
-      ProposalStatus.declined => "You declined this time proposal.",
-      ProposalStatus.pending => "",
-    };
+    final bool isSent =
+        proposal.senderId == _firebaseAuth.currentUser!.uid;
+    final String timeString = TimeFormatter.formatTimeOfDayString(
+      TimeFormatter.productionToString(proposal.proposedTime),
+    );
 
-    return Column(
-      children: [
-        SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 80.0),
-          child: Column(
-            children: [
-              // Main message
-              Text(
-                "${proposal.senderName} proposes this time: ${TimeFormatter.formatTimeOfDay(TimeFormatter.productionToString(proposal.proposedTime))}",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.blueGrey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -0.56,
-                  decoration: TextDecoration.none,
+    final textTheme = Theme.of(context).textTheme;
+
+    Widget bottomSection;
+    if (proposal.status != ProposalStatus.pending) {
+      final String statusText = switch (proposal.status) {
+        ProposalStatus.accepted => "Accepted",
+        ProposalStatus.declined => "Declined",
+        ProposalStatus.pending => "",
+      };
+      final Color statusColor = proposal.status == ProposalStatus.accepted
+          ? SwipeshareColors.primary
+          : SwipeshareColors.cardAccent;
+      bottomSection = Text(
+        statusText,
+        textAlign: TextAlign.center,
+        style: textTheme.bodyLarge?.copyWith(color: statusColor),
+      );
+    } else if (isSent) {
+      // Pending, sent by us
+      bottomSection = Text(
+        "Pending...",
+        textAlign: TextAlign.center,
+        style: textTheme.bodyLarge?.copyWith(color: SwipeshareColors.cardAccent),
+      );
+    } else {
+      // Pending, received — show Accept + Decline
+      bottomSection = Column(
+        children: [
+          GestureDetector(
+            onTap: () async {
+              await _chatService.updateTimeProposal(
+                proposal.id,
+                ProposalStatus.accepted,
+              );
+            },
+            child: Container(
+              width: 108,
+              height: 28,
+              decoration: BoxDecoration(
+                color: SwipeshareColors.primary,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                "Accept",
+                style: textTheme.bodyLarge?.copyWith(
+                  color: SwipeshareColors.onPrimary,
+                  height: 1,
                 ),
               ),
-              SizedBox(height: 12),
-              proposal.status != ProposalStatus.pending
-                  //if the propsal was accepted or declined, show that here
-                  ? Text(
-                      statusString,
-                      style: TextStyle(
-                        color: Colors.blueGrey[200],
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.56,
-                        decoration: TextDecoration.none,
-                      ),
-                    )
-                  :
-                    // Decline and Accept buttons
-                    // Show buttons only if we are not the sender
-                    proposal.senderId != _firebaseAuth.currentUser!.uid
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Decline button
-                        GestureDetector(
-                          onTap: () async {
-                            debugPrint("Declined");
-
-                            await _chatService.updateTimeProposal(
-                              proposal.id,
-                              ProposalStatus.declined,
-                            );
-                          },
-                          child: Text(
-                            "Decline",
-                            style: TextStyle(
-                              color: Colors.blueGrey[300],
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.none,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 24), // Space between buttons
-                        // Accept button
-                        GestureDetector(
-                          onTap: () async {
-                            debugPrint("Accepted");
-                            // Add your accept logic here
-                            await _chatService.updateTimeProposal(
-                              proposal.id,
-                              ProposalStatus.accepted,
-                            );
-                          },
-                          child: Text(
-                            "Accept",
-                            style: TextStyle(
-                              color: Colors.blueAccent,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.none,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Text(
-                      "wating for response....",
-                      style: TextStyle(
-                        color: Colors.blueGrey[200],
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.56,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-            ],
+            ),
           ),
+          SizedBox(height: 8),
+          GestureDetector(
+            onTap: () async {
+              await _chatService.updateTimeProposal(
+                proposal.id,
+                ProposalStatus.declined,
+              );
+            },
+            child: Text(
+              "Decline",
+              style: textTheme.bodyLarge?.copyWith(
+                fontSize: 14,
+                color: SwipeshareColors.cardAccent,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15.0),
+      child: Align(
+        alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
+        child: Column(
+          crossAxisAlignment:
+              isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 8),
+            Container(
+              width: 212,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2ECF9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    "Time Proposal:",
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodyLarge,
+                  ),
+                  SizedBox(height: isSent ? 13 : 8),
+                  Text(
+                    timeString,
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodyLarge?.copyWith(fontSize: 32),
+                  ),
+                  SizedBox(height: 8),
+                  bottomSection,
+                  SizedBox(height: 4),
+                ],
+              ),
+            ),
+            SizedBox(height: 8),
+          ],
         ),
-        SizedBox(height: 12),
-      ],
+      ),
     );
   }
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 
 class PageAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -16,7 +18,12 @@ class PageAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       backgroundColor: colors.surface,
-      leading: const BackButton(),
+      leading: BackButton(
+        onPressed: () async {
+          await safeVibrate(HapticsType.selection);
+          if (context.mounted) Navigator.of(context).pop();
+        },
+      ),
       title: Text(title, style: textTheme.displayLarge),
       centerTitle: true,
       scrolledUnderElevation: 5,
