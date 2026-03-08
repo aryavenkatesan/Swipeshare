@@ -188,14 +188,24 @@ class _BottomBarState extends State<BottomBar>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Scaffold(
-        body: _selectedIndex == 4
-            ? HomeScreen()
-            : RefreshablePage(
-                header: headers[_selectedIndex],
-                onRefresh: _loadUserData,
-                child: bodies[_selectedIndex],
-              ),
-        bottomNavigationBar: BottomNavigationBar(
+        body: AnimatedSwitcher(
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          duration: const Duration(milliseconds: 140),
+          child: _selectedIndex == 4
+              ? HomeScreen(key: const ValueKey(4))
+              : RefreshablePage(
+                  key: ValueKey(_selectedIndex),
+                  header: headers[_selectedIndex],
+                  onRefresh: _loadUserData,
+                  child: bodies[_selectedIndex],
+                ),
+        ),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Divider(height: 1, thickness: 1, color: Color.fromARGB(97, 158, 158, 158)),
+            BottomNavigationBar(
           selectedFontSize: 14,
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
@@ -221,6 +231,8 @@ class _BottomBarState extends State<BottomBar>
               icon: Icon(Icons.sunny_snowing),
               label: 'Old Home',
             ),
+          ],
+        ),
           ],
         ),
       ),

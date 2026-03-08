@@ -58,7 +58,7 @@ class ChatSettingsMenu extends StatelessWidget {
       hintText: 'Enter reason...',
       submitText: 'Report',
       cancelText: 'Close',
-      maxLines: 3,
+      maxLines: 1,
       maxLength: 200,
     );
 

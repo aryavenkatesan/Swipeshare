@@ -12,6 +12,7 @@ class ProfilePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 24),
           _SectionCard(
             children: [
               _SettingsTile(
