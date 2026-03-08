@@ -4,13 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/swipes_page/filter_pill_row.dart';
 import 'package:swipeshare_app/components/swipes_page/swipe_filter_sheet.dart';
-import 'package:swipeshare_app/components/swipes_page/swipe_listing_card.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/user.dart';
+import 'package:swipeshare_app/pages/buy/view_listing_page.dart';
 import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class SwipesPage extends StatefulWidget {
   const SwipesPage({super.key});
@@ -78,17 +80,19 @@ class _SwipesPageState extends State<SwipesPage> {
         )
         .snapshots()
         .listen(
-      (snapshot) => _processSnapshot(snapshot, today),
-      onError: (e) {
-        debugPrint('SwipesPage stream error: $e');
-        if (mounted) {
-          setState(() {
-            _error = 'Failed to load listings. Please try again.';
-            _isLoading = false;
-          });
-        }
-      },
-    );
+          (snapshot) {
+            _processSnapshot(snapshot, today);
+          },
+          onError: (e) {
+            debugPrint('SwipesPage stream error: $e');
+            if (mounted) {
+              setState(() {
+                _error = 'Failed to load listings. Please try again.';
+                _isLoading = false;
+              });
+            }
+          },
+        );
   }
 
   bool _passesFilters(Listing l, DateTime today) {
@@ -130,7 +134,7 @@ class _SwipesPageState extends State<SwipesPage> {
       return false;
     }
 
-    // Time filter — overlap: listing [A,B] passes if A < filterEnd && B > filterStart.
+    // Time filter — listing [A,B] passes if A < filterEnd && B > filterStart.
     final startAt = _filterData.startAt;
     final endAt = _filterData.endAt;
     if (startAt != null || endAt != null) {
@@ -241,159 +245,366 @@ class _SwipesPageState extends State<SwipesPage> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 70,
-        title: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Text('Swipes', style: textTheme.displayLarge),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: Text('Available Swipes', style: textTheme.headlineMedium),
         ),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Divider(
-                        height: 1,
-                        color: Color(0xFFE0E0E0),
-                        indent: 20,
-                        endIndent: 20,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                        child: Text(
-                          'Available Swipes',
-                          style: textTheme.headlineMedium,
-                        ),
-                      ),
-                      FilterPillRow(
-                        filterData: _filterData,
-                        onToggleLocation: _toggleLocation,
-                        onToggleDate: _toggleDate,
-                        onOpenSheet: _openFilterSheet,
-                        onClearTime: _clearTime,
-                        onTogglePayment: _togglePayment,
-                      ),
-                      const SizedBox(height: 28),
-                    ],
-                  ),
-                ),
-                ..._buildSliverBody(textTheme),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: ElevatedButton.icon(
-              onPressed: () => Navigator.push(
+        _FilterPillRow(
+          filterData: _filterData,
+          onToggleLocation: _toggleLocation,
+          onToggleDate: _toggleDate,
+          onOpenSheet: _openFilterSheet,
+          onClearTime: _clearTime,
+          onTogglePayment: _togglePayment,
+        ),
+        const SizedBox(height: 28),
+        _buildBody(textTheme),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => const CreateSwipeListingPage(),
                 ),
-              ),
-              icon: const Icon(CupertinoIcons.add, color: Colors.white, size: 28),
-              label: const Text('Sell a Swipe'),
-            ),
+              );
+            },
+            icon: const Icon(CupertinoIcons.add, color: Colors.white, size: 28),
+            label: const Text('Sell a Swipe'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  List<Widget> _buildSliverBody(TextTheme textTheme) {
+  Widget _buildBody(TextTheme textTheme) {
     if (_isLoading) {
-      return [
-        const SliverFillRemaining(
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ];
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (_error != null) {
-      return [
-        SliverFillRemaining(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(_error!, style: textTheme.bodyLarge),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _startListening,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_error!, style: textTheme.bodyLarge),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _startListening,
+                child: const Text('Retry'),
+              ),
+            ],
           ),
         ),
-      ];
+      );
     }
 
     if (_listings.isEmpty && _filteredOutListings.isEmpty) {
-      return [
-        SliverFillRemaining(
-          child: Center(
-            child: Text('No listings available', style: textTheme.bodyLarge),
-          ),
-        ),
-      ];
-    }
-
-    final slivers = <Widget>[];
-
-    if (_listings.isEmpty) {
-      slivers.add(SliverToBoxAdapter(
+      return Center(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: Text(
-            'No listings match your filters',
-            style: textTheme.bodyLarge,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Text('No listings available', style: textTheme.bodyLarge),
         ),
-      ));
-    } else {
-      slivers.add(_listingsGrid(_listings));
+      );
     }
 
-    if (_filteredOutListings.isNotEmpty) {
-      slivers.add(SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 32, 20, 8),
-          child: Text(
-            'Filtered Out',
-            style: textTheme.titleSmall?.copyWith(color: Colors.grey.shade500),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_listings.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Text(
+              'No listings match your filters',
+              style: textTheme.bodyLarge,
+            ),
+          )
+        else
+          _listingsGrid(_listings),
+        if (_filteredOutListings.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 32, 20, 8),
+            child: Text(
+              'Filtered Out',
+              style: textTheme.titleSmall
+                  ?.copyWith(color: Colors.grey.shade500),
+            ),
           ),
-        ),
-      ));
-      slivers.add(_listingsGrid(_filteredOutListings, opacity: 0.4));
-    }
-
-    return slivers;
+          Opacity(opacity: 0.4, child: _listingsGrid(_filteredOutListings)),
+        ],
+      ],
+    );
   }
 
-  Widget _listingsGrid(List<Listing> listings, {double opacity = 1.0}) {
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      sliver: SliverGrid(
+  Widget _listingsGrid(List<Listing> listings) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
           mainAxisExtent: 90,
         ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final card = SwipeListingCard(listing: listings[index]);
-            return opacity < 1.0 ? Opacity(opacity: opacity, child: card) : card;
-          },
-          childCount: listings.length,
+        itemCount: listings.length,
+        itemBuilder: (context, index) =>
+            _SwipeListingCard(listing: listings[index]),
+      ),
+    );
+  }
+}
+
+/// Interactive pill row. Shows Lenoir, Chase, Today, Tomorrow always, plus
+/// date range, time, and individual payment pills when active.
+/// The tune icon opens the full filter sheet.
+class _FilterPillRow extends StatelessWidget {
+  final SwipeFilterData filterData;
+  final ValueChanged<String> onToggleLocation;
+  final ValueChanged<String> onToggleDate;
+  final VoidCallback onOpenSheet;
+  final VoidCallback onClearTime;
+  final ValueChanged<String> onTogglePayment;
+
+  const _FilterPillRow({
+    required this.filterData,
+    required this.onToggleLocation,
+    required this.onToggleDate,
+    required this.onOpenSheet,
+    required this.onClearTime,
+    required this.onTogglePayment,
+  });
+
+  String _formatTime(TimeOfDay t) {
+    final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final min =
+        t.minute == 0 ? '' : ':${t.minute.toString().padLeft(2, '0')}';
+    final period = t.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour$min $period';
+  }
+
+  String get _timePillLabel {
+    final start = filterData.startAt;
+    final end = filterData.endAt;
+    if (start != null && end != null) {
+      return '${_formatTime(start)}–${_formatTime(end)}';
+    } else if (start != null) {
+      return 'After ${_formatTime(start)}';
+    } else {
+      return 'Before ${_formatTime(end!)}';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
+    final hasTimePill =
+        filterData.startAt != null || filterData.endAt != null;
+    final hasPaymentPill = filterData.paymentTypes.isNotEmpty &&
+        !filterData.paymentTypes.containsAll(allPayNames);
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onOpenSheet,
+            child: Icon(Icons.tune, color: SwipeshareColors.primary, size: 32),
+          ),
+          const SizedBox(width: 8),
+          _Pill(
+            label: ' Lenoir ',
+            selected: filterData.locations.contains('Lenoir'),
+            onTap: () => onToggleLocation('Lenoir'),
+          ),
+          const SizedBox(width: 8),
+          _Pill(
+            label: ' Chase ',
+            selected: filterData.locations.contains('Chase'),
+            onTap: () => onToggleLocation('Chase'),
+          ),
+          const SizedBox(width: 8),
+          _Pill(
+            label: ' Today ',
+            selected: filterData.dates.contains('Today'),
+            onTap: () => onToggleDate('Today'),
+          ),
+          const SizedBox(width: 8),
+          _Pill(
+            label: ' Tomorrow ',
+            selected: filterData.dates.contains('Tomorrow'),
+            onTap: () => onToggleDate('Tomorrow'),
+          ),
+          if (filterData.otherRange != null) ...[
+            const SizedBox(width: 8),
+            _Pill(
+              label:
+                  ' ${filterData.otherRange!.start.month}/${filterData.otherRange!.start.day}'
+                  '–${filterData.otherRange!.end.month}/${filterData.otherRange!.end.day} ',
+              selected: true,
+              onTap: onOpenSheet,
+            ),
+          ],
+          if (hasTimePill) ...[
+            const SizedBox(width: 8),
+            _Pill(
+              label: ' $_timePillLabel ',
+              selected: true,
+              onTap: onClearTime,
+            ),
+          ],
+          if (hasPaymentPill)
+            for (final name in filterData.paymentTypes) ...[
+              const SizedBox(width: 8),
+              _Pill(
+                label: ' $name ',
+                selected: true,
+                onTap: () => onTogglePayment(name),
+              ),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A pill chip. Selected = blue bg, unselected = white bg, both with black border.
+class _Pill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _Pill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? const Color(0xFFE2ECF9) : Colors.white,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.black),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+          child: Text(
+            label,
+            style: GoogleFonts.lexend(
+              fontWeight: FontWeight.w300,
+              fontSize: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SwipeListingCard extends StatelessWidget {
+  final Listing listing;
+
+  const _SwipeListingCard({required this.listing});
+
+  String get _date {
+    final d = listing.transactionDate;
+    return '${d.month}/${d.day}';
+  }
+
+  String get _timeRange {
+    return '${TimeFormatter.formatTOD(listing.timeStart)} to '
+        '${TimeFormatter.formatTOD(listing.timeEnd)}';
+  }
+
+  String _formatDisplayTime(String timeRange) {
+    return timeRange.replaceAllMapped(
+      RegExp(r'(\d+):00\s*([AP]M)'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.black),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ViewListingPage(listing: listing),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 8, 15, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              RichText(
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${listing.diningHall} ',
+                      style: GoogleFonts.lexend(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 23,
+                        height: 1,
+                        color: textTheme.titleMedium?.color,
+                      ),
+                    ),
+                    TextSpan(
+                      text: _date,
+                      style: GoogleFonts.lexend(
+                        fontWeight: FontWeight.w300,
+                        fontSize: 23,
+                        height: 1,
+                        color: textTheme.titleMedium?.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _formatDisplayTime(_timeRange),
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontSize: 18.5,
+                    color: Colors.black,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

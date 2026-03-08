@@ -22,10 +22,10 @@ class SellListingPreviewCard extends StatelessWidget {
   });
 
   String get _timeRange {
-    final start = TimeFormatter.formatTimeOfDay(
+    final start = TimeFormatter.formatTimeOfDayString(
       TimeFormatter.productionToString(timeStart),
     );
-    final end = TimeFormatter.formatTimeOfDay(
+    final end = TimeFormatter.formatTimeOfDayString(
       TimeFormatter.productionToString(timeEnd),
     );
     return 'From $start to $end';

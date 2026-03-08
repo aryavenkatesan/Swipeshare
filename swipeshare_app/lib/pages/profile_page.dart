@@ -7,146 +7,125 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        toolbarHeight: 70,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text("Profile", style: textTheme.displayLarge),
-        ),
-      ),
-      body: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Divider(height: 1, color: Color(0xFFE0E0E0)),
-            const SizedBox(height: 20),
-
-            // --- Settings Section ---
-            Text("Settings", style: textTheme.titleMedium),
-            const SizedBox(height: 12),
-            _SectionCard(
-              children: [
-                _SettingsTile(
-                  icon: Icons.notifications_none_rounded,
-                  label: "Notifications",
-                  onTap: () =>
-                      ProfilePageActions.navigateToNotifications(context),
-                ),
-                _SettingsTile(
-                  icon: Icons.password_rounded,
-                  label: "Change Password",
-                  onTap: () =>
-                      ProfilePageActions.navigateToChangePassword(context),
-                ),
-                _SettingsTile(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: "Update Payment Options",
-                  onTap: () =>
-                      ProfilePageActions.navigateToUpdatePayment(context),
-                ),
-                _SettingsTile(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  label: "Share Feedback",
-                  onTap: () => ProfilePageActions.navigateToFeedback(context),
-                  showDivider: false,
-                ),
-              ],
-            ),
-
-             const SizedBox(height: 28),
-
-            // --- Replay Tutorial Section ---
-            Text("Replay Tutorial", style: textTheme.titleMedium),
-            const SizedBox(height: 12),
-            _SectionCard(
-              children: [
-                _SettingsTile(
-                  icon: Icons.play_arrow_outlined,
-                  label: "Swipeology 101",
-                  onTap: () => ProfilePageActions.navigateToTutorial(context),
-                  showDivider: false,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 28),
-
-            // --- Danger Zone Section ---
-            Text("Danger Zone", style: textTheme.titleMedium),
-            const SizedBox(height: 12),
-            _SectionCard(
-              children: [
-                _SettingsTile(
-                  icon: Icons.logout_rounded,
-                  label: "Sign Out",
-                  onTap: () => ProfilePageActions.signOut(context),
-                ),
-                _SettingsTile(
-                  icon: Icons.delete_outline_rounded,
-                  label: "Delete Account",
-                  onTap: () =>
-                      ProfilePageActions.navigateToDeleteAccount(context),
-                  showDivider: false,
-                ),
-              ],
-            ),
-
-
-            const SizedBox(height: 32),
-
-            // --- Legal Links ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () => ProfilePageActions.launchPrivacyPolicy(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey,
-                    textStyle: const TextStyle(fontSize: 13),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text("Privacy Policy"),
-                ),
-                const Text(
-                  "·",
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
-                ),
-                TextButton(
-                  onPressed: () => ProfilePageActions.launchTermsOfService(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey,
-                    textStyle: const TextStyle(fontSize: 13),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text("Terms & Conditions"),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            // --- Footer ---
-            const Center(
-              child: Text(
-                "Swipeshare 2026",
-                style: TextStyle(color: Colors.grey, fontSize: 12),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionCard(
+            children: [
+              _SettingsTile(
+                icon: Icons.notifications_none_rounded,
+                label: "Notifications",
+                onTap: () =>
+                    ProfilePageActions.navigateToNotifications(context),
               ),
-            ),
+              _SettingsTile(
+                icon: Icons.password_rounded,
+                label: "Change Password",
+                onTap: () =>
+                    ProfilePageActions.navigateToChangePassword(context),
+              ),
+              _SettingsTile(
+                icon: Icons.account_balance_wallet_outlined,
+                label: "Update Payment Options",
+                onTap: () =>
+                    ProfilePageActions.navigateToUpdatePayment(context),
+              ),
+              _SettingsTile(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: "Share Feedback",
+                onTap: () => ProfilePageActions.navigateToFeedback(context),
+                showDivider: false,
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 24),
-          ],
-        ),
+          const SizedBox(height: 28),
+
+          // --- Replay Tutorial Section ---
+          Text("Replay Tutorial", style: textTheme.titleMedium),
+          const SizedBox(height: 12),
+          _SectionCard(
+            children: [
+              _SettingsTile(
+                icon: Icons.play_arrow_outlined,
+                label: "Swipeology 101",
+                onTap: () => ProfilePageActions.navigateToTutorial(context),
+                showDivider: false,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 28),
+
+          // --- Danger Zone Section ---
+          Text("Danger Zone", style: textTheme.titleMedium),
+          const SizedBox(height: 12),
+          _SectionCard(
+            children: [
+              _SettingsTile(
+                icon: Icons.logout_rounded,
+                label: "Sign Out",
+                onTap: () => ProfilePageActions.signOut(context),
+              ),
+              _SettingsTile(
+                icon: Icons.delete_outline_rounded,
+                label: "Delete Account",
+                onTap: () =>
+                    ProfilePageActions.navigateToDeleteAccount(context),
+                showDivider: false,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 32),
+
+          // --- Legal Links ---
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () => ProfilePageActions.launchPrivacyPolicy(),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.grey,
+                  textStyle: const TextStyle(fontSize: 13),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text("Privacy Policy"),
+              ),
+              const Text(
+                "·",
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+              TextButton(
+                onPressed: () => ProfilePageActions.launchTermsOfService(),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.grey,
+                  textStyle: const TextStyle(fontSize: 13),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text("Terms & Conditions"),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // --- Footer ---
+          const Center(
+            child: Text(
+              "Swipeshare 2026",
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }

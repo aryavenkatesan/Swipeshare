@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/listing_form/date_selector_field.dart';
+import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/components/listing_form/dining_hall_selector.dart';
 import 'package:swipeshare_app/components/listing_form/payment_options_field.dart';
 import 'package:swipeshare_app/components/listing_form/price_stepper_field.dart';
@@ -109,8 +111,9 @@ class _ListingFormState extends State<ListingForm> {
     setState(() => _paymentTypes = List.from(user.paymentTypes));
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_isComplete) return;
+    await safeVibrate(HapticsType.success);
     widget.onSubmit(
       ListingFormData(
         diningHall: _diningHall!,

@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
-import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
@@ -84,7 +84,7 @@ class ActiveOrderCard extends StatelessWidget {
                       isCancelled
                           ? 'Cancelled'
                           : orderData.displayTime != null
-                          ? "${TimeFormatter.formatTimeOfDay(orderData.displayTime!)}    ${TimeFormatter.formatToMMDD(orderData.transactionDate)} "
+                          ? "${TimeFormatter.formatTimeOfDayString(orderData.displayTime!)}    ${TimeFormatter.formatToMMDD(orderData.transactionDate)} "
                           : "${TimeFormatter.formatToMMDD(orderData.transactionDate)}, TBD",
                       style: GreyHeaderStyle,
                     ),
