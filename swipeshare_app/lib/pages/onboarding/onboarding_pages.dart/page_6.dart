@@ -14,14 +14,14 @@ class Page6 extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: vh > 767 ? (vh * 0.14) : (vh * 0.12)),
+          SizedBox(height: vh > 767 ? (vh * 0.10) : (vh * 0.04)),
           Image.asset(
             'assets/onboarding6.png',
-            width: vw * 0.4,
+            width: vw * 0.75,
             fit: BoxFit.fitWidth,
           ),
 
-          SizedBox(height: vh > 767 ? 150 : 80),
+          SizedBox(height: vh > 767 ? 30 : 0),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
             child: Column(
@@ -29,7 +29,7 @@ class Page6 extends StatelessWidget {
                 Text("Cost", style: AppTextStyles.subHeaderStyle),
                 SizedBox(height: vh * 0.02),
                 Text(
-                  "Using the payment method on the listing, buyers will pay before sellers swipe them in.",
+                  "Using the payment method on the listing, buyers will pay in person before sellers swipe them in.",
                   style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),

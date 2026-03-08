@@ -27,7 +27,7 @@ class Page2 extends StatelessWidget {
                 Text("How to Buy Swipes", style: AppTextStyles.subHeaderStyle),
                 SizedBox(height: vh * 0.02),
                 Text(
-                  "Click on an available swipe to fix details with seller!\nYou can also filter these listings :0",
+                  "Select a swipe card to fix details with seller!\nYou can also filter these listings :0",
                   style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),

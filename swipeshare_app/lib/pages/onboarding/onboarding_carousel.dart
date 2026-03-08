@@ -52,6 +52,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   Widget build(BuildContext context) {
     // final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final double vh = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -93,7 +94,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
             height: 50,
             alignment: Alignment.center,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
+              padding: EdgeInsets.symmetric(horizontal: vh > 767 ? 8.0 : 0.0 ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.center,
