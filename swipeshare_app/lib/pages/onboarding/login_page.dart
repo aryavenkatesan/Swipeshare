@@ -57,6 +57,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final double vh = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -69,8 +70,8 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               // --- Logo clipped inside grey circle ---
               Container(
-                width: 120,
-                height: 120,
+                width: vh > 767 ? 120 : 90,
+                height: vh > 767 ? 120 : 90,
                 decoration: BoxDecoration(
                   color: colorScheme.secondaryContainer,
                   shape: BoxShape.circle,
@@ -78,13 +79,13 @@ class _LoginPageState extends State<LoginPage> {
                 clipBehavior: Clip.antiAlias,
                 child: Image.asset(
                   'assets/logo.png',
-                  width: 120,
-                  height: 120,
+                  width: vh > 767 ? 120 : 90,
+                  height: vh > 767 ? 120 : 90,
                   fit: BoxFit.cover,
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: vh > 767 ? 16 : 8),
 
               // --- "Login" title ---
               Text(
@@ -94,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: vh > 767 ? 32 : 16),
 
               // --- Email field ---
               TextField(
@@ -106,9 +107,9 @@ class _LoginPageState extends State<LoginPage> {
                   hintStyle: TextStyle(color: colorScheme.outlineVariant),
                   filled: true,
                   fillColor: colorScheme.surface,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: vh > 767 ? 20 : 10,
+                    vertical: vh > 767 ? 18 : 9,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -124,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: vh > 767 ? 16 : 10),
 
               // --- Password field ---
               TextField(
@@ -135,9 +136,9 @@ class _LoginPageState extends State<LoginPage> {
                   hintStyle: TextStyle(color: colorScheme.outlineVariant),
                   filled: true,
                   fillColor: colorScheme.surface,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: vh > 767 ? 20 : 10,
+                    vertical: vh > 767 ? 18 : 9,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -220,12 +221,12 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: vh > 767 ? 24 : 24),
 
               // --- Log in button ---
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: vh > 767 ? 56 : 44,
                 child: ElevatedButton(
                   onPressed: () async {
                     signIn();
@@ -243,7 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: vh > 767 ? 16 : 10),
 
               // --- "or Sign up" ---
               Row(

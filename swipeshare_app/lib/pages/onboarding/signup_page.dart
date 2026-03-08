@@ -98,13 +98,15 @@ class _RegisterPageState extends State<RegisterPage> {
     required String hintText,
     Widget? suffixIcon,
     required ColorScheme colorScheme,
-  }) {
+    required double vh,
+  }) 
+  {
     return InputDecoration(
       hintText: hintText,
       hintStyle: TextStyle(color: colorScheme.outlineVariant),
       filled: true,
       fillColor: colorScheme.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      contentPadding: EdgeInsets.symmetric(horizontal: vh > 767 ? 20 : 10, vertical: vh > 767 ? 18 : 9),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -121,6 +123,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final double vh = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -133,8 +136,8 @@ class _RegisterPageState extends State<RegisterPage> {
             children: [
               // --- Logo clipped inside grey circle ---
               Container(
-                width: 120,
-                height: 120,
+                width: vh > 767 ? 120 : 90,
+                height: vh > 767 ? 120 : 90,
                 decoration: BoxDecoration(
                   color: colorScheme.secondaryContainer,
                   shape: BoxShape.circle,
@@ -142,13 +145,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 clipBehavior: Clip.antiAlias,
                 child: Image.asset(
                   'assets/logo.png',
-                  width: 120,
-                  height: 120,
+                  width: vh > 767 ? 120 : 90,
+                  height: vh > 767 ? 120 : 90,
                   fit: BoxFit.cover,
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: vh > 767 ? 16 : 8),
 
               // --- "Sign Up" title ---
               Text(
@@ -158,7 +161,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: vh > 767 ? 32 : 16),
 
               // --- Name Field ---
               AutofillGroup(
@@ -171,9 +174,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: _outlinedInputDecoration(
                         hintText: "First Name",
                         colorScheme: colorScheme,
+                        vh: vh,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: vh > 767 ? 16 : 10),
 
                     // --- Email Field ---
                     TextField(
@@ -185,9 +189,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       decoration: _outlinedInputDecoration(
                         hintText: "Email",
                         colorScheme: colorScheme,
+                        vh: vh,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: vh > 767 ? 16 : 10),
 
                     // --- Password Field ---
                     TextField(
@@ -212,9 +217,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             });
                           },
                         ),
+                        vh: vh,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: vh > 767 ? 16 : 10),
 
                     // --- Confirm Password Field ---
                     TextField(
@@ -241,13 +247,14 @@ class _RegisterPageState extends State<RegisterPage> {
                             });
                           },
                         ),
+                        vh: vh,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: vh > 767 ? 24 : 24),
 
               // --- Referral field (currently commented out in original) ---
               // TODO: Uncomment and style referral field if needed
@@ -255,7 +262,7 @@ class _RegisterPageState extends State<RegisterPage> {
               // --- Register button ---
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: vh > 767 ? 56 : 44,
                 child: ElevatedButton(
                   onPressed: () => signUp(),
                   style: ElevatedButton.styleFrom(
@@ -271,7 +278,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: vh > 767 ? 16 : 10),
 
               // --- "or Log in" link (not shown in screenshot but preserving existing functionality) ---
               Row(
