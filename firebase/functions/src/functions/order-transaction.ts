@@ -9,7 +9,7 @@ import {
   orderStatus,
   SystemMessage,
 } from "../types";
-import { NEW_ORDER_SYSTEM_MESSAGE_CONTENT } from "../utils/constants";
+import { newOrderSystemMessageContent } from "../utils/constants";
 import { getListing, getOrderRoomName, getUser } from "../utils/firestore";
 import { dateToTimeOfDayString } from "../utils/time";
 
@@ -212,7 +212,7 @@ export const createOrderFromListing = functions.https.onCall(
         senderId: "system",
         senderEmail: "system@swipeshare.app",
         senderName: "SwipeShare",
-        content: NEW_ORDER_SYSTEM_MESSAGE_CONTENT,
+        content: newOrderSystemMessageContent(newOrder.price),
       };
       transaction.set(messageDoc, {
         ...messageData,
