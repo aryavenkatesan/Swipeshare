@@ -195,7 +195,11 @@ class _BottomBarState extends State<BottomBar>
                 onRefresh: _loadUserData,
                 child: bodies[_selectedIndex],
               ),
-        bottomNavigationBar: BottomNavigationBar(
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Divider(height: 1, thickness: 1, color: Color.fromARGB(97, 158, 158, 158)),
+            BottomNavigationBar(
           selectedFontSize: 14,
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
@@ -221,6 +225,8 @@ class _BottomBarState extends State<BottomBar>
               icon: Icon(Icons.sunny_snowing),
               label: 'Old Home',
             ),
+          ],
+        ),
           ],
         ),
       ),

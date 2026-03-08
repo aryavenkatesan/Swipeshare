@@ -6,6 +6,8 @@ class FirestoreUtils {
   static DateTime parseTimestamp(dynamic value) {
     if (value is Timestamp) {
       return value.toDate();
+    } else if (value is String) {
+      return DateTime.parse(value);
     } else if (value is Map) {
       final seconds = value['_seconds'] as int;
       final nanoseconds = value['_nanoseconds'] as int? ?? 0;

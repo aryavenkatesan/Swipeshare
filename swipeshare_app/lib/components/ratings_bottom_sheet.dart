@@ -137,13 +137,14 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(15, 20, 15, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Question text
             Text(
-              'How did your order on $formattedDate with\n$peerName at ${order.diningHall} go?',
+              'How did your order on $formattedDate with $peerName at ${order.diningHall} go?',
               style: _textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w400,
               ),
@@ -208,26 +209,29 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
   Widget _buildStarRating(int pageIndex) {
     final selectedStars = _selectedStars[pageIndex] ?? 0;
 
-    return Row(
-      children: List.generate(5, (starIndex) {
-        final starNumber = starIndex + 1;
-        final isSelected = starNumber <= selectedStars;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final starSize = (constraints.maxWidth / 6).clamp(32.0, 60.0);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(5, (starIndex) {
+            final starNumber = starIndex + 1;
+            final isSelected = starNumber <= selectedStars;
 
-        return GestureDetector(
-          onTap: () async {
-            await safeVibrate(HapticsType.light);
-            setState(() => _selectedStars[pageIndex] = starNumber);
-          },
-          child: Padding(
-            padding: EdgeInsets.only(right: starIndex < 4 ? 16 : 0),
-            child: Icon(
-              isSelected ? Icons.star_rounded : Icons.star_border_rounded,
-              color: _colors.onSurface,
-              size: 60,
-            ),
-          ),
+            return GestureDetector(
+              onTap: () async {
+                await safeVibrate(HapticsType.light);
+                setState(() => _selectedStars[pageIndex] = starNumber);
+              },
+              child: Icon(
+                isSelected ? Icons.star_rounded : Icons.star_border_rounded,
+                color: _colors.onSurface,
+                size: starSize,
+              ),
+            );
+          }),
         );
-      }),
+      },
     );
   }
 
