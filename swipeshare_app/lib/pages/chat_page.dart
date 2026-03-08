@@ -153,17 +153,21 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            //messages
-            Expanded(child: _buildMessageList()),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          child: Column(
+            children: [
+              //messages
+              Expanded(child: _buildMessageList()),
 
-            //userInput
-            _buildMessageInput(),
+              //userInput
+              _buildMessageInput(),
 
-            SizedBox(height: 10),
-          ],
+              SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
     );
@@ -179,7 +183,7 @@ class _ChatPageState extends State<ChatPage> {
         if (snapshot.hasError) {
           return Text("Error: ${snapshot.error}");
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -187,9 +191,12 @@ class _ChatPageState extends State<ChatPage> {
             .map((snapshot) => snapshot.data())
             .toList();
 
-        return ListView.builder(
+        return RefreshIndicator(
+          onRefresh: () async => _chatService.readNotifications(),
+          child: ListView.builder(
           controller: _scrollController,
           reverse: true,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           itemCount: reversedDocs.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
@@ -207,6 +214,7 @@ class _ChatPageState extends State<ChatPage> {
               TextMessage() => _buildTextMessage(message, previousMessage),
             };
           },
+          ),
         );
       },
     );
