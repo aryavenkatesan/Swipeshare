@@ -47,9 +47,7 @@ class UserModel {
   final UserStatus status;
   final double moneySaved;
   final double moneyEarned;
-  final bool notifOrderReminders;
-  final bool notifMessages;
-  final bool notifOffersFromBuyers;
+  final NotifSettings notifSettings;
 
   UserModel({
     required this.id,
@@ -66,9 +64,7 @@ class UserModel {
     this.status = UserStatus.active,
     this.moneySaved = 0,
     this.moneyEarned = 0,
-    this.notifOrderReminders = true,
-    this.notifMessages = true,
-    this.notifOffersFromBuyers = true,
+    this.notifSettings = const NotifSettings(),
   });
 
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
@@ -91,17 +87,37 @@ class UserModel {
           : UserStatus.active,
       moneySaved: (data['moneySaved'] ?? 0).toDouble(),
       moneyEarned: (data['moneyEarned'] ?? 0).toDouble(),
-      notifOrderReminders: data['notif_order_reminders'] ?? true,
-      notifMessages: data['notif_messages'] ?? true,
-      notifOffersFromBuyers: data['notif_offers_from_buyers'] ?? true,
+      notifSettings: data['notifSettings'] != null
+          ? NotifSettings.fromMap(data['notifSettings'])
+          : const NotifSettings(),
     );
   }
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     final docData = doc.data() as Map<String, dynamic>?;
     if (!doc.exists || docData == null || docData.isEmpty) {
-      throw Exception('User document (id: ${doc.id}) does not exist or has no data');
+      throw Exception(
+        'User document (id: ${doc.id}) does not exist or has no data',
+      );
     }
     return UserModel.fromMap(doc.id, docData);
+  }
+}
+
+class NotifSettings {
+  final bool newOrders;
+  final bool newMessages;
+
+  const NotifSettings({this.newOrders = true, this.newMessages = true});
+
+  factory NotifSettings.fromMap(Map<String, dynamic> data) {
+    return NotifSettings(
+      newOrders: data['newOrders'] ?? true,
+      newMessages: data['newMessages'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {'newOrders': newOrders, 'newMessages': newMessages};
   }
 }
