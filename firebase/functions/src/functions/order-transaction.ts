@@ -170,10 +170,10 @@ export const createOrderFromListing = functions.https.onCall(
       const newOrder: Order = {
         sellerId: listing.sellerId,
         sellerName: listing.sellerName,
-        sellerStars: seller.stars,
+        sellerStars: seller.stars ?? 5,
         buyerId: buyerId,
         buyerName: buyer.name,
-        buyerStars: buyer.stars,
+        buyerStars: buyer.stars ?? 5,
         diningHall: listing.diningHall,
         // displayTime: undefined,
         sellerHasNotifs: true,

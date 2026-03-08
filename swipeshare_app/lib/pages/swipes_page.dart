@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/swipes_page/swipe_filter_sheet.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:swipeshare_app/components/colors.dart';
-import 'package:swipeshare_app/components/swipe_filter_sheet.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/view_listing_page.dart';
@@ -25,6 +25,7 @@ class _SwipesPageState extends State<SwipesPage> {
   SwipeFilterData _filterData = SwipeFilterData.defaults;
 
   List<Listing> _listings = [];
+  List<Listing> _filteredOutListings = [];
   bool _isLoading = true;
   String? _error;
 
@@ -44,10 +45,18 @@ class _SwipesPageState extends State<SwipesPage> {
   }
 
   Future<void> _init() async {
-    // Prefetch blocked users once, then start the stream.
     try {
       final currentUser = await UserService.instance.getCurrentUser();
       _blockedUsers = currentUser.blockedUsers;
+      final userPayments = currentUser.paymentTypes;
+      final defaultPayments = userPayments.isNotEmpty
+          ? Set<String>.from(userPayments)
+          : Set<String>.from(PaymentOption.allPaymentTypeNames);
+      if (mounted) {
+        setState(() {
+          _filterData = _filterData.copyWith(paymentTypes: defaultPayments);
+        });
+      }
     } catch (_) {}
     _startListening();
   }
@@ -86,10 +95,77 @@ class _SwipesPageState extends State<SwipesPage> {
         );
   }
 
+  bool _passesFilters(Listing l, DateTime today) {
+    final tomorrow = today.add(const Duration(days: 1));
+
+    // Date filter
+    final todaySelected = _filterData.dates.contains('Today');
+    final tomorrowSelected = _filterData.dates.contains('Tomorrow');
+    final otherRange = _filterData.otherRange;
+
+    if (todaySelected || tomorrowSelected || otherRange != null) {
+      final d = DateTime(
+        l.transactionDate.year,
+        l.transactionDate.month,
+        l.transactionDate.day,
+      );
+      bool dateMatch = false;
+      if (todaySelected && d == today) dateMatch = true;
+      if (tomorrowSelected && d == tomorrow) dateMatch = true;
+      if (otherRange != null) {
+        final rangeStart = DateTime(
+          otherRange.start.year,
+          otherRange.start.month,
+          otherRange.start.day,
+        );
+        final rangeEnd = DateTime(
+          otherRange.end.year,
+          otherRange.end.month,
+          otherRange.end.day,
+        );
+        if (!d.isBefore(rangeStart) && !d.isAfter(rangeEnd)) dateMatch = true;
+      }
+      if (!dateMatch) return false;
+    }
+
+    // Location filter
+    if (_filterData.locations.isNotEmpty &&
+        !_filterData.locations.contains(l.diningHall)) {
+      return false;
+    }
+
+    // Time filter — listing [A,B] passes if A < filterEnd && B > filterStart.
+    final startAt = _filterData.startAt;
+    final endAt = _filterData.endAt;
+    if (startAt != null || endAt != null) {
+      final listingStartMin = l.timeStart.hour * 60 + l.timeStart.minute;
+      final listingEndMin = l.timeEnd.hour * 60 + l.timeEnd.minute;
+      if (startAt != null) {
+        final filterStartMin = startAt.hour * 60 + startAt.minute;
+        if (listingEndMin <= filterStartMin) return false;
+      }
+      if (endAt != null) {
+        final filterEndMin = endAt.hour * 60 + endAt.minute;
+        if (listingStartMin >= filterEndMin) return false;
+      }
+    }
+
+    // Payment filter
+    final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
+    final applyPayFilter = _filterData.paymentTypes.isNotEmpty &&
+        !_filterData.paymentTypes.containsAll(allPayNames);
+    if (applyPayFilter &&
+        !l.paymentTypes.any(_filterData.paymentTypes.contains)) {
+      return false;
+    }
+
+    return true;
+  }
+
   void _processSnapshot(QuerySnapshot snapshot, DateTime today) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
-    List<Listing> listings = snapshot.docs
+    final candidates = snapshot.docs
         .map((doc) => Listing.fromFirestore(doc))
         .where((l) {
           if (l.status != ListingStatus.active) return false;
@@ -99,87 +175,19 @@ class _SwipesPageState extends State<SwipesPage> {
         })
         .toList();
 
-    // Date filter
-    final todaySelected = _filterData.dates.contains('Today');
-    final tomorrow = today.add(const Duration(days: 1));
-    final tomorrowSelected = _filterData.dates.contains('Tomorrow');
-    final otherRange = _filterData.otherRange;
-    final rangeStart = otherRange != null
-        ? DateTime(
-            otherRange.start.year,
-            otherRange.start.month,
-            otherRange.start.day,
-          )
-        : null;
-    final rangeEnd = otherRange != null
-        ? DateTime(
-            otherRange.end.year,
-            otherRange.end.month,
-            otherRange.end.day,
-          )
-        : null;
-
-    if (todaySelected || tomorrowSelected || otherRange != null) {
-      listings = listings.where((l) {
-        final d = DateTime(
-          l.transactionDate.year,
-          l.transactionDate.month,
-          l.transactionDate.day,
-        );
-        if (todaySelected && d == today) return true;
-        if (tomorrowSelected && d == tomorrow) return true;
-        if (rangeStart != null &&
-            rangeEnd != null &&
-            !d.isBefore(rangeStart) &&
-            !d.isAfter(rangeEnd)) {
-          return true;
-        }
-        return false;
-      }).toList();
+    final included = <Listing>[];
+    final excluded = <Listing>[];
+    for (final l in candidates) {
+      (_passesFilters(l, today) ? included : excluded).add(l);
     }
 
-    // Location filter
-    if (_filterData.locations.isNotEmpty) {
-      listings = listings
-          .where((l) => _filterData.locations.contains(l.diningHall))
-          .toList();
-    }
-
-    // Time filter
-    final startAt = _filterData.startAt;
-    final endAt = _filterData.endAt;
-    if (startAt != null || endAt != null) {
-      listings = listings.where((l) {
-        if (startAt != null) {
-          final filterMin = startAt.hour * 60 + startAt.minute;
-          final listingMin = l.timeStart.hour * 60 + l.timeStart.minute;
-          if (listingMin < filterMin) return false;
-        }
-        if (endAt != null) {
-          final filterMin = endAt.hour * 60 + endAt.minute;
-          final listingMin = l.timeEnd.hour * 60 + l.timeEnd.minute;
-          if (listingMin > filterMin) return false;
-        }
-        return true;
-      }).toList();
-    }
-
-    // Payment filter
-    final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
-    final applyPayFilter =
-        _filterData.paymentTypes.isNotEmpty &&
-        !_filterData.paymentTypes.containsAll(allPayNames);
-    if (applyPayFilter) {
-      listings = listings
-          .where((l) => l.paymentTypes.any(_filterData.paymentTypes.contains))
-          .toList();
-    }
-
-    listings.sort(Listing.bySoonest);
+    included.sort(Listing.bySoonest);
+    excluded.sort(Listing.bySoonest);
 
     if (mounted) {
       setState(() {
-        _listings = listings;
+        _listings = included;
+        _filteredOutListings = excluded;
         _isLoading = false;
       });
     }
@@ -207,6 +215,24 @@ class _SwipesPageState extends State<SwipesPage> {
     _startListening();
   }
 
+  void _clearTime() {
+    setState(
+      () => _filterData = _filterData.copyWith(startAt: null, endAt: null),
+    );
+    _startListening();
+  }
+
+  void _togglePayment(String name) {
+    final newTypes = Set<String>.from(_filterData.paymentTypes);
+    if (newTypes.contains(name)) {
+      newTypes.remove(name);
+    } else {
+      newTypes.add(name);
+    }
+    setState(() => _filterData = _filterData.copyWith(paymentTypes: newTypes));
+    _startListening();
+  }
+
   Future<void> _openFilterSheet() async {
     final result = await showSwipeFilterSheet(context, _filterData);
     if (result != null) {
@@ -231,6 +257,8 @@ class _SwipesPageState extends State<SwipesPage> {
           onToggleLocation: _toggleLocation,
           onToggleDate: _toggleDate,
           onOpenSheet: _openFilterSheet,
+          onClearTime: _clearTime,
+          onTogglePayment: _togglePayment,
         ),
         const SizedBox(height: 28),
         _buildBody(textTheme),
@@ -280,15 +308,44 @@ class _SwipesPageState extends State<SwipesPage> {
       );
     }
 
-    if (_listings.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-        child: Center(
+    if (_listings.isEmpty && _filteredOutListings.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
           child: Text('No listings available', style: textTheme.bodyLarge),
         ),
       );
     }
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_listings.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Text(
+              'No listings match your filters',
+              style: textTheme.bodyLarge,
+            ),
+          )
+        else
+          _listingsGrid(_listings),
+        if (_filteredOutListings.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 32, 20, 8),
+            child: Text(
+              'Filtered Out',
+              style: textTheme.titleSmall
+                  ?.copyWith(color: Colors.grey.shade500),
+            ),
+          ),
+          Opacity(opacity: 0.4, child: _listingsGrid(_filteredOutListings)),
+        ],
+      ],
+    );
+  }
+
+  Widget _listingsGrid(List<Listing> listings) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GridView.builder(
@@ -300,32 +357,62 @@ class _SwipesPageState extends State<SwipesPage> {
           mainAxisSpacing: 20,
           mainAxisExtent: 90,
         ),
-        itemCount: _listings.length,
+        itemCount: listings.length,
         itemBuilder: (context, index) =>
-            _SwipeListingCard(listing: _listings[index]),
+            _SwipeListingCard(listing: listings[index]),
       ),
     );
   }
 }
 
-/// Interactive pill row. Shows Lenoir, Chase, Today, Tomorrow always (in that
-/// order) plus an otherRange chip when set. Tapping a pill toggles it directly;
-/// the tune icon opens the full filter sheet for advanced options.
+/// Interactive pill row. Shows Lenoir, Chase, Today, Tomorrow always, plus
+/// date range, time, and individual payment pills when active.
+/// The tune icon opens the full filter sheet.
 class _FilterPillRow extends StatelessWidget {
   final SwipeFilterData filterData;
   final ValueChanged<String> onToggleLocation;
   final ValueChanged<String> onToggleDate;
   final VoidCallback onOpenSheet;
+  final VoidCallback onClearTime;
+  final ValueChanged<String> onTogglePayment;
 
   const _FilterPillRow({
     required this.filterData,
     required this.onToggleLocation,
     required this.onToggleDate,
     required this.onOpenSheet,
+    required this.onClearTime,
+    required this.onTogglePayment,
   });
+
+  String _formatTime(TimeOfDay t) {
+    final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final min =
+        t.minute == 0 ? '' : ':${t.minute.toString().padLeft(2, '0')}';
+    final period = t.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour$min $period';
+  }
+
+  String get _timePillLabel {
+    final start = filterData.startAt;
+    final end = filterData.endAt;
+    if (start != null && end != null) {
+      return '${_formatTime(start)}–${_formatTime(end)}';
+    } else if (start != null) {
+      return 'After ${_formatTime(start)}';
+    } else {
+      return 'Before ${_formatTime(end!)}';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
+    final hasTimePill =
+        filterData.startAt != null || filterData.endAt != null;
+    final hasPaymentPill = filterData.paymentTypes.isNotEmpty &&
+        !filterData.paymentTypes.containsAll(allPayNames);
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -363,20 +450,36 @@ class _FilterPillRow extends StatelessWidget {
             const SizedBox(width: 8),
             _Pill(
               label:
-                  '${filterData.otherRange!.start.month}/${filterData.otherRange!.start.day}–'
-                  '${filterData.otherRange!.end.month}/${filterData.otherRange!.end.day}',
+                  ' ${filterData.otherRange!.start.month}/${filterData.otherRange!.start.day}'
+                  '–${filterData.otherRange!.end.month}/${filterData.otherRange!.end.day} ',
               selected: true,
               onTap: onOpenSheet,
             ),
           ],
+          if (hasTimePill) ...[
+            const SizedBox(width: 8),
+            _Pill(
+              label: ' $_timePillLabel ',
+              selected: true,
+              onTap: onClearTime,
+            ),
+          ],
+          if (hasPaymentPill)
+            for (final name in filterData.paymentTypes) ...[
+              const SizedBox(width: 8),
+              _Pill(
+                label: ' $name ',
+                selected: true,
+                onTap: () => onTogglePayment(name),
+              ),
+            ],
         ],
       ),
     );
   }
 }
 
-/// A pill chip matching Figma 621:1270.
-/// Both states always have a black border; selected = blue bg, unselected = white bg.
+/// A pill chip. Selected = blue bg, unselected = white bg, both with black border.
 class _Pill extends StatelessWidget {
   final String label;
   final bool selected;
@@ -414,9 +517,6 @@ class _Pill extends StatelessWidget {
   }
 }
 
-/// Swipe listing card matching Figma 621:1278.
-/// Line 1: "{hall}" (Lexend Medium 20sp) + " {date}" (Lexend Light 20sp)
-/// Line 2: "{startTime} to {endTime}" (Lexend Light 17sp)
 class _SwipeListingCard extends StatelessWidget {
   final Listing listing;
 
@@ -465,7 +565,6 @@ class _SwipeListingCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Hall (medium) + date (light) — both 20sp, Figma 621:1278
               RichText(
                 overflow: TextOverflow.ellipsis,
                 text: TextSpan(
@@ -492,7 +591,6 @@ class _SwipeListingCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Time range — Lexend Light 17sp, always shows fully
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
