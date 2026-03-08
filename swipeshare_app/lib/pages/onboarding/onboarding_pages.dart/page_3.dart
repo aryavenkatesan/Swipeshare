@@ -32,7 +32,7 @@ class Page3 extends StatelessWidget {
                 Text("How to Sell Swipes", style: AppTextStyles.subHeaderStyle),
                 SizedBox(height: vh * 0.02),
                 Text(
-                  "This button adds to the current listing pool!\nPut in all of your preferences and it's be up :)",
+                  "This button adds to the current listing pool!\nPut in all of your preferences and it'll be up :)",
                   style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),

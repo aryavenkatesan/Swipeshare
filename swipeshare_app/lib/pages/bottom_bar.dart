@@ -227,10 +227,10 @@ class _BottomBarState extends State<BottomBar>
               icon: Icon(Icons.person_outline),
               label: 'Profile',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.sunny_snowing),
-              label: 'Old Home',
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.sunny_snowing),
+            //   label: 'Old Home',
+            // ),
           ],
         ),
           ],

@@ -3,6 +3,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_1.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_2.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_7.dart';
@@ -46,6 +47,7 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
                 Page1(tutorial: true),
                 Page2(),
                 Page3(),
+                Page4(),
                 Page5(),
                 Page6(),
                 Page7(tutorial: true),
