@@ -46,6 +46,15 @@ class _SwipesPageState extends State<SwipesPage> {
     try {
       final currentUser = await UserService.instance.getCurrentUser();
       _blockedUsers = currentUser.blockedUsers;
+      final userPayments = currentUser.paymentTypes;
+      final defaultPayments = userPayments.isNotEmpty
+          ? Set<String>.from(userPayments)
+          : Set<String>.from(PaymentOption.allPaymentTypeNames);
+      if (mounted) {
+        setState(() {
+          _filterData = _filterData.copyWith(paymentTypes: defaultPayments);
+        });
+      }
     } catch (_) {}
     _startListening();
   }
@@ -209,12 +218,14 @@ class _SwipesPageState extends State<SwipesPage> {
     _startListening();
   }
 
-  void _clearPayment() {
-    setState(
-      () => _filterData = _filterData.copyWith(
-        paymentTypes: Set.from(PaymentOption.allPaymentTypeNames),
-      ),
-    );
+  void _togglePayment(String name) {
+    final newTypes = Set<String>.from(_filterData.paymentTypes);
+    if (newTypes.contains(name)) {
+      newTypes.remove(name);
+    } else {
+      newTypes.add(name);
+    }
+    setState(() => _filterData = _filterData.copyWith(paymentTypes: newTypes));
     _startListening();
   }
 
@@ -268,7 +279,7 @@ class _SwipesPageState extends State<SwipesPage> {
                         onToggleDate: _toggleDate,
                         onOpenSheet: _openFilterSheet,
                         onClearTime: _clearTime,
-                        onClearPayment: _clearPayment,
+                        onTogglePayment: _togglePayment,
                       ),
                       const SizedBox(height: 28),
                     ],

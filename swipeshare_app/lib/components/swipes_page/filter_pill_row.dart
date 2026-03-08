@@ -14,7 +14,7 @@ class FilterPillRow extends StatelessWidget {
   final ValueChanged<String> onToggleDate;
   final VoidCallback onOpenSheet;
   final VoidCallback onClearTime;
-  final VoidCallback onClearPayment;
+  final ValueChanged<String> onTogglePayment;
 
   const FilterPillRow({
     super.key,
@@ -23,7 +23,7 @@ class FilterPillRow extends StatelessWidget {
     required this.onToggleDate,
     required this.onOpenSheet,
     required this.onClearTime,
-    required this.onClearPayment,
+    required this.onTogglePayment,
   });
 
   String _formatTime(TimeOfDay t) {
@@ -102,11 +102,13 @@ class FilterPillRow extends StatelessWidget {
       ));
     }
     if (hasPaymentPill) {
-      selectedPills.add(Pill(
-        label: ' Payment ',
-        selected: true,
-        onTap: onClearPayment,
-      ));
+      for (final name in filterData.paymentTypes) {
+        selectedPills.add(Pill(
+          label: ' $name ',
+          selected: true,
+          onTap: () => onTogglePayment(name),
+        ));
+      }
     }
 
     final allPills = [...selectedPills, ...unselectedPills];
