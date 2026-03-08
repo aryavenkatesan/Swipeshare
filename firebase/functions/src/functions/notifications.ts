@@ -27,7 +27,7 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
 
       if (!messageTypes.includes(message.messageType)) {
         console.log(
-          `Unknown message type: ${message.messageType}. No notification sent.`
+          `Unknown message type: ${message.messageType}. No notification sent.`,
         );
         return;
       }
@@ -47,6 +47,13 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
         return;
       }
 
+      if (recipientData.notifSettings?.newMessages === false) {
+        console.log(
+          `User ${recipientId} has disabled new message notifications. No notification sent.`,
+        );
+        return;
+      }
+
       const title =
         message.messageType === "text"
           ? `${message.senderName} sent a message`
@@ -54,7 +61,7 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
 
       const body =
         message.messageType === "text"
-          ? message.content ?? ""
+          ? (message.content ?? "")
           : timeOfDayStringToTime(message.proposedTime ?? "");
 
       await updateNotificationsStatus(orderId, recipientId);
@@ -80,7 +87,7 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
       console.error("Error sending notification:", error);
       throw error;
     }
-  }
+  },
 );
 
 export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
@@ -100,8 +107,15 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
         return;
       }
 
+      if (sellerData.notifSettings?.newOrders === false) {
+        console.log(
+          `User ${orderData.sellerId} has disabled new order notifications. No notification sent.`,
+        );
+        return;
+      }
+
       const readableDate = new Date(
-        orderData.transactionDate.toDate()
+        orderData.transactionDate.toDate(),
       ).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -129,7 +143,7 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
       console.error("Error sending notification:", error);
       throw error;
     }
-  }
+  },
 );
 
 export const sendProposalUpdateNotification =
@@ -175,15 +189,22 @@ export const sendProposalUpdateNotification =
           return;
         }
 
+        if (senderData.notifSettings?.newMessages === false) {
+          console.log(
+            `User ${senderId} has disabled new message notifications. No notification sent.`,
+          );
+          return;
+        }
+
         const receiverName =
           senderId === orderData.buyerId
             ? orderData.buyerName
             : orderData.sellerId === senderId
-            ? orderData.sellerName
-            : "Someone";
+              ? orderData.sellerName
+              : "Someone";
 
         const proposalTime = timeOfDayStringToTime(
-          afterData.proposedTime ?? ""
+          afterData.proposedTime ?? "",
         );
 
         await updateNotificationsStatus(orderId, senderId);
@@ -205,5 +226,5 @@ export const sendProposalUpdateNotification =
         console.error("Error sending notification:", error);
         throw error;
       }
-    }
+    },
   );

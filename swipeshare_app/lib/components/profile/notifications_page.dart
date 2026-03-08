@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -16,7 +17,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
   bool _isLoading = true;
   bool _orderReminders = true;
   bool _messages = false;
-  bool _offersFromBuyers = true;
 
   @override
   void initState() {
@@ -28,9 +28,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final user = await _userService.getCurrentUser();
     if (mounted) {
       setState(() {
-        _orderReminders = user.notifOrderReminders;
-        _messages = user.notifMessages;
-        _offersFromBuyers = user.notifOffersFromBuyers;
+        _orderReminders = user.notifSettings.newOrders;
+        _messages = user.notifSettings.newMessages;
         _isLoading = false;
       });
     }
@@ -39,9 +38,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void _savePreferences() {
     _userService.updateNotificationPreferences(
       _uid,
-      orderReminders: _orderReminders,
-      messages: _messages,
-      offersFromBuyers: _offersFromBuyers,
+      NotifSettings(newOrders: _orderReminders, newMessages: _messages),
     );
   }
 
@@ -77,9 +74,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         children: [
           const Divider(height: 1, color: Color(0xFFE0E0E0)),
           if (_isLoading)
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const Expanded(child: Center(child: CircularProgressIndicator()))
           else
             Expanded(
               child: ListView(
@@ -89,8 +84,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
                 children: [
                   _NotificationTile(
-                    title: "Order reminders",
-                    description: "Be notified of upcoming orders.",
+                    title: "New Orders",
+                    description: "Be notified when a user claims your listing.",
                     value: _orderReminders,
                     activeColor: colorScheme.primary,
                     onChanged: (val) {
@@ -100,23 +95,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   ),
                   _NotificationTile(
                     title: "Messages",
-                    description:
-                        "Be notified of any messages from your inbox.",
+                    description: "Be notified of any messages from your inbox.",
                     value: _messages,
                     activeColor: colorScheme.primary,
                     onChanged: (val) {
                       setState(() => _messages = val);
-                      _savePreferences();
-                    },
-                  ),
-                  _NotificationTile(
-                    title: "Offers from buyers",
-                    description:
-                        "Be notified when a buyer has made a time proposal for your listing.",
-                    value: _offersFromBuyers,
-                    activeColor: colorScheme.primary,
-                    onChanged: (val) {
-                      setState(() => _offersFromBuyers = val);
                       _savePreferences();
                     },
                   ),
@@ -157,10 +140,7 @@ class _NotificationTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: textTheme.titleMedium
-                ),
+                Text(title, style: textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
                   description,
@@ -175,7 +155,7 @@ class _NotificationTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Colors.white,
+            activeThumbColor: Colors.white,
             activeTrackColor: activeColor,
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: Colors.grey.shade300,

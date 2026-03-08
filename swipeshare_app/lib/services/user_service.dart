@@ -50,22 +50,14 @@ class UserService {
       rethrow;
     }
   }
- 
-  Future<void> updatePaymentTypes(
-    String uid,
-    List<String> paymentTypes,
-  ) async => await updateUserData(uid, {'payment_types': paymentTypes});
+
+  Future<void> updatePaymentTypes(String uid, List<String> paymentTypes) =>
+      updateUserData(uid, {'payment_types': paymentTypes});
 
   Future<void> updateNotificationPreferences(
-    String uid, {
-    required bool orderReminders,
-    required bool messages,
-    required bool offersFromBuyers,
-  }) async => await updateUserData(uid, {
-    'notif_order_reminders': orderReminders,
-    'notif_messages': messages,
-    'notif_offers_from_buyers': offersFromBuyers,
-  });
+    String uid,
+    NotifSettings notifSettings,
+  ) => updateUserData(uid, {'notifSettings': notifSettings.toMap()});
 
   Future<void> blockUser(MealOrder orderData) async {
     final currentUser = await getCurrentUser();

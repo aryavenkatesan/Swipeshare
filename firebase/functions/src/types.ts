@@ -87,7 +87,13 @@ export type User = {
   transactions_completed: number;
   moneySaved: number;
   moneyEarned: number;
+  notifSettings: NotifSettings;
   // other fields aren't relevant
+};
+
+export type NotifSettings = {
+  newOrders: boolean;
+  newMessages: boolean;
 };
 
 export type Rating = {
