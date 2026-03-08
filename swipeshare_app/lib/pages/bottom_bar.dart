@@ -188,13 +188,19 @@ class _BottomBarState extends State<BottomBar>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Scaffold(
-        body: _selectedIndex == 4
-            ? HomeScreen()
-            : RefreshablePage(
-                header: headers[_selectedIndex],
-                onRefresh: _loadUserData,
-                child: bodies[_selectedIndex],
-              ),
+        body: AnimatedSwitcher(
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          duration: const Duration(milliseconds: 140),
+          child: _selectedIndex == 4
+              ? HomeScreen(key: const ValueKey(4))
+              : RefreshablePage(
+                  key: ValueKey(_selectedIndex),
+                  header: headers[_selectedIndex],
+                  onRefresh: _loadUserData,
+                  child: bodies[_selectedIndex],
+                ),
+        ),
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

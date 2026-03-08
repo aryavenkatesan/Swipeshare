@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
@@ -27,6 +29,8 @@ class _RefreshablePageState extends State<RefreshablePage> {
   }
 
   Future<void> _onRefresh() async {
+    final delay = 100 + Random().nextInt(1200);
+    await Future.delayed(Duration(milliseconds: delay));
     await widget.onRefresh();
     _refreshController.refreshCompleted();
   }
