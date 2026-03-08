@@ -59,14 +59,18 @@ class _PaymentOptionsComponentState extends State<PaymentOptionsComponent> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          widget.selectedPaymentOptions.isEmpty
-                              ? 'Tap to select payment methods'
-                              : '${widget.selectedPaymentOptions.length} method${widget.selectedPaymentOptions.length > 1 ? 's' : ''} selected',
-                          style: AppTextStyles.validationText.copyWith(
-                            color: widget.selectedPaymentOptions.isEmpty
-                                ? AppColors.subText
-                                : AppColors.accentBlue,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            widget.selectedPaymentOptions.isEmpty
+                                ? 'Select payment methods'
+                                : '${widget.selectedPaymentOptions.length} method${widget.selectedPaymentOptions.length > 1 ? 's' : ''} selected',
+                            style: AppTextStyles.validationText.copyWith(
+                              color: widget.selectedPaymentOptions.isEmpty
+                                  ? AppColors.subText
+                                  : AppColors.accentBlue,
+                            ),
                           ),
                         ),
                       ],

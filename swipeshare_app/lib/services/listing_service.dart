@@ -21,6 +21,7 @@ class ListingService {
     TimeOfDay timeEnd,
     DateTime transactionDate,
     List<String> paymentTypes,
+    double price,
   ) async {
     final currentUser = await _userService.getCurrentUser();
     final currentUserName = currentUser.name;
@@ -47,6 +48,7 @@ class ListingService {
       transactionDate: listingDateTime,
       sellerRating: currentUserRating,
       paymentTypes: paymentTypes,
+      price: price,
       status: ListingStatus.active,
     );
 

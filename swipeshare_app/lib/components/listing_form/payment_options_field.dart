@@ -26,7 +26,7 @@ class _PaymentOptionsFieldState extends State<PaymentOptionsField> {
   bool _expanded = false;
 
   String get _subtitle {
-    if (widget.selected.isEmpty) return 'Tap to select payment methods';
+    if (widget.selected.isEmpty) return 'Select payment methods';
     final count = widget.selected.length;
     return '$count method${count > 1 ? 's' : ''} selected';
   }
@@ -75,7 +75,7 @@ class _PaymentOptionsFieldState extends State<PaymentOptionsField> {
                             _subtitle,
                             style: textTheme.bodyLarge?.copyWith(
                               color: widget.selected.isEmpty
-                                  ? colors.onSurface
+                                  ?  colors.onSurface
                                   : colors.primary,
                             ),
                           ),

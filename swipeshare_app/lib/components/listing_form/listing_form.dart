@@ -86,6 +86,17 @@ class _ListingFormState extends State<ListingForm> {
       _paymentTypes.isNotEmpty &&
       _isValidTimeRange;
 
+  String? get _missingFieldsHint {
+    final missing = <String>[];
+    if (_diningHall == null) missing.add('a dining hall');
+    if (_timeStart == null) missing.add('a start time');
+    if (_timeEnd == null) missing.add('an end time');
+    if (!_isValidTimeRange) missing.add('a valid time range');
+    if (_paymentTypes.isEmpty) missing.add('payment methods');
+    if (missing.isEmpty) return null;
+    return 'Please select ${missing.join(', ')}';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -138,7 +149,7 @@ class _ListingFormState extends State<ListingForm> {
           const SizedBox(height: 6),
           Text(
             'Set up your swipe listing with location, time, and payment preferences.',
-            style: textTheme.bodyLarge,
+            style: textTheme.bodyLarge?.copyWith(height: 1.4),
           ),
           const SizedBox(height: 24),
 
@@ -178,6 +189,16 @@ class _ListingFormState extends State<ListingForm> {
             onChanged: (opts) => setState(() => _paymentTypes = opts),
           ),
           const SizedBox(height: 32),
+
+          // Missing fields hint
+          if (_missingFieldsHint != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _missingFieldsHint!,
+                style: textTheme.bodyMedium?.copyWith(color: Colors.grey, fontSize: 14),
+              ),
+            ),
 
           // Submit button
           ElevatedButton(

@@ -61,6 +61,7 @@ class ConfirmListingPage extends StatelessWidget {
       data.timeEnd,
       data.transactionDate,
       data.paymentTypes,
+      data.price,
     );
     await safeVibrate(HapticsType.success);
     if (!context.mounted) return;

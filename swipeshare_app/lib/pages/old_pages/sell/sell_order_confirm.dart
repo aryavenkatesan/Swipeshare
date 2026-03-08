@@ -335,6 +335,7 @@ class _SellOrderConfirmScreenState extends State<SellOrderConfirmScreen> {
             widget.endTime,
             widget.date,
             widget.paymentOptions,
+            7.00
           );
           await safeVibrate(HapticsType.success);
           Navigator.pop(context);

@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/ratings_bottom_sheet.dart';
 import 'package:swipeshare_app/components/refreshable_page.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/inbox_page.dart';
 import 'package:swipeshare_app/pages/profile_page.dart';
+import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
 import 'package:swipeshare_app/pages/swipes_page.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
@@ -198,6 +200,25 @@ class _BottomBarState extends State<BottomBar>
                   key: ValueKey(_selectedIndex),
                   header: headers[_selectedIndex],
                   onRefresh: _loadUserData,
+                  stickyBottom: _selectedIndex == 1
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const CreateSwipeListingPage(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(CupertinoIcons.add,
+                                color: Colors.white, size: 28),
+                            label: const Text('Sell a Swipe'),
+                          ),
+                        )
+                      : null,
                   child: bodies[_selectedIndex],
                 ),
         ),

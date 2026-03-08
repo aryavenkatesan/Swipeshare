@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/swipes_page/swipe_filter_sheet.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,7 +9,6 @@ import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/view_listing_page.dart';
-import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
@@ -262,21 +260,6 @@ class _SwipesPageState extends State<SwipesPage> {
         ),
         const SizedBox(height: 28),
         _buildBody(textTheme),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CreateSwipeListingPage(),
-                ),
-              );
-            },
-            icon: const Icon(CupertinoIcons.add, color: Colors.white, size: 28),
-            label: const Text('Sell a Swipe'),
-          ),
-        ),
       ],
     );
   }

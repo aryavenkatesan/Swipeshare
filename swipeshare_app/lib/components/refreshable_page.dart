@@ -7,12 +7,14 @@ class RefreshablePage extends StatefulWidget {
   final Widget header;
   final Widget child;
   final Future<void> Function() onRefresh;
+  final Widget? stickyBottom;
 
   const RefreshablePage({
     super.key,
     required this.header,
     required this.child,
     required this.onRefresh,
+    this.stickyBottom,
   });
 
   @override
@@ -58,6 +60,7 @@ class _RefreshablePageState extends State<RefreshablePage> {
               ),
             ),
           ),
+          if (widget.stickyBottom != null) widget.stickyBottom!,
         ],
       ),
     );
