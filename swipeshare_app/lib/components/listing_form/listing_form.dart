@@ -78,13 +78,27 @@ class _ListingFormState extends State<ListingForm> {
     return e > s;
   }
 
+  bool get _isTimeRangeInPast {
+    if (_transactionDate == null || _timeEnd == null) return false;
+    final now = DateTime.now();
+    final endDateTime = DateTime(
+      _transactionDate!.year,
+      _transactionDate!.month,
+      _transactionDate!.day,
+      _timeEnd!.hour,
+      _timeEnd!.minute,
+    );
+    return endDateTime.isBefore(now);
+  }
+
   bool get _isComplete =>
       _diningHall != null &&
       _transactionDate != null &&
       _timeStart != null &&
       _timeEnd != null &&
       _paymentTypes.isNotEmpty &&
-      _isValidTimeRange;
+      _isValidTimeRange &&
+      !_isTimeRangeInPast;
 
   String? get _missingFieldsHint {
     final missing = <String>[];
@@ -92,6 +106,7 @@ class _ListingFormState extends State<ListingForm> {
     if (_timeStart == null) missing.add('a start time');
     if (_timeEnd == null) missing.add('an end time');
     if (!_isValidTimeRange) missing.add('a valid time range');
+    if (_isTimeRangeInPast) missing.add('a future time range');
     if (_paymentTypes.isEmpty) missing.add('payment methods');
     if (missing.isEmpty) return null;
     return 'Please select ${missing.join(', ')}';
