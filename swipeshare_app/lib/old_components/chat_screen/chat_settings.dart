@@ -67,7 +67,11 @@ class ChatSettingsMenu extends StatelessWidget {
       await safeVibrate(HapticsType.success);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(SnackbarMessages.reportSubmitted)),
+          const SnackBar(
+            content: Text(SnackbarMessages.reportSubmitted),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(bottom: 70, left: 16, right: 16),
+          ),
         );
       }
     }

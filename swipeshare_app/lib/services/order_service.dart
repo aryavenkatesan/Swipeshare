@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
+import 'package:swipeshare_app/utils/time_formatter.dart';
 
 class OrderService {
   OrderService._();
@@ -44,7 +45,9 @@ class OrderService {
     TimeOfDay? newTime, {
     Transaction? transaction,
   }) async {
-    final String? timeString = newTime?.toString();
+    final String timeString = newTime == null
+        ? "TBD"
+        : TimeFormatter.productionToString(newTime);
 
     final docRef = orderCol.doc(orderId);
 
