@@ -384,21 +384,26 @@ class _ChatPageState extends State<ChatPage> {
         (previousMessage is! TextMessage) ||
         (previousMessage.senderId != message.senderId);
 
+    final double maxBubbleWidth = MediaQuery.of(context).size.width * 0.85;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
       child: Container(
         alignment: alignment,
-        child: Column(
-          crossAxisAlignment:
-              (message.senderId == _firebaseAuth.currentUser!.uid)
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            if (showSenderName) Text(message.senderName),
-            if (showSenderName) SizedBox(height: 5),
-            ChatBubble(message: (message.content), alignment: alignment),
-            SizedBox(height: 5),
-          ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+          child: Column(
+            crossAxisAlignment:
+                (message.senderId == _firebaseAuth.currentUser!.uid)
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              if (showSenderName) Text(message.senderName),
+              if (showSenderName) SizedBox(height: 5),
+              ChatBubble(message: (message.content), alignment: alignment),
+              SizedBox(height: 5),
+            ],
+          ),
         ),
       ),
     );
