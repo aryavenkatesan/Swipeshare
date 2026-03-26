@@ -48,6 +48,7 @@ class UserModel {
   final double moneySaved;
   final double moneyEarned;
   final NotifSettings notifSettings;
+  final bool hasSeenAppFeedback;
 
   UserModel({
     required this.id,
@@ -65,6 +66,7 @@ class UserModel {
     this.moneySaved = 0,
     this.moneyEarned = 0,
     this.notifSettings = const NotifSettings(),
+    this.hasSeenAppFeedback = false,
   });
 
   factory UserModel.fromMap(String id, Map<String, dynamic> data) {
@@ -90,6 +92,7 @@ class UserModel {
       notifSettings: data['notifSettings'] != null
           ? NotifSettings.fromMap(data['notifSettings'])
           : const NotifSettings(),
+      hasSeenAppFeedback: data['hasSeenAppFeedback'] ?? false,
     );
   }
 

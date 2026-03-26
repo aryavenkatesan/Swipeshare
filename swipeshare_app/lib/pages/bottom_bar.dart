@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/app_feedback_bottom_sheet.dart';
 import 'package:swipeshare_app/components/ratings_bottom_sheet.dart';
 import 'package:swipeshare_app/components/refreshable_page.dart';
 import 'package:swipeshare_app/models/user.dart';
@@ -100,24 +101,24 @@ class _BottomBarState extends State<BottomBar>
   }
 
   Future<void> _checkOrdersToRate() async {
-    // final ordersToRate = [
-    //   MealOrder(
-    //     sellerId: userData!.id,
-    //     buyerId: "bruh",
-    //     sellerName: "bruh",
-    //     buyerName: "bruh",
-    //     diningHall: "Chase",
-    //     sellerStars: 5,
-    //     buyerStars: 5,
-    //     transactionDate: DateTime.now(),
-    //     sellerHasNotifs: false,
-    //     buyerHasNotifs: false,
-    //     status: OrderStatus.completed,
-    //   ),
-    // ];
     final ordersToRate = await _orderService.getOrdersToRate();
     if (ordersToRate.isNotEmpty && mounted) {
-      RatingsBottomSheet.show(context, ordersToRate);
+      final showFeedback =
+          userData != null && !userData!.hasSeenAppFeedback;
+      RatingsBottomSheet.show(
+        context,
+        ordersToRate,
+        onComplete: showFeedback
+            ? () {
+                if (mounted) AppFeedbackBottomSheet.show(context);
+              }
+            : null,
+      );
+    } else if (userData != null &&
+        !userData!.hasSeenAppFeedback &&
+        userData!.transactionsCompleted >= 1 &&
+        mounted) {
+      AppFeedbackBottomSheet.show(context);
     }
   }
 
