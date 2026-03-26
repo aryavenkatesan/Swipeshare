@@ -73,6 +73,12 @@ class UserService {
     await updateUserData(currentUser.id, {'blocked_users': appendedBlockList});
   }
 
+  Future<void> banUser(String uid) =>
+      updateUserData(uid, {'status': UserStatus.banned.name});
+
+  Future<void> unbanUser(String uid) =>
+      updateUserData(uid, {'status': UserStatus.active.name});
+
   Future<void> sendFeedback(String message) async {
     final User? currentUser = FirebaseAuth.instance.currentUser;
 

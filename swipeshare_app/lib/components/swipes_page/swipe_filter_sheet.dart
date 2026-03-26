@@ -13,6 +13,7 @@ class SwipeFilterData {
   final TimeOfDay? startAt;
   final TimeOfDay? endAt;
   final Set<String> paymentTypes;
+  final double? maxPrice;
 
   SwipeFilterData({
     required this.locations,
@@ -21,6 +22,7 @@ class SwipeFilterData {
     this.startAt,
     this.endAt,
     required this.paymentTypes,
+    this.maxPrice,
   });
 
   /// Default: all locations, today, all payment methods (= no payment filter).
@@ -37,6 +39,7 @@ class SwipeFilterData {
     Object? startAt = _keep,
     Object? endAt = _keep,
     Set<String>? paymentTypes,
+    Object? maxPrice = _keep,
   }) =>
       SwipeFilterData(
         locations: locations ?? Set.from(this.locations),
@@ -46,6 +49,7 @@ class SwipeFilterData {
         startAt: startAt == _keep ? this.startAt : startAt as TimeOfDay?,
         endAt: endAt == _keep ? this.endAt : endAt as TimeOfDay?,
         paymentTypes: paymentTypes ?? Set.from(this.paymentTypes),
+        maxPrice: maxPrice == _keep ? this.maxPrice : maxPrice as double?,
       );
 }
 
@@ -83,6 +87,8 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
   late TimeOfDay? _startAt;
   late TimeOfDay? _endAt;
   late Set<String> _paymentTypes;
+  late double? _maxPrice;
+  late TextEditingController _priceController;
 
   @override
   void initState() {
@@ -93,6 +99,20 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
     _startAt = widget.initial.startAt;
     _endAt = widget.initial.endAt;
     _paymentTypes = Set.from(widget.initial.paymentTypes);
+    _maxPrice = widget.initial.maxPrice;
+    _priceController = TextEditingController(
+      text: _maxPrice != null
+          ? (_maxPrice! == _maxPrice!.roundToDouble()
+              ? _maxPrice!.toInt().toString()
+              : _maxPrice!.toStringAsFixed(2))
+          : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _priceController.dispose();
+    super.dispose();
   }
 
   void _toggle(Set<String> set, String value) {
@@ -114,6 +134,8 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
       _startAt = null;
       _endAt = null;
       _paymentTypes = Set.from(d.paymentTypes);
+      _maxPrice = null;
+      _priceController.clear();
     });
   }
 
@@ -274,6 +296,37 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // ── Max Price ──
+              Text(
+                'Max Price',
+                style: textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: 120,
+                child: TextField(
+                  controller: _priceController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    prefixText: '\$ ',
+                    hintText: 'Any',
+                    isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _maxPrice =
+                          val.isEmpty ? null : double.tryParse(val);
+                    });
+                  },
+                ),
+              ),
               const SizedBox(height: 32),
 
               // ── Save ──
@@ -286,6 +339,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                     startAt: _startAt,
                     endAt: _endAt,
                     paymentTypes: Set.from(_paymentTypes),
+                    maxPrice: _maxPrice,
                   ),
                 ),
                 child: const Text('Save'),
