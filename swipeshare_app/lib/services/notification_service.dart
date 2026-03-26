@@ -10,6 +10,18 @@ import 'package:swipeshare_app/pages/chat_page.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 
+enum NotificationType {
+  newMessage('new_message'),
+  newOrder('new_order'),
+  timeProposalUpdate('time_proposal_update');
+
+  const NotificationType(this.value);
+  final String value;
+
+  static NotificationType? fromString(String value) =>
+      NotificationType.values.where((e) => e.value == value).firstOrNull;
+}
+
 @pragma('vm:entry-point')
 Future<void> _handleBackgroundMessage(RemoteMessage message) async {
   debugPrint('Background message received: ${message.messageId}');
@@ -170,13 +182,12 @@ class NotificationService {
       return;
     }
 
-    switch (message.data['type']) {
-      case 'new_message':
-      case 'new_order':
-      case 'time_proposal_update':
+    switch (NotificationType.fromString(message.data['type'])) {
+      case NotificationType.newMessage:
+      case NotificationType.newOrder:
+      case NotificationType.timeProposalUpdate:
         await _navigateToChatPage(message.data);
-        break;
-      default:
+      case null:
         debugPrint('Unknown notification type: ${message.data['type']}');
     }
   }

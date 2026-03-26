@@ -8,6 +8,15 @@ import {
 } from "../utils/notifications";
 import { timeOfDayStringToTime } from "../utils/time";
 
+export const notificationType = {
+  newMessage: "new_message",
+  newOrder: "new_order",
+  timeProposalUpdate: "time_proposal_update",
+} as const;
+
+export type NotificationType =
+  (typeof notificationType)[keyof typeof notificationType];
+
 export const sendMessageNotification = functions.firestore.onDocumentCreated(
   "orders/{orderId}/messages/{messageId}",
   async (event) => {
@@ -54,15 +63,12 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
         return;
       }
 
-      const title =
-        message.messageType === "text"
-          ? `${message.senderName} sent a message`
-          : `${message.senderName} proposed a time`;
+      const title = message.senderName;
 
       const body =
         message.messageType === "text"
           ? (message.content ?? "")
-          : timeOfDayStringToTime(message.proposedTime ?? "");
+          : `Proposed a time: ${timeOfDayStringToTime(message.proposedTime ?? "")}`;
 
       await updateNotificationsStatus(orderId, recipientId);
 
@@ -76,7 +82,7 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
           messageId,
           senderId: message.senderId,
           senderName: message.senderName,
-          type: "new_message",
+          type: notificationType.newMessage,
         },
         token: recipientData.fcmToken,
       });
@@ -125,14 +131,14 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
 
       const payload = await payloadWithNotifs(orderData.sellerId, {
         notification: {
-          title: `Someone claimed your meal swipe for ${readableDate}`,
-          body: "Tap to coordinate a meeting time",
+          title: "You have a new buyer!",
+          body: `For ${readableDate} — tap to coordinate a time`,
         },
         data: {
           orderId,
           buyerId: orderData.buyerId,
           buyerName: orderData.buyerName,
-          type: "new_order",
+          type: notificationType.newOrder,
         },
         token: sellerData.fcmToken,
       });
@@ -211,11 +217,12 @@ export const sendProposalUpdateNotification =
 
         const payload = await payloadWithNotifs(senderId, {
           notification: {
-            title: `${receiverName} ${afterData.status} your time proposal for ${proposalTime}!`,
+            title: `${receiverName} ${afterData.status} your proposal`,
+            body: `Meeting at ${proposalTime}`,
           },
           data: {
             orderId,
-            type: "time_proposal_update",
+            type: notificationType.timeProposalUpdate,
           },
           token: senderData.fcmToken,
         });
