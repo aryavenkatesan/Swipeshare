@@ -131,6 +131,7 @@ class NotificationService {
     // Show snackbar
     final context = _navigatorKey?.currentContext;
     if (context != null && message.notification != null) {
+      final bool inChat = _activeChatId != null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -140,6 +141,11 @@ class NotificationService {
           backgroundColor: Colors.blue,
           duration: const Duration(seconds: 5),
           behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: inChat ? 70 : 16,
+            left: 16,
+            right: 16,
+          ),
           action: SnackBarAction(
             label: 'View',
             textColor: Colors.white,

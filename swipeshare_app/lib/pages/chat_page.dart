@@ -75,7 +75,11 @@ class _ChatPageState extends State<ChatPage> {
       await safeVibrate(HapticsType.error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(SnackbarMessages.profanityInMessage)),
+          SnackBar(
+            content: Text(SnackbarMessages.profanityInMessage),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 70, left: 16, right: 16),
+          ),
         );
       }
       return;
@@ -380,21 +384,26 @@ class _ChatPageState extends State<ChatPage> {
         (previousMessage is! TextMessage) ||
         (previousMessage.senderId != message.senderId);
 
+    final double maxBubbleWidth = MediaQuery.of(context).size.width * 0.85;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
       child: Container(
         alignment: alignment,
-        child: Column(
-          crossAxisAlignment:
-              (message.senderId == _firebaseAuth.currentUser!.uid)
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            if (showSenderName) Text(message.senderName),
-            if (showSenderName) SizedBox(height: 5),
-            ChatBubble(message: (message.content), alignment: alignment),
-            SizedBox(height: 5),
-          ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+          child: Column(
+            crossAxisAlignment:
+                (message.senderId == _firebaseAuth.currentUser!.uid)
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              if (showSenderName) Text(message.senderName),
+              if (showSenderName) SizedBox(height: 5),
+              ChatBubble(message: (message.content), alignment: alignment),
+              SizedBox(height: 5),
+            ],
+          ),
         ),
       ),
     );
@@ -462,6 +471,8 @@ class _ChatPageState extends State<ChatPage> {
         placeholder: "Enter Message",
         style: textStyle,
         placeholderStyle: placeholderStyle,
+        minLines: 1,
+        maxLines: 5,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: const Color.fromARGB(11, 3, 168, 244),
@@ -473,6 +484,8 @@ class _ChatPageState extends State<ChatPage> {
       return TextField(
         controller: _messageController,
         obscureText: false,
+        minLines: 1,
+        maxLines: 5,
         style: textStyle,
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
