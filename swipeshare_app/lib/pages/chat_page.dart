@@ -466,6 +466,8 @@ class _ChatPageState extends State<ChatPage> {
         placeholder: "Enter Message",
         style: textStyle,
         placeholderStyle: placeholderStyle,
+        minLines: 1,
+        maxLines: 5,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: const Color.fromARGB(11, 3, 168, 244),
@@ -477,6 +479,8 @@ class _ChatPageState extends State<ChatPage> {
       return TextField(
         controller: _messageController,
         obscureText: false,
+        minLines: 1,
+        maxLines: 5,
         style: textStyle,
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
