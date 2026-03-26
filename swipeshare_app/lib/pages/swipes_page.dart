@@ -157,9 +157,9 @@ class _SwipesPageState extends State<SwipesPage> {
       return false;
     }
 
-    // Price filter
+    // Price filter (strict less-than)
     if (_filterData.maxPrice != null) {
-      if (l.price == null || l.price! > _filterData.maxPrice!) return false;
+      if (l.price == null || l.price! >= _filterData.maxPrice!) return false;
     }
 
     return true;
@@ -465,9 +465,7 @@ class _FilterPillRow extends StatelessWidget {
           if (filterData.maxPrice != null) ...[
             const SizedBox(width: 8),
             _Pill(
-              label: filterData.maxPrice! == filterData.maxPrice!.roundToDouble()
-                  ? ' ≤ \$${filterData.maxPrice!.toInt()} '
-                  : ' ≤ \$${filterData.maxPrice!.toStringAsFixed(2)} ',
+              label: ' < \$${filterData.maxPrice} ',
               selected: true,
               onTap: onClearPrice,
             ),
