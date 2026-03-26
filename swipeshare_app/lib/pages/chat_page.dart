@@ -75,7 +75,11 @@ class _ChatPageState extends State<ChatPage> {
       await safeVibrate(HapticsType.error);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(SnackbarMessages.profanityInMessage)),
+          SnackBar(
+            content: Text(SnackbarMessages.profanityInMessage),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 70, left: 16, right: 16),
+          ),
         );
       }
       return;
