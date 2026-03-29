@@ -7,17 +7,29 @@ import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class RatingsBottomSheet extends StatefulWidget {
   final List<MealOrder> ordersToRate;
+  final VoidCallback? onComplete;
 
-  const RatingsBottomSheet({super.key, required this.ordersToRate});
+  const RatingsBottomSheet({
+    super.key,
+    required this.ordersToRate,
+    this.onComplete,
+  });
 
-  static Future<void> show(BuildContext context, List<MealOrder> orders) {
+  static Future<void> show(
+    BuildContext context,
+    List<MealOrder> orders, {
+    VoidCallback? onComplete,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => RatingsBottomSheet(ordersToRate: orders),
+      builder: (context) => RatingsBottomSheet(
+        ordersToRate: orders,
+        onComplete: onComplete,
+      ),
     );
   }
 
@@ -277,6 +289,7 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
       );
     } else {
       Navigator.of(context).pop();
+      widget.onComplete?.call();
       messenger.showSnackBar(
         SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
       );

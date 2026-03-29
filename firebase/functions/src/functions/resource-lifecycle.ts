@@ -36,7 +36,11 @@ async function completeOldOrdersLogic() {
 
   const getOrCreate = (userId: string): UserUpdates => {
     if (!userUpdates.has(userId)) {
-      userUpdates.set(userId, { transactions: 0, moneySaved: 0, moneyEarned: 0 });
+      userUpdates.set(userId, {
+        transactions: 0,
+        moneySaved: 0,
+        moneyEarned: 0,
+      });
     }
     return userUpdates.get(userId)!;
   };
