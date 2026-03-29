@@ -13,6 +13,7 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_7.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
+import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class OnboardingCarousel extends StatefulWidget {
@@ -206,7 +207,9 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
     try {
       await _verificationService.checkVerificationCode(_codeController.text);
 
-      // Email verified
+      // Email verified — request notification permissions before entering the app
+      await NotificationService.instance.requestPermissions();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

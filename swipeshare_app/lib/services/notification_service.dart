@@ -41,17 +41,23 @@ class NotificationService {
 
   static final NotificationService instance = NotificationService._();
 
+  /// Requests notification permissions from the user.
+  /// Call this during onboarding, not on every app open.
+  Future<void> requestPermissions() async {
+    await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
   /// Configures notification service for app to funciton properly
   Future<void> initialize(GlobalKey<NavigatorState> navigatorKey) async {
     debugPrint("Initializing Notification Service");
 
     _navigatorKey = navigatorKey;
 
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    final settings = await _messaging.getNotificationSettings();
 
     if (settings.authorizationStatus != AuthorizationStatus.authorized) {
       debugPrint("User declined notification permissions");
