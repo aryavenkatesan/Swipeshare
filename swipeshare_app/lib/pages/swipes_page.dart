@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/components/swipes_page/swipe_filter_sheet.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:swipeshare_app/components/colors.dart';
+import 'package:swipeshare_app/components/swipes_page/swipe_filter_sheet.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/pages/buy/view_listing_page.dart';
@@ -150,7 +150,8 @@ class _SwipesPageState extends State<SwipesPage> {
 
     // Payment filter
     final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
-    final applyPayFilter = _filterData.paymentTypes.isNotEmpty &&
+    final applyPayFilter =
+        _filterData.paymentTypes.isNotEmpty &&
         !_filterData.paymentTypes.containsAll(allPayNames);
     if (applyPayFilter &&
         !l.paymentTypes.any(_filterData.paymentTypes.contains)) {
@@ -331,8 +332,9 @@ class _SwipesPageState extends State<SwipesPage> {
             padding: const EdgeInsets.fromLTRB(20, 32, 20, 8),
             child: Text(
               'Filtered Out',
-              style: textTheme.titleSmall
-                  ?.copyWith(color: Colors.grey.shade500),
+              style: textTheme.titleSmall?.copyWith(
+                color: Colors.grey.shade500,
+              ),
             ),
           ),
           Opacity(opacity: 0.4, child: _listingsGrid(_filteredOutListings)),
@@ -385,8 +387,7 @@ class _FilterPillRow extends StatelessWidget {
 
   String _formatTime(TimeOfDay t) {
     final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
-    final min =
-        t.minute == 0 ? '' : ':${t.minute.toString().padLeft(2, '0')}';
+    final min = t.minute == 0 ? '' : ':${t.minute.toString().padLeft(2, '0')}';
     final period = t.period == DayPeriod.am ? 'AM' : 'PM';
     return '$hour$min $period';
   }
@@ -406,9 +407,9 @@ class _FilterPillRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allPayNames = Set.from(PaymentOption.allPaymentTypeNames);
-    final hasTimePill =
-        filterData.startAt != null || filterData.endAt != null;
-    final hasPaymentPill = filterData.paymentTypes.isNotEmpty &&
+    final hasTimePill = filterData.startAt != null || filterData.endAt != null;
+    final hasPaymentPill =
+        filterData.paymentTypes.isNotEmpty &&
         !filterData.paymentTypes.containsAll(allPayNames);
 
     return SingleChildScrollView(

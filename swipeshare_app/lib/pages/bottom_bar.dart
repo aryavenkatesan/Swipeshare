@@ -10,6 +10,7 @@ import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
 import 'package:swipeshare_app/pages/swipes_page.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'dashboard/dashboard_page.dart';
 import 'home_page.dart';
@@ -174,9 +175,50 @@ class _BottomBarState extends State<BottomBar>
       );
     }
 
+    Widget swipesHeader() {
+      final colors = Theme.of(context).colorScheme;
+      final textTheme = Theme.of(context).textTheme;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Swipes", style: textTheme.displayLarge),
+              GestureDetector(
+                onTap: () => launchUrl(
+                  Uri.parse("https://dining.unc.edu/menu-hours/"),
+                  mode: LaunchMode.inAppBrowserView,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    "Menu",
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.onSecondaryContainer,
+                      fontWeight: FontWeight.w300,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Divider(),
+        ],
+      );
+    }
+
     final headers = <Widget>[
       DashboardHeader(userData: userData!),
-      pageHeader("Swipes"),
+      swipesHeader(),
       pageHeader("Inbox"),
       pageHeader("Profile"),
     ];
@@ -214,8 +256,11 @@ class _BottomBarState extends State<BottomBar>
                                 ),
                               );
                             },
-                            icon: const Icon(CupertinoIcons.add,
-                                color: Colors.white, size: 28),
+                            icon: const Icon(
+                              CupertinoIcons.add,
+                              color: Colors.white,
+                              size: 28,
+                            ),
                             label: const Text('Sell a Swipe'),
                           ),
                         )
@@ -226,35 +271,39 @@ class _BottomBarState extends State<BottomBar>
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Divider(height: 1, thickness: 1, color: Color.fromARGB(97, 158, 158, 158)),
+            const Divider(
+              height: 1,
+              thickness: 1,
+              color: Color.fromARGB(97, 158, 158, 158),
+            ),
             BottomNavigationBar(
-          selectedFontSize: 14,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              label: 'Dashboard',
+              selectedFontSize: 14,
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+              type: BottomNavigationBarType.fixed,
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  label: 'Dashboard',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.attach_money_rounded),
+                  label: 'Swipes',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat_outlined),
+                  label: 'Inbox',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  label: 'Profile',
+                ),
+                // BottomNavigationBarItem(
+                //   icon: Icon(Icons.sunny_snowing),
+                //   label: 'Old Home',
+                // ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.attach_money_rounded),
-              label: 'Swipes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_outlined),
-              label: 'Inbox',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: 'Profile',
-            ),
-            // BottomNavigationBarItem(
-            //   icon: Icon(Icons.sunny_snowing),
-            //   label: 'Old Home',
-            // ),
-          ],
-        ),
           ],
         ),
       ),
