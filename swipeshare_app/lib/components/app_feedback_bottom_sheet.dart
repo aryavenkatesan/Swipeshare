@@ -9,8 +9,8 @@ class AppFeedbackBottomSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
+      isDismissible: true,
+      enableDrag: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const AppFeedbackBottomSheet(),
     );
@@ -94,7 +94,18 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: _colors.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               Center(
                 child: Text(
                   'Share Feedback',
@@ -125,7 +136,7 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
                         Container(
                           height: 130,
                           decoration: BoxDecoration(
-                            border: Border.all(color: _colors.outline),
+                            border: Border.all(color: _colors.outline, width: 0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: TextField(
@@ -141,6 +152,8 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
                                 color: _colors.surfaceTint,
                               ),
                               border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                               contentPadding:
                                   const EdgeInsets.fromLTRB(16, 16, 9, 4),
                             ),
