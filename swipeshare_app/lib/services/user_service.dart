@@ -73,6 +73,28 @@ class UserService {
     await updateUserData(currentUser.id, {'blocked_users': appendedBlockList});
   }
 
+  Future<void> banUser(String uid) async {
+    await updateUserData(uid, {'status': UserStatus.banned.name});
+
+    // Cancel the banned user's active listings
+    final listingsSnapshot = await _firestore
+        .collection('listings')
+        .where('sellerId', isEqualTo: uid)
+        .where('status', isEqualTo: ListingStatus.active.name)
+        .get();
+
+    if (listingsSnapshot.docs.isNotEmpty) {
+      final batch = _firestore.batch();
+      for (final doc in listingsSnapshot.docs) {
+        batch.update(doc.reference, {'status': ListingStatus.cancelled.name});
+      }
+      await batch.commit();
+    }
+  }
+
+  Future<void> unbanUser(String uid) =>
+      updateUserData(uid, {'status': UserStatus.active.name});
+
   Future<void> sendFeedback(String message) async {
     final User? currentUser = FirebaseAuth.instance.currentUser;
 

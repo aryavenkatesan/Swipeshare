@@ -13,6 +13,7 @@ class SwipeFilterData {
   final TimeOfDay? startAt;
   final TimeOfDay? endAt;
   final Set<String> paymentTypes;
+  final int? maxPrice;
 
   SwipeFilterData({
     required this.locations,
@@ -21,6 +22,7 @@ class SwipeFilterData {
     this.startAt,
     this.endAt,
     required this.paymentTypes,
+    this.maxPrice,
   });
 
   /// Default: all locations, today, all payment methods (= no payment filter).
@@ -37,6 +39,7 @@ class SwipeFilterData {
     Object? startAt = _keep,
     Object? endAt = _keep,
     Set<String>? paymentTypes,
+    Object? maxPrice = _keep,
   }) =>
       SwipeFilterData(
         locations: locations ?? Set.from(this.locations),
@@ -46,6 +49,7 @@ class SwipeFilterData {
         startAt: startAt == _keep ? this.startAt : startAt as TimeOfDay?,
         endAt: endAt == _keep ? this.endAt : endAt as TimeOfDay?,
         paymentTypes: paymentTypes ?? Set.from(this.paymentTypes),
+        maxPrice: maxPrice == _keep ? this.maxPrice : maxPrice as int?,
       );
 }
 
@@ -83,6 +87,10 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
   late TimeOfDay? _startAt;
   late TimeOfDay? _endAt;
   late Set<String> _paymentTypes;
+  late int? _maxPrice;
+
+  static const _minPrice = 1;
+  static const _maxPriceLimit = 20;
 
   @override
   void initState() {
@@ -93,6 +101,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
     _startAt = widget.initial.startAt;
     _endAt = widget.initial.endAt;
     _paymentTypes = Set.from(widget.initial.paymentTypes);
+    _maxPrice = widget.initial.maxPrice;
   }
 
   void _toggle(Set<String> set, String value) {
@@ -114,6 +123,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
       _startAt = null;
       _endAt = null;
       _paymentTypes = Set.from(d.paymentTypes);
+      _maxPrice = null;
     });
   }
 
@@ -274,6 +284,74 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // ── Max Price ──
+              Text(
+                'Max Price',
+                style: textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _maxPrice != null && _maxPrice! > _minPrice
+                        ? () => setState(() => _maxPrice = _maxPrice! - 1)
+                        : null,
+                    child: Icon(
+                      Icons.remove_circle_outline,
+                      size: 30,
+                      color: _maxPrice != null && _maxPrice! > _minPrice
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    width: 52,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _maxPrice != null ? '< \$$_maxPrice' : '—',
+                      style: textTheme.bodyMedium,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: _maxPrice == null || _maxPrice! < _maxPriceLimit
+                        ? () => setState(() {
+                              _maxPrice = (_maxPrice ?? _minPrice) + 1;
+                              if (_maxPrice! > _maxPriceLimit) {
+                                _maxPrice = _maxPriceLimit;
+                              }
+                            })
+                        : null,
+                    child: Icon(
+                      Icons.add_circle_outline,
+                      size: 30,
+                      color: _maxPrice == null || _maxPrice! < _maxPriceLimit
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  if (_maxPrice != null) ...[
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () => setState(() => _maxPrice = null),
+                      child: Text(
+                        'Clear',
+                        style: textTheme.bodyLarge
+                            ?.copyWith(color: SwipeshareColors.primary),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
               const SizedBox(height: 32),
 
               // ── Save ──
@@ -286,6 +364,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                     startAt: _startAt,
                     endAt: _endAt,
                     paymentTypes: Set.from(_paymentTypes),
+                    maxPrice: _maxPrice,
                   ),
                 ),
                 child: const Text('Save'),

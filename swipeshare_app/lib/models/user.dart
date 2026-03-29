@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-enum UserStatus { active, deleted }
+enum UserStatus { active, deleted, banned }
 
 class PaymentOption {
   final String name;

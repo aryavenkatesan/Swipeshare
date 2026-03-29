@@ -157,6 +157,11 @@ class _SwipesPageState extends State<SwipesPage> {
       return false;
     }
 
+    // Price filter (strict less-than)
+    if (_filterData.maxPrice != null) {
+      if (l.price == null || l.price! >= _filterData.maxPrice!) return false;
+    }
+
     return true;
   }
 
@@ -231,6 +236,13 @@ class _SwipesPageState extends State<SwipesPage> {
     _startListening();
   }
 
+  void _clearPrice() {
+    setState(
+      () => _filterData = _filterData.copyWith(maxPrice: null),
+    );
+    _startListening();
+  }
+
   Future<void> _openFilterSheet() async {
     final result = await showSwipeFilterSheet(context, _filterData);
     if (result != null) {
@@ -257,6 +269,7 @@ class _SwipesPageState extends State<SwipesPage> {
           onOpenSheet: _openFilterSheet,
           onClearTime: _clearTime,
           onTogglePayment: _togglePayment,
+          onClearPrice: _clearPrice,
         ),
         const SizedBox(height: 28),
         _buildBody(textTheme),
@@ -358,6 +371,7 @@ class _FilterPillRow extends StatelessWidget {
   final VoidCallback onOpenSheet;
   final VoidCallback onClearTime;
   final ValueChanged<String> onTogglePayment;
+  final VoidCallback onClearPrice;
 
   const _FilterPillRow({
     required this.filterData,
@@ -366,6 +380,7 @@ class _FilterPillRow extends StatelessWidget {
     required this.onOpenSheet,
     required this.onClearTime,
     required this.onTogglePayment,
+    required this.onClearPrice,
   });
 
   String _formatTime(TimeOfDay t) {
@@ -445,6 +460,14 @@ class _FilterPillRow extends StatelessWidget {
               label: ' $_timePillLabel ',
               selected: true,
               onTap: onClearTime,
+            ),
+          ],
+          if (filterData.maxPrice != null) ...[
+            const SizedBox(width: 8),
+            _Pill(
+              label: ' < \$${filterData.maxPrice} ',
+              selected: true,
+              onTap: onClearPrice,
             ),
           ],
           if (hasPaymentPill)

@@ -76,8 +76,16 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        // Get email verification status from Firestore
+        // Get user data from Firestore
         final userData = userSnapshot.data!.data() as Map<String, dynamic>;
+
+        // Check if user is banned
+        if (userData['status'] == 'banned') {
+          // Sign out the banned user and show login screen
+          FirebaseAuth.instance.signOut();
+          return const LoginOrRegister(key: ValueKey('auth'));
+        }
+
         final isEmailVerified = userData['isEmailVerified'] ?? false;
 
         // Route based on verification status
