@@ -16,11 +16,14 @@ class AdaptiveTimePicker {
     required BuildContext context,
     required TimeOfDay initialTime,
     String? helpText,
+    String confirmText = 'Done',
   }) async {
     if (useCupertino) {
       return _showCupertinoTimePicker(
         context: context,
         initialTime: initialTime,
+        helpText: helpText,
+        confirmText: confirmText,
       );
     } else {
       return _showMaterialTimePicker(
@@ -35,16 +38,25 @@ class AdaptiveTimePicker {
   static Future<TimeOfDay?> _showCupertinoTimePicker({
     required BuildContext context,
     required TimeOfDay initialTime,
+    String? helpText,
+    String confirmText = 'Done',
   }) async {
     TimeOfDay selectedTime = initialTime;
+
+    final helpTextStyle = Theme.of(context).textTheme.labelMedium;
 
     final result = await showCupertinoModalPopup<TimeOfDay>(
       context: context,
       builder: (context) => Container(
-        height: 280,
+        height: helpText != null ? 320 : 280,
         color: CupertinoColors.systemBackground.resolveFrom(context),
         child: Column(
           children: [
+            if (helpText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: Text(helpText, style: helpTextStyle),
+              ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
@@ -55,7 +67,7 @@ class AdaptiveTimePicker {
                     onPressed: () => Navigator.of(context).pop(null),
                   ),
                   CupertinoButton(
-                    child: const Text('Done'),
+                    child: Text(confirmText),
                     onPressed: () => Navigator.of(context).pop(selectedTime),
                   ),
                 ],
@@ -121,8 +133,10 @@ class AdaptiveTimePicker {
     required DateTime firstDate,
     required DateTime lastDate,
   }) async {
-    assert(!initialDate.isBefore(firstDate),
-        'initialDate must be >= firstDate');
+    assert(
+      !initialDate.isBefore(firstDate),
+      'initialDate must be >= firstDate',
+    );
     if (useCupertino) {
       return _showCupertinoDatePicker(
         context: context,
