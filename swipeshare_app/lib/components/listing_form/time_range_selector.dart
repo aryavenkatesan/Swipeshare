@@ -6,11 +6,12 @@ import 'package:swipeshare_app/components/listing_form/listing_field_card.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
 /// Two side-by-side time pickers for start and end times.
-class TimeRangeSelector extends StatelessWidget {
+class TimeRangeSelector extends StatefulWidget {
   final TimeOfDay? timeStart;
   final TimeOfDay? timeEnd;
   final ValueChanged<TimeOfDay> onStartChanged;
   final ValueChanged<TimeOfDay> onEndChanged;
+  final VoidCallback? onNow;
 
   const TimeRangeSelector({
     super.key,
@@ -18,54 +19,112 @@ class TimeRangeSelector extends StatelessWidget {
     required this.timeEnd,
     required this.onStartChanged,
     required this.onEndChanged,
+    this.onNow,
   });
+
+  @override
+  State<TimeRangeSelector> createState() => _TimeRangeSelectorState();
+}
+
+class _TimeRangeSelectorState extends State<TimeRangeSelector> {
+  bool _nowCollapsed = false;
+  bool _nowFaded = false;
 
   static int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
 
   bool get _hasRangeError =>
-      timeStart != null &&
-      timeEnd != null &&
-      _toMinutes(timeStart!) >= _toMinutes(timeEnd!);
+      widget.timeStart != null &&
+      widget.timeEnd != null &&
+      _toMinutes(widget.timeStart!) >= _toMinutes(widget.timeEnd!);
 
   TimeOfDay _initialEndTime() {
-    if (timeStart == null) return timeEnd ?? const TimeOfDay(hour: 17, minute: 0);
-    if (timeEnd != null && _toMinutes(timeEnd!) > _toMinutes(timeStart!)) return timeEnd!;
-    return timeStart!;
+    if (widget.timeStart == null) return widget.timeEnd ?? const TimeOfDay(hour: 17, minute: 0);
+    if (widget.timeEnd != null && _toMinutes(widget.timeEnd!) > _toMinutes(widget.timeStart!)) return widget.timeEnd!;
+    return widget.timeStart!;
+  }
+
+  bool get _shouldShowNow =>
+      widget.onNow != null &&
+      widget.timeStart == null &&
+      widget.timeEnd == null;
+
+  @override
+  void didUpdateWidget(TimeRangeSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final wasShowing = oldWidget.onNow != null &&
+        oldWidget.timeStart == null &&
+        oldWidget.timeEnd == null;
+    if (wasShowing && !_shouldShowNow && !_nowCollapsed) {
+      // Fade out first, then collapse.
+      setState(() => _nowFaded = true);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) setState(() => _nowCollapsed = true);
+      });
+    } else if (_shouldShowNow && _nowCollapsed) {
+      setState(() {
+        _nowCollapsed = false;
+        _nowFaded = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final rangeError = _hasRangeError;
+    final showNow = !_nowCollapsed && widget.onNow != null;
 
     return Row(
       children: [
         Expanded(
           child: _TimeTile(
             label: 'Start at',
-            time: timeStart,
+            time: widget.timeStart,
             onTap: () => _pick(
               context,
-              timeStart ?? const TimeOfDay(hour: 9, minute: 0),
-              onStartChanged,
+              widget.timeStart ?? const TimeOfDay(hour: 9, minute: 0),
+              widget.onStartChanged,
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          child: showNow
+              ? GestureDetector(
+                  onTap: widget.onNow,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: AnimatedOpacity(
+                      opacity: _nowFaded ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 100),
+                      child: Text(
+                        'now',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox(width: 12),
+        ),
         Expanded(
           child: _TimeTile(
             label: 'End at',
-            time: timeEnd,
+            time: widget.timeEnd,
             hasError: rangeError,
             onTap: () => _pick(
               context,
               _initialEndTime(),
-              onEndChanged,
+              widget.onEndChanged,
             ),
           ),
         ),
       ],
     );
   }
+
 
   Future<void> _pick(
     BuildContext context,

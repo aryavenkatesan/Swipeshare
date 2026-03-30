@@ -188,6 +188,14 @@ class _ListingFormState extends State<ListingForm> {
             timeEnd: _timeEnd,
             onStartChanged: (t) => setState(() => _timeStart = t),
             onEndChanged: (t) => setState(() => _timeEnd = t),
+            onNow: () {
+              final now = DateTime.now();
+              final end = now.add(const Duration(minutes: 30));
+              setState(() {
+                _timeStart = TimeOfDay(hour: now.hour, minute: now.minute);
+                _timeEnd = TimeOfDay(hour: end.hour, minute: end.minute);
+              });
+            },
           ),
           const SizedBox(height: 16),
 
