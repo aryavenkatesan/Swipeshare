@@ -100,8 +100,8 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
                       child: Text(
                         'now',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
