@@ -1,0 +1,17 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+const String _emulatorHost = 'localhost';
+
+Future<void> connectToEmulators() async {
+  // On Android, localhost on the device refers to the emulator itself.
+  // Use 10.0.2.2 to reach the host machine where Firebase emulators run.
+  final host = Platform.isAndroid ? '10.0.2.2' : _emulatorHost;
+
+  await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+  FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+  FirebaseFunctions.instance.useFunctionsEmulator(host, 5001);
+}

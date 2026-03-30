@@ -93,6 +93,7 @@ export const createOrderFromEmails = functions.https.onCall(async (request) => {
     transactionDate,
     status: orderStatus.active,
     price: price ?? 0,
+    cancellationAcknowledged: false,
   };
 
   const orderId = getOrderRoomName(newOrder);
@@ -181,6 +182,7 @@ export const createOrderFromListing = functions.https.onCall(
         transactionDate: listing.transactionDate,
         status: orderStatus.active,
         price: listing.price ?? 0,
+        cancellationAcknowledged: false,
       };
 
       const orderId = getOrderRoomName(newOrder);

@@ -11,6 +11,7 @@ type BaseMessage = {
   senderId: string;
   senderEmail: string;
   senderName: string;
+  timestamp?: FirebaseFirestore.Timestamp; // optional: set by server on creation
 };
 
 export type TextMessage = BaseMessage & {
@@ -26,7 +27,7 @@ export type SystemMessage = BaseMessage & {
 export type TimeProposal = BaseMessage & {
   messageType: "timeProposal";
   proposedTime: TimeOfDayString;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "accepted" | "declined";
 };
 
 export type Message = TextMessage | SystemMessage | TimeProposal;
@@ -61,6 +62,8 @@ export const orderStatus = {
 
 export type OrderStatus = (typeof orderStatus)[keyof typeof orderStatus];
 
+export type OrderRole = "buyer" | "seller";
+
 export type Order = {
   sellerId: string;
   sellerName: string;
@@ -77,18 +80,35 @@ export type Order = {
   ratingBySeller?: Rating;
   status: OrderStatus;
   price: number;
+  cancelledBy?: OrderRole;
+  cancellationAcknowledged: boolean;
 };
 
+export const userStatus = {
+  active: "active",
+  deleted: "deleted",
+  banned: "banned",
+} as const;
+
+export type UserStatus = (typeof userStatus)[keyof typeof userStatus];
+
 export type User = {
+  email: string;
   name: string;
   stars: number;
   fcmToken?: string;
   isEmailVerified: boolean;
+  verificationCode?: string;
+  verificationCodeExpires?: FirebaseFirestore.Timestamp;
+  status: UserStatus;
+  payment_types: string[];
   transactions_completed: number;
+  referral_email: string;
+  blocked_users: string[];
   moneySaved: number;
   moneyEarned: number;
   notifSettings: NotifSettings;
-  // other fields aren't relevant
+  hasSeenAppFeedback: boolean;
 };
 
 export type NotifSettings = {
