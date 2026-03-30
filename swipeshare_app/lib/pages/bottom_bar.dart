@@ -10,6 +10,7 @@ import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
 import 'package:swipeshare_app/pages/swipes_page.dart';
 import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/services/user_service.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'dashboard/dashboard_page.dart';
@@ -101,6 +102,19 @@ class _BottomBarState extends State<BottomBar>
     }
   }
 
+  Future<void> _requestStoreReview() async {
+    if (userData == null) return;
+    if (userData!.hasRequestedStoreReview) return;
+    if (userData!.transactionsCompleted < 2) return;
+    final inAppReview = InAppReview.instance;
+    if (!await inAppReview.isAvailable()) return;
+    await UserService.instance.updateUserData(
+      userData!.id,
+      {'hasRequestedStoreReview': true},
+    );
+    await inAppReview.requestReview();
+  }
+
   Future<void> _checkOrdersToRate() async {
     final ordersToRate = await _orderService.getOrdersToRate();
     if (ordersToRate.isNotEmpty && mounted) {
@@ -111,15 +125,29 @@ class _BottomBarState extends State<BottomBar>
         ordersToRate,
         onComplete: showFeedback
             ? () {
-                if (mounted) AppFeedbackBottomSheet.show(context);
+                if (mounted) {
+                  AppFeedbackBottomSheet.show(
+                    context,
+                    onComplete: _requestStoreReview,
+                  );
+                }
               }
-            : null,
+            : () async => await _requestStoreReview(),
       );
     } else if (userData != null &&
         !userData!.hasSeenAppFeedback &&
         userData!.transactionsCompleted >= 1 &&
         mounted) {
-      AppFeedbackBottomSheet.show(context);
+      AppFeedbackBottomSheet.show(
+        context,
+        onComplete: _requestStoreReview,
+      );
+    } else if (userData != null &&
+        userData!.hasSeenAppFeedback &&
+        !userData!.hasRequestedStoreReview &&
+        userData!.transactionsCompleted >= 2 &&
+        mounted) {
+      await _requestStoreReview();
     }
   }
 

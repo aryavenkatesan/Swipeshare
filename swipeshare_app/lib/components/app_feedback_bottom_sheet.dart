@@ -5,8 +5,8 @@ import 'package:swipeshare_app/utils/snackbar_messages.dart';
 class AppFeedbackBottomSheet extends StatefulWidget {
   const AppFeedbackBottomSheet({super.key});
 
-  static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
+  static Future<void> show(BuildContext context, {VoidCallback? onComplete}) async {
+    final submitted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       isDismissible: true,
@@ -14,6 +14,7 @@ class AppFeedbackBottomSheet extends StatefulWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => const AppFeedbackBottomSheet(),
     );
+    if (submitted == true) onComplete?.call();
   }
 
   @override
@@ -59,7 +60,7 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
       return;
     }
 
-    navigator.pop();
+    navigator.pop(true);
     messenger.showSnackBar(
       SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
     );
