@@ -64,11 +64,14 @@ class ProfilePage extends StatelessWidget {
           Text("Danger Zone", style: textTheme.titleMedium),
           const SizedBox(height: 12),
           _SectionCard(
+            borderColor: const Color.fromARGB(190, 244, 67, 54),
             children: [
               _SettingsTile(
                 icon: Icons.logout_rounded,
                 label: "Sign Out",
                 onTap: () => ProfilePageActions.signOut(context),
+                dividerColor: const Color.fromARGB(190, 244, 67, 54),
+                textColor: const Color.fromARGB(190, 244, 67, 54),
               ),
               _SettingsTile(
                 icon: Icons.delete_outline_rounded,
@@ -76,6 +79,7 @@ class ProfilePage extends StatelessWidget {
                 onTap: () =>
                     ProfilePageActions.navigateToDeleteAccount(context),
                 showDivider: false,
+                textColor: const Color.fromARGB(190, 244, 67, 54),
               ),
             ],
           ),
@@ -135,8 +139,9 @@ class ProfilePage extends StatelessWidget {
 // --- Rounded bordered card that wraps a section ---
 class _SectionCard extends StatelessWidget {
   final List<Widget> children;
+  final Color borderColor;
 
-  const _SectionCard({required this.children});
+  const _SectionCard({required this.children, this.borderColor = const Color(0xFFD0D0D0)});
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +150,7 @@ class _SectionCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFD0D0D0), width: 1.2),
+        side: BorderSide(color: borderColor, width: 1.2),
       ),
       child: Column(children: children),
     );
@@ -158,12 +163,16 @@ class _SettingsTile extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final bool showDivider;
+  final Color dividerColor;
+  final Color? textColor;
 
   const _SettingsTile({
     required this.icon,
     required this.label,
     required this.onTap,
     this.showDivider = true,
+    this.dividerColor = const Color(0xFFE0E0E0),
+    this.textColor,
   });
 
   @override
@@ -180,15 +189,15 @@ class _SettingsTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
-                Icon(icon, size: 24, color: const Color(0xFF5C4DB7)),
+                Icon(icon, size: 24, color: textColor ?? const Color(0xFF5C4DB7)),
                 const SizedBox(width: 12),
-                Expanded(child: Text(label, style: textTheme.bodyMedium)),
+                Expanded(child: Text(label, style: textTheme.bodyMedium?.copyWith(color: textColor))),
               ],
             ),
           ),
         ),
         if (showDivider)
-          const Divider(height: 1, thickness: 1, color: Color(0xFFE0E0E0)),
+          Divider(height: 1, thickness: 1, color: dividerColor),
       ],
     );
   }
