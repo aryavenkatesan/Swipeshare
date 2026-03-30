@@ -56,6 +56,13 @@ class _BottomBarState extends State<BottomBar>
     super.dispose();
   }
 
+  bool popupChecks({int transactions = 2}) {
+    // True = show feedback popup, False = don't show
+    return userData != null &&
+        !userData!.hasSeenAppFeedback &&
+        userData!.transactionsCompleted >= transactions;
+  }
+
   Future<void> _loadUserData() async {
     setState(() {
       isLoading = true;
@@ -103,9 +110,7 @@ class _BottomBarState extends State<BottomBar>
   }
 
   Future<void> _requestStoreReview() async {
-    if (userData == null) return;
-    if (userData!.hasRequestedStoreReview) return;
-    if (userData!.transactionsCompleted < 2) return;
+    if (popupChecks() == false) return;
     final inAppReview = InAppReview.instance;
     if (!await inAppReview.isAvailable()) return;
     await UserService.instance.updateUserData(
@@ -134,18 +139,13 @@ class _BottomBarState extends State<BottomBar>
               }
             : () async => await _requestStoreReview(),
       );
-    } else if (userData != null &&
-        !userData!.hasSeenAppFeedback &&
-        userData!.transactionsCompleted >= 1 &&
+    } else if (popupChecks(transactions: 1) &&
         mounted) {
       AppFeedbackBottomSheet.show(
         context,
         onComplete: _requestStoreReview,
       );
-    } else if (userData != null &&
-        userData!.hasSeenAppFeedback &&
-        !userData!.hasRequestedStoreReview &&
-        userData!.transactionsCompleted >= 2 &&
+    } else if (popupChecks() &&
         mounted) {
       await _requestStoreReview();
     }
