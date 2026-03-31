@@ -21,6 +21,7 @@ class SwipesPage extends StatefulWidget {
 
 class _SwipesPageState extends State<SwipesPage> {
   SwipeFilterData _filterData = SwipeFilterData.defaults;
+  Set<String>? _userDefaultPaymentTypes;
 
   List<Listing> _listings = [];
   List<Listing> _filteredOutListings = [];
@@ -52,6 +53,7 @@ class _SwipesPageState extends State<SwipesPage> {
           : Set<String>.from(PaymentOption.allPaymentTypeNames);
       if (mounted) {
         setState(() {
+          _userDefaultPaymentTypes = defaultPayments;
           _filterData = _filterData.copyWith(paymentTypes: defaultPayments);
         });
       }
@@ -163,6 +165,11 @@ class _SwipesPageState extends State<SwipesPage> {
       if (l.price == null || l.price! >= _filterData.maxPrice!) return false;
     }
 
+    // Rating filter (greater-than-or-equal)
+    if (_filterData.minRating != null) {
+      if (l.sellerRating < _filterData.minRating!) return false;
+    }
+
     return true;
   }
 
@@ -244,8 +251,19 @@ class _SwipesPageState extends State<SwipesPage> {
     _startListening();
   }
 
+  void _clearRating() {
+    setState(
+      () => _filterData = _filterData.copyWith(minRating: null),
+    );
+    _startListening();
+  }
+
   Future<void> _openFilterSheet() async {
-    final result = await showSwipeFilterSheet(context, _filterData);
+    final result = await showSwipeFilterSheet(
+      context,
+      _filterData,
+      userDefaultPaymentTypes: _userDefaultPaymentTypes,
+    );
     if (result != null) {
       setState(() => _filterData = result);
       _startListening();
@@ -271,6 +289,7 @@ class _SwipesPageState extends State<SwipesPage> {
           onClearTime: _clearTime,
           onTogglePayment: _togglePayment,
           onClearPrice: _clearPrice,
+          onClearRating: _clearRating,
         ),
         const SizedBox(height: 28),
         _buildBody(textTheme),
@@ -374,6 +393,7 @@ class _FilterPillRow extends StatelessWidget {
   final VoidCallback onClearTime;
   final ValueChanged<String> onTogglePayment;
   final VoidCallback onClearPrice;
+  final VoidCallback onClearRating;
 
   const _FilterPillRow({
     required this.filterData,
@@ -383,6 +403,7 @@ class _FilterPillRow extends StatelessWidget {
     required this.onClearTime,
     required this.onTogglePayment,
     required this.onClearPrice,
+    required this.onClearRating,
   });
 
   String _formatTime(TimeOfDay t) {
@@ -469,6 +490,14 @@ class _FilterPillRow extends StatelessWidget {
               label: ' < \$${filterData.maxPrice} ',
               selected: true,
               onTap: onClearPrice,
+            ),
+          ],
+          if (filterData.minRating != null) ...[
+            const SizedBox(width: 8),
+            _Pill(
+              label: ' ≥ ${filterData.minRating}★ ',
+              selected: true,
+              onTap: onClearRating,
             ),
           ],
           if (hasPaymentPill)

@@ -14,6 +14,7 @@ class SwipeFilterData {
   final TimeOfDay? endAt;
   final Set<String> paymentTypes;
   final int? maxPrice;
+  final int? minRating;
 
   SwipeFilterData({
     required this.locations,
@@ -23,6 +24,7 @@ class SwipeFilterData {
     this.endAt,
     required this.paymentTypes,
     this.maxPrice,
+    this.minRating,
   });
 
   /// Default: all locations, today, all payment methods (= no payment filter).
@@ -40,6 +42,7 @@ class SwipeFilterData {
     Object? endAt = _keep,
     Set<String>? paymentTypes,
     Object? maxPrice = _keep,
+    Object? minRating = _keep,
   }) =>
       SwipeFilterData(
         locations: locations ?? Set.from(this.locations),
@@ -50,6 +53,7 @@ class SwipeFilterData {
         endAt: endAt == _keep ? this.endAt : endAt as TimeOfDay?,
         paymentTypes: paymentTypes ?? Set.from(this.paymentTypes),
         maxPrice: maxPrice == _keep ? this.maxPrice : maxPrice as int?,
+        minRating: minRating == _keep ? this.minRating : minRating as int?,
       );
 }
 
@@ -59,21 +63,29 @@ const Object _keep = Object();
 /// Returns updated [SwipeFilterData] on Save, or null on dismiss.
 Future<SwipeFilterData?> showSwipeFilterSheet(
   BuildContext context,
-  SwipeFilterData current,
-) {
+  SwipeFilterData current, {
+  Set<String>? userDefaultPaymentTypes,
+}) {
   return showModalBottomSheet<SwipeFilterData>(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (_) => _SwipeFilterSheetContent(initial: current),
+    builder: (_) => _SwipeFilterSheetContent(
+      initial: current,
+      userDefaultPaymentTypes: userDefaultPaymentTypes,
+    ),
   );
 }
 
 class _SwipeFilterSheetContent extends StatefulWidget {
   final SwipeFilterData initial;
-  const _SwipeFilterSheetContent({required this.initial});
+  final Set<String>? userDefaultPaymentTypes;
+  const _SwipeFilterSheetContent({
+    required this.initial,
+    this.userDefaultPaymentTypes,
+  });
 
   @override
   State<_SwipeFilterSheetContent> createState() =>
@@ -88,9 +100,12 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
   late TimeOfDay? _endAt;
   late Set<String> _paymentTypes;
   late int? _maxPrice;
+  late int? _minRating;
 
   static const _minPrice = 1;
   static const _maxPriceLimit = 20;
+  static const _minRatingValue = 1;
+  static const _maxRatingValue = 5;
 
   @override
   void initState() {
@@ -102,6 +117,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
     _endAt = widget.initial.endAt;
     _paymentTypes = Set.from(widget.initial.paymentTypes);
     _maxPrice = widget.initial.maxPrice;
+    _minRating = widget.initial.minRating;
   }
 
   void _toggle(Set<String> set, String value) {
@@ -116,14 +132,16 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
 
   void _reset() {
     final d = SwipeFilterData.defaults;
+    final defaultPayments = widget.userDefaultPaymentTypes ?? d.paymentTypes;
     setState(() {
       _locations = Set.from(d.locations);
       _dates = Set.from(d.dates);
       _otherRange = null;
       _startAt = null;
       _endAt = null;
-      _paymentTypes = Set.from(d.paymentTypes);
+      _paymentTypes = Set.from(defaultPayments);
       _maxPrice = null;
+      _minRating = null;
     });
   }
 
@@ -286,70 +304,153 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
               ),
               const SizedBox(height: 16),
 
-              // ── Max Price ──
-              Text(
-                'Max Price',
-                style: textTheme.bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 6),
+              // ── Max Price & Min Rating (side by side) ──
               Row(
                 children: [
-                  GestureDetector(
-                    onTap: _maxPrice != null && _maxPrice! > _minPrice
-                        ? () => setState(() => _maxPrice = _maxPrice! - 1)
-                        : null,
-                    child: Icon(
-                      Icons.remove_circle_outline,
-                      size: 30,
-                      color: _maxPrice != null && _maxPrice! > _minPrice
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context).colorScheme.outlineVariant,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Max Price',
+                          style: textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: _maxPrice != null && _maxPrice! > _minPrice
+                                  ? () => setState(() => _maxPrice = _maxPrice! - 1)
+                                  : null,
+                              child: Icon(
+                                Icons.remove_circle_outline,
+                                size: 30,
+                                color: _maxPrice != null && _maxPrice! > _minPrice
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(context).colorScheme.outlineVariant,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Container(
+                              width: 52,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                _maxPrice != null ? '< \$$_maxPrice' : '—',
+                                style: textTheme.bodyMedium,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: _maxPrice == null || _maxPrice! < _maxPriceLimit
+                                  ? () => setState(() {
+                                        _maxPrice = (_maxPrice ?? _minPrice) + 1;
+                                        if (_maxPrice! > _maxPriceLimit) {
+                                          _maxPrice = _maxPriceLimit;
+                                        }
+                                      })
+                                  : null,
+                              child: Icon(
+                                Icons.add_circle_outline,
+                                size: 30,
+                                color: _maxPrice == null || _maxPrice! < _maxPriceLimit
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(context).colorScheme.outlineVariant,
+                              ),
+                            ),
+                            if (_maxPrice != null) ...[
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: () => setState(() => _maxPrice = null),
+                                child: Text(
+                                  'Clear',
+                                  style: textTheme.bodyLarge
+                                      ?.copyWith(color: SwipeshareColors.primary),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Container(
-                    width: 52,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _maxPrice != null ? '< \$$_maxPrice' : '—',
-                      style: textTheme.bodyMedium,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Min Rating',
+                          style: textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: _minRating != null && _minRating! > _minRatingValue
+                                  ? () => setState(() => _minRating = _minRating! - 1)
+                                  : null,
+                              child: Icon(
+                                Icons.remove_circle_outline,
+                                size: 30,
+                                color: _minRating != null && _minRating! > _minRatingValue
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(context).colorScheme.outlineVariant,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Container(
+                              width: 52,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                _minRating != null ? '≥ $_minRating' : '—',
+                                style: textTheme.bodyMedium,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: _minRating == null || _minRating! < _maxRatingValue
+                                  ? () => setState(() {
+                                        _minRating = (_minRating ?? _minRatingValue) + 1;
+                                        if (_minRating! > _maxRatingValue) {
+                                          _minRating = _maxRatingValue;
+                                        }
+                                      })
+                                  : null,
+                              child: Icon(
+                                Icons.add_circle_outline,
+                                size: 30,
+                                color: _minRating == null || _minRating! < _maxRatingValue
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(context).colorScheme.outlineVariant,
+                              ),
+                            ),
+                            if (_minRating != null) ...[
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: () => setState(() => _minRating = null),
+                                child: Text(
+                                  'Clear',
+                                  style: textTheme.bodyLarge
+                                      ?.copyWith(color: SwipeshareColors.primary),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: _maxPrice == null || _maxPrice! < _maxPriceLimit
-                        ? () => setState(() {
-                              _maxPrice = (_maxPrice ?? _minPrice) + 1;
-                              if (_maxPrice! > _maxPriceLimit) {
-                                _maxPrice = _maxPriceLimit;
-                              }
-                            })
-                        : null,
-                    child: Icon(
-                      Icons.add_circle_outline,
-                      size: 30,
-                      color: _maxPrice == null || _maxPrice! < _maxPriceLimit
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                  ),
-                  if (_maxPrice != null) ...[
-                    const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: () => setState(() => _maxPrice = null),
-                      child: Text(
-                        'Clear',
-                        style: textTheme.bodyLarge
-                            ?.copyWith(color: SwipeshareColors.primary),
-                      ),
-                    ),
-                  ],
                 ],
               ),
               const SizedBox(height: 32),
@@ -365,6 +466,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                     endAt: _endAt,
                     paymentTypes: Set.from(_paymentTypes),
                     maxPrice: _maxPrice,
+                    minRating: _minRating,
                   ),
                 ),
                 child: const Text('Save'),
