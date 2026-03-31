@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v2";
+import { updateUserStars } from "../services/user-service";
 import { Order, Rating, orderStatus } from "../types";
-import { updateUserStars } from "../utils/firestore";
 
 /**
  * Updates a user's star rating when an order is updated with a new rating.

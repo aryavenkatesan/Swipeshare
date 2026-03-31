@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { getOrder } from "./firestore";
+import { getOrder, patchOrder } from "../services/order-service";
 /** Sets `sellerHasNotifs` or `buyerHasNotifs` to true for the given order and notification recipient */
 export const updateNotificationsStatus = async (
   orderId: string,
@@ -19,13 +19,7 @@ export const updateNotificationsStatus = async (
 
   const updateField =
     recipientId === orderData.sellerId ? "sellerHasNotifs" : "buyerHasNotifs";
-  await admin
-    .firestore()
-    .collection("orders")
-    .doc(orderId)
-    .update({
-      [updateField]: true,
-    });
+  await patchOrder(orderId, { [updateField]: true });
 };
 
 /** Prepares the payload for a notification message, including unread counts */

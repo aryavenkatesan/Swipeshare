@@ -15,6 +15,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await connectToEmulators();
+  isDevMode = true;
 
   // Skip NotificationService: FCM does not work with local emulators.
 

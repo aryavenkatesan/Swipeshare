@@ -1,7 +1,8 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v2";
+import { getOrder } from "../services/order-service";
+import { getUserWithFcm } from "../services/user-service";
 import { Message, messageTypes, Order } from "../types";
-import { getOrder, getUserWithFcm } from "../utils/firestore";
 import {
   payloadWithNotifs,
   updateNotificationsStatus,

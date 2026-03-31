@@ -8,6 +8,7 @@ import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
+bool isDevMode = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

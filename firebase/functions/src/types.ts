@@ -1,3 +1,16 @@
+import type { DocumentData, DocumentReference, Timestamp, UpdateData } from "firebase-admin/firestore";
+
+/**
+ * Structural interface satisfied by both WriteBatch and Transaction.
+ * Avoids union-type overload resolution issues when passing either to service patch functions.
+ */
+export interface FirestoreWriter {
+  update(
+    documentRef: DocumentReference<DocumentData>,
+    data: UpdateData<DocumentData>,
+  ): unknown;
+}
+
 export const messageTypes = ["text", "system", "timeProposal"] as const;
 export type MessageType = (typeof messageTypes)[number];
 
@@ -11,7 +24,7 @@ type BaseMessage = {
   senderId: string;
   senderEmail: string;
   senderName: string;
-  timestamp?: FirebaseFirestore.Timestamp; // optional: set by server on creation
+  timestamp?: Timestamp; // optional: set by server on creation
 };
 
 export type TextMessage = BaseMessage & {
@@ -47,7 +60,7 @@ export type Listing = {
   diningHall: string;
   timeStart: number; // minutes since midnight (TimeOfDay converted via toMinutes)
   timeEnd: number; // minutes since midnight (TimeOfDay converted via toMinutes)
-  transactionDate: FirebaseFirestore.Timestamp;
+  transactionDate: Timestamp;
   sellerRating: number;
   paymentTypes: string[];
   price?: number;
@@ -75,7 +88,7 @@ export type Order = {
   displayTime?: TimeOfDayString;
   sellerHasNotifs: boolean;
   buyerHasNotifs: boolean;
-  transactionDate: FirebaseFirestore.Timestamp;
+  transactionDate: Timestamp;
   ratingByBuyer?: Rating;
   ratingBySeller?: Rating;
   status: OrderStatus;
@@ -99,7 +112,7 @@ export type User = {
   fcmToken?: string;
   isEmailVerified: boolean;
   verificationCode?: string;
-  verificationCodeExpires?: FirebaseFirestore.Timestamp;
+  verificationCodeExpires?: Timestamp;
   status: UserStatus;
   payment_types: string[];
   transactions_completed: number;
@@ -119,5 +132,5 @@ export type NotifSettings = {
 export type Rating = {
   stars: number;
   extraInfo?: string;
-  timestamp: FirebaseFirestore.Timestamp;
+  timestamp: Timestamp;
 };
