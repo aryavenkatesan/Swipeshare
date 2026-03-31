@@ -14,7 +14,15 @@
       "request": "launch",
       "program": "lib/main_dev.dart",
       "cwd": "swipeshare_app",
-      "preLaunchTask": "Start Emulators and Seed"
+      "preLaunchTask": "Start Emulators and Seed",
+      "postDebugTask": "Stop Firebase Emulators"
+    },
+    {
+      "name": "Raw Dev",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_dev.dart",
+      "cwd": "swipeshare_app"
     }
   ]
 }
