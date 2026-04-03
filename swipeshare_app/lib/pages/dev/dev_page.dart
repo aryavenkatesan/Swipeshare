@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/listing_form/listing_form.dart';
+import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/services/dev_service.dart';
 
 class DevPage extends StatefulWidget {
@@ -14,6 +15,7 @@ class _DevPageState extends State<DevPage> {
   ColorScheme get _colors => Theme.of(context).colorScheme;
   TextTheme get _textTheme => Theme.of(context).textTheme;
 
+  late SeedEmail _currentUser;
   late SeedEmail _listingSeller;
   bool _listingLoading = false;
   ListingFormData? _listingOverrides;
@@ -27,9 +29,11 @@ class _DevPageState extends State<DevPage> {
   void initState() {
     super.initState();
     final email = FirebaseAuth.instance.currentUser?.email;
-    final match = SeedEmail.values.where((e) => e.value == email).firstOrNull;
-    _listingSeller = match ?? SeedEmail.nick;
-    _orderSeller = match ?? SeedEmail.nick;
+    _currentUser =
+        SeedEmail.values.where((e) => e.value == email).firstOrNull ??
+        SeedEmail.nick;
+    _listingSeller = _currentUser;
+    _orderSeller = _currentUser;
   }
 
   bool _clearLoading = false;
@@ -45,12 +49,53 @@ class _DevPageState extends State<DevPage> {
     };
   }
 
-  Future<void> _showOverrideSheet(ValueChanged<ListingFormData> onSaved) async {
+  Listing _defaultDevListing() {
+    final now = DateTime.now();
+    final base = now.hour * 60 + now.minute;
+    return Listing(
+      id: '',
+      sellerId: '',
+      sellerName: '',
+      diningHall: 'Lenoir',
+      timeStart: Listing.minutesToTOD(base + 60),
+      timeEnd: Listing.minutesToTOD((base + 180).clamp(0, 1439)),
+      transactionDate: now,
+      sellerRating: 5,
+      paymentTypes: const ['Venmo'],
+      price: 5.0,
+      status: ListingStatus.active,
+    );
+  }
+
+  Listing _listingFromFormData(ListingFormData data) {
+    return Listing(
+      id: '',
+      sellerId: '',
+      sellerName: '',
+      diningHall: data.diningHall,
+      timeStart: data.timeStart,
+      timeEnd: data.timeEnd,
+      transactionDate: data.transactionDate,
+      sellerRating: 5,
+      paymentTypes: data.paymentTypes,
+      price: data.price,
+      status: ListingStatus.active,
+    );
+  }
+
+  Future<void> _showOverrideSheet(
+    ListingFormData? currentOverrides,
+    ValueChanged<ListingFormData> onSaved,
+  ) async {
+    final initial = currentOverrides != null
+        ? _listingFromFormData(currentOverrides)
+        : _defaultDevListing();
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (_) => ListingForm(
+        initialListing: initial,
         onSubmit: (data) {
           onSaved(data);
           Navigator.pop(context);
@@ -65,16 +110,14 @@ class _DevPageState extends State<DevPage> {
     try {
       await DevService.instance.createListing(
         sellerEmail: _listingSeller,
-        overrides:
-            _listingOverrides != null ? _toOverridesMap(_listingOverrides!) : null,
+        overrides: _listingOverrides != null
+            ? _toOverridesMap(_listingOverrides!)
+            : null,
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: _colors.error,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: _colors.error),
         );
       }
     } finally {
@@ -98,10 +141,7 @@ class _DevPageState extends State<DevPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: _colors.error,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: _colors.error),
         );
       }
     } finally {
@@ -124,10 +164,7 @@ class _DevPageState extends State<DevPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'Clear',
-              style: TextStyle(color: _colors.error),
-            ),
+            child: Text('Clear', style: TextStyle(color: _colors.error)),
           ),
         ],
       ),
@@ -138,17 +175,14 @@ class _DevPageState extends State<DevPage> {
     try {
       await DevService.instance.clearData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Data cleared')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Data cleared')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: _colors.error,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: _colors.error),
         );
       }
     } finally {
@@ -162,16 +196,14 @@ class _DevPageState extends State<DevPage> {
       await DevService.instance.createOrder(
         sellerEmail: _orderSeller,
         buyerEmail: _orderBuyer,
-        overrides:
-            _orderOverrides != null ? _toOverridesMap(_orderOverrides!) : null,
+        overrides: _orderOverrides != null
+            ? _toOverridesMap(_orderOverrides!)
+            : null,
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: _colors.error,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: _colors.error),
         );
       }
     } finally {
@@ -199,7 +231,12 @@ class _DevPageState extends State<DevPage> {
           isExpanded: true,
           style: _textTheme.bodySmall,
           items: SeedEmail.values
-              .map((e) => DropdownMenuItem(value: e, child: Text(e.displayName, style: _textTheme.bodySmall)))
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(e.displayName, style: _textTheme.bodySmall),
+                ),
+              )
               .toList(),
           onChanged: onChanged,
           dropdownColor: colors.surface,
@@ -281,14 +318,31 @@ class _DevPageState extends State<DevPage> {
         children: [
           Text('Create Listing', style: _textTheme.titleMedium),
           const SizedBox(height: 6),
-          _emailDropdown(
-            label: 'Seller',
-            value: _listingSeller,
-            onChanged: (v) => setState(() => _listingSeller = v!),
+          Row(
+            children: [
+              Expanded(
+                child: _emailDropdown(
+                  label: 'Seller',
+                  value: _listingSeller,
+                  onChanged: (v) => setState(() => _listingSeller = v!),
+                ),
+              ),
+              IconButton(
+                onPressed: () => setState(() {
+                  _listingSeller = _listingSeller == _currentUser
+                      ? SeedEmail.testUser1
+                      : _currentUser;
+                }),
+                icon: const Icon(Icons.swap_horiz, size: 18),
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Swap to test user',
+              ),
+            ],
           ),
           _overrideSection(
             overrides: _listingOverrides,
             onCustomize: () => _showOverrideSheet(
+              _listingOverrides,
               (data) => setState(() => _listingOverrides = data),
             ),
             onClear: () => setState(() => _listingOverrides = null),
@@ -335,6 +389,7 @@ class _DevPageState extends State<DevPage> {
           _overrideSection(
             overrides: _orderOverrides,
             onCustomize: () => _showOverrideSheet(
+              _orderOverrides,
               (data) => setState(() => _orderOverrides = data),
             ),
             onClear: () => setState(() => _orderOverrides = null),
