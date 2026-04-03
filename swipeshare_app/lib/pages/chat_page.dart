@@ -110,14 +110,17 @@ class _ChatPageState extends State<ChatPage> {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0.0,
         toolbarHeight: 72,
-        leadingWidth: 130,
+        centerTitle: true,
         leading: Row(
           mainAxisSize: MainAxisSize.min,
           children: [SizedBox(width: 8), BackButton()],
         ),
         title: Column(
           children: [
-            Text(widget.receiverUserName),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(widget.receiverUserName),
+            ),
             SizedBox(height: 3),
             Transform.translate(
               offset: Offset(-2, 0),
