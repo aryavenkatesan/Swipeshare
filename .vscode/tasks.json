@@ -43,14 +43,6 @@
       }
     },
     {
-      "label": "Stop Firebase Emulators",
-      "type": "shell",
-      "command": "pkill -f 'firebase emulators' || true",
-      "presentation": {
-        "reveal": "silent"
-      }
-    },
-    {
       "label": "Start Emulators and Seed",
       "dependsOn": ["Start Firebase Emulators", "Seed Firebase Emulator"],
       "dependsOrder": "sequence",
