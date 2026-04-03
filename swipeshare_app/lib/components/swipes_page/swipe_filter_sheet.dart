@@ -145,6 +145,53 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
     });
   }
 
+  Future<void> _showNumberInput({
+    required String title,
+    required int min,
+    required int max,
+    int? current,
+    required ValueChanged<int?> onResult,
+    String? prefix,
+  }) async {
+    final controller =
+        TextEditingController(text: current != null ? '$current' : '');
+    final result = await showDialog<int?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: InputDecoration(
+            prefixText: prefix,
+            hintText: '$min – $max',
+          ),
+          onSubmitted: (v) {
+            final parsed = int.tryParse(v);
+            Navigator.of(ctx).pop(parsed);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final parsed = int.tryParse(controller.text);
+              Navigator.of(ctx).pop(parsed);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) {
+      onResult(result.clamp(min, max));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -332,17 +379,27 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Container(
-                              width: 52,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.secondaryContainer,
-                                borderRadius: BorderRadius.circular(8),
+                            GestureDetector(
+                              onTap: () => _showNumberInput(
+                                title: 'Enter Max Price',
+                                min: _minPrice,
+                                max: _maxPriceLimit,
+                                current: _maxPrice,
+                                prefix: '\$ ',
+                                onResult: (v) => setState(() => _maxPrice = v),
                               ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                _maxPrice != null ? '< \$$_maxPrice' : '—',
-                                style: textTheme.bodyMedium,
+                              child: Container(
+                                width: 52,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _maxPrice != null ? '< \$$_maxPrice' : '—',
+                                  style: textTheme.bodyMedium,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -404,17 +461,26 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Container(
-                              width: 52,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.secondaryContainer,
-                                borderRadius: BorderRadius.circular(8),
+                            GestureDetector(
+                              onTap: () => _showNumberInput(
+                                title: 'Enter Min Rating',
+                                min: _minRatingValue,
+                                max: _maxRatingValue,
+                                current: _minRating,
+                                onResult: (v) => setState(() => _minRating = v),
                               ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                _minRating != null ? '≥ $_minRating' : '—',
-                                style: textTheme.bodyMedium,
+                              child: Container(
+                                width: 52,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.secondaryContainer,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _minRating != null ? '≥ $_minRating' : '—',
+                                  style: textTheme.bodyMedium,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 4),

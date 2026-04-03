@@ -19,6 +19,45 @@ class PriceStepperField extends StatelessWidget {
     required this.onChanged,
   });
 
+  Future<void> _showInputDialog(BuildContext context) async {
+    final controller = TextEditingController(text: '$price');
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Enter Swipe Price'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            prefixText: '\$ ',
+            hintText: '$_minPrice – $_maxPrice',
+          ),
+          onSubmitted: (v) {
+            final parsed = int.tryParse(v);
+            Navigator.of(ctx).pop(parsed);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final parsed = int.tryParse(controller.text);
+              Navigator.of(ctx).pop(parsed);
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) {
+      onChanged(result.clamp(_minPrice, _maxPrice));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -45,17 +84,20 @@ class PriceStepperField extends StatelessWidget {
                     : null,
               ),
               const SizedBox(width: 4),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: colors.secondaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$price',
-                  style: textTheme.bodyMedium,
+              GestureDetector(
+                onTap: () => _showInputDialog(context),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$price',
+                    style: textTheme.bodyMedium,
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
