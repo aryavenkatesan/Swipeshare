@@ -238,9 +238,7 @@ class _SwipesPageState extends State<SwipesPage> {
   }
 
   void _clearPrice() {
-    setState(
-      () => _filterData = _filterData.copyWith(maxPrice: null),
-    );
+    setState(() => _filterData = _filterData.copyWith(maxPrice: null));
     _startListening();
   }
 
@@ -352,8 +350,8 @@ class _SwipesPageState extends State<SwipesPage> {
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          mainAxisExtent: 90,
+          mainAxisSpacing: 18,
+          mainAxisExtent: 85,
         ),
         itemCount: listings.length,
         itemBuilder: (context, index) =>
@@ -450,7 +448,7 @@ class _FilterPillRow extends StatelessWidget {
             _Pill(
               label:
                   ' ${filterData.otherRange!.start.month}/${filterData.otherRange!.start.day}'
-                  '–${filterData.otherRange!.end.month}/${filterData.otherRange!.end.day} ',
+                  '-${filterData.otherRange!.end.month}/${filterData.otherRange!.end.day} ',
               selected: true,
               onTap: onOpenSheet,
             ),
@@ -572,30 +570,47 @@ class _SwipeListingCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              RichText(
-                overflow: TextOverflow.ellipsis,
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '${listing.diningHall} ',
-                      style: GoogleFonts.lexend(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 23,
-                        height: 1,
-                        color: textTheme.titleMedium?.color,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: listing.diningHall,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontSize: 19,
+                                height: 1,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' $_date',
+                              style: textTheme.labelMedium?.copyWith(
+                                fontSize: 15,
+                                height: 1,
+                                color: SwipeshareColors.subtleText,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    TextSpan(
-                      text: _date,
-                      style: GoogleFonts.lexend(
-                        fontWeight: FontWeight.w300,
-                        fontSize: 23,
+                  ),
+                  if (listing.price != null)
+                    Text(
+                      '\$${listing.price!.toStringAsFixed(listing.price! % 1 == 0 ? 0 : 2)}',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
                         height: 1,
-                        color: textTheme.titleMedium?.color,
+                        color: SwipeshareColors.primary,
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
               const SizedBox(height: 16),
               FittedBox(
