@@ -10,6 +10,7 @@ import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/listing_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
+import 'package:swipeshare_app/pages/dashboard/star_rating_page.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
 // Thin wrapper — use DashboardHeader + DashboardContent directly via BottomBar
@@ -49,7 +50,10 @@ class DashboardHeader extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text("Hi, ${userData.name}", style: textTheme.displayLarge),
-            _RatingChip(rating: userData.stars),
+            _RatingChip(
+              rating: userData.stars,
+              transactionsCompleted: userData.transactionsCompleted,
+            ),
           ],
         ),
         const Divider(),
@@ -85,24 +89,41 @@ class DashboardContent extends StatelessWidget {
 
 class _RatingChip extends StatelessWidget {
   final double rating;
+  final int transactionsCompleted;
 
-  const _RatingChip({required this.rating});
+  const _RatingChip({
+    required this.rating,
+    required this.transactionsCompleted,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: colors.secondaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        "\u2605 ${rating.toStringAsFixed(2)}",
-        style: textTheme.titleMedium?.copyWith(
-          color: colors.onSecondaryContainer,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StarRatingPage(
+              rating: rating,
+              transactionsCompleted: transactionsCompleted,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: colors.secondaryContainer,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          "\u2605 ${rating.toStringAsFixed(2)}",
+          style: textTheme.titleMedium?.copyWith(
+            color: colors.onSecondaryContainer,
+          ),
         ),
       ),
     );
