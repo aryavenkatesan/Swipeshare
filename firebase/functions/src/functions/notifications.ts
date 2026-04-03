@@ -48,9 +48,9 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
       }
 
       const recipientId =
-        orderData.buyerId === message.senderId
-          ? orderData.sellerId
-          : orderData.buyerId;
+        orderData.buyer.id === message.senderId
+          ? orderData.seller.id
+          : orderData.buyer.id;
 
       const recipientData = await getUserWithFcm(recipientId);
       if (!recipientData) {
@@ -109,14 +109,14 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
     }
 
     try {
-      const sellerData = await getUserWithFcm(orderData.sellerId);
+      const sellerData = await getUserWithFcm(orderData.seller.id);
       if (!sellerData) {
         return;
       }
 
       if (sellerData.notifSettings?.newOrders === false) {
         console.log(
-          `User ${orderData.sellerId} has disabled new order notifications. No notification sent.`,
+          `User ${orderData.seller.id} has disabled new order notifications. No notification sent.`,
         );
         return;
       }
@@ -128,17 +128,17 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
         day: "numeric",
       });
 
-      await updateNotificationsStatus(orderId, orderData.sellerId);
+      await updateNotificationsStatus(orderId, orderData.seller.id);
 
-      const payload = await payloadWithNotifs(orderData.sellerId, {
+      const payload = await payloadWithNotifs(orderData.seller.id, {
         notification: {
           title: "You have a new buyer!",
           body: `For ${readableDate} — tap to coordinate a time`,
         },
         data: {
           orderId,
-          buyerId: orderData.buyerId,
-          buyerName: orderData.buyerName,
+          buyerId: orderData.buyer.id,
+          buyerName: orderData.buyer.name,
           type: notificationType.newOrder,
         },
         token: sellerData.fcmToken,
@@ -204,10 +204,10 @@ export const sendProposalUpdateNotification =
         }
 
         const receiverName =
-          senderId === orderData.buyerId
-            ? orderData.buyerName
-            : orderData.sellerId === senderId
-              ? orderData.sellerName
+          senderId === orderData.buyer.id
+            ? orderData.buyer.name
+            : orderData.seller.id === senderId
+              ? orderData.seller.name
               : "Someone";
 
         const proposalTime = timeOfDayStringToTime(

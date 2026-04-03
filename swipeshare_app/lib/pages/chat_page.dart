@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:swipeshare_app/components/colors.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
+import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_bubble.dart';
@@ -22,15 +22,9 @@ class ChatPage extends StatefulWidget {
 
   const ChatPage({super.key, required this.orderData});
 
-  String get receiverUserName =>
-      orderData.sellerId == FirebaseAuth.instance.currentUser!.uid
-      ? orderData.buyerName
-      : orderData.sellerName;
+  String get receiverUserName => orderData.them.name;
 
-  String get receiverUserId =>
-      orderData.sellerId == FirebaseAuth.instance.currentUser!.uid
-      ? orderData.buyerId
-      : orderData.sellerId;
+  String get receiverUserId => orderData.them.id;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -128,10 +122,7 @@ class _ChatPageState extends State<ChatPage> {
             Transform.translate(
               offset: Offset(-2, 0),
               child: StarContainer(
-                stars:
-                    _firebaseAuth.currentUser!.uid != widget.orderData.buyerId
-                    ? widget.orderData.buyerStars
-                    : widget.orderData.sellerStars,
+                stars: widget.orderData.them.stars,
                 background: false,
               ),
             ),
@@ -198,26 +189,26 @@ class _ChatPageState extends State<ChatPage> {
         return RefreshIndicator(
           onRefresh: () async => _chatService.readNotifications(),
           child: ListView.builder(
-          controller: _scrollController,
-          reverse: true,
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          itemCount: reversedDocs.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return const SizedBox(height: 14);
-            }
+            controller: _scrollController,
+            reverse: true,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            itemCount: reversedDocs.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return const SizedBox(height: 14);
+              }
 
-            final previousMessage = index < reversedDocs.length
-                ? reversedDocs[index]
-                : null;
+              final previousMessage = index < reversedDocs.length
+                  ? reversedDocs[index]
+                  : null;
 
-            final message = reversedDocs[index - 1];
-            return switch (message) {
-              SystemMessage() => _buildSystemMessage(message),
-              TimeProposal() => _buildTimeProposal(message),
-              TextMessage() => _buildTextMessage(message, previousMessage),
-            };
-          },
+              final message = reversedDocs[index - 1];
+              return switch (message) {
+                SystemMessage() => _buildSystemMessage(message),
+                TimeProposal() => _buildTimeProposal(message),
+                TextMessage() => _buildTextMessage(message, previousMessage),
+              };
+            },
           ),
         );
       },
@@ -253,8 +244,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildTimeProposal(TimeProposal proposal) {
-    final bool isSent =
-        proposal.senderId == _firebaseAuth.currentUser!.uid;
+    final bool isSent = proposal.senderId == _firebaseAuth.currentUser!.uid;
     final String timeString = TimeFormatter.formatTimeOfDayString(
       TimeFormatter.productionToString(proposal.proposedTime),
     );
@@ -281,7 +271,9 @@ class _ChatPageState extends State<ChatPage> {
       bottomSection = Text(
         "Pending...",
         textAlign: TextAlign.center,
-        style: textTheme.bodyLarge?.copyWith(color: SwipeshareColors.cardAccent),
+        style: textTheme.bodyLarge?.copyWith(
+          color: SwipeshareColors.cardAccent,
+        ),
       );
     } else {
       // Pending, received — show Accept + Decline
@@ -336,8 +328,9 @@ class _ChatPageState extends State<ChatPage> {
       child: Align(
         alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
-          crossAxisAlignment:
-              isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isSent
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             SizedBox(height: 8),
             Container(

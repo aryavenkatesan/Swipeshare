@@ -43,9 +43,7 @@ class ChatService extends ChangeNotifier {
   Future<UserModel> getReceivingUser() async {
     final order = await _orderDoc.get().then(MealOrder.fromFirestore);
 
-    final receivingUserId = (_auth.currentUser!.uid == order.buyerId)
-        ? order.sellerId
-        : order.buyerId;
+    final receivingUserId = order.them.id;
 
     return await _userService.getUserData(receivingUserId);
   }
@@ -140,13 +138,13 @@ class ChatService extends ChangeNotifier {
   }
 
   Future<void> readNotifications() async {
-    final currentUserId = _auth.currentUser!.uid;
     final order = await _orderService.getOrderById(orderId);
 
-    if (currentUserId == order.buyerId && order.buyerHasNotifs) {
-      await _orderDoc.update({'buyerHasNotifs': false});
-    } else if (currentUserId == order.sellerId && order.sellerHasNotifs) {
-      await _orderDoc.update({'sellerHasNotifs': false});
+    if (order.me.hasNotifs) {
+      final field = order.currentUserRole == OrderRole.buyer
+          ? 'buyer.hasNotifs'
+          : 'seller.hasNotifs';
+      await _orderDoc.update({field: false});
     }
 
     await _notificationService.updateBadgeCount();

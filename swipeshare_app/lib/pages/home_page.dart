@@ -431,8 +431,8 @@ class _HomeScreenState extends State<HomeScreen>
       stream: _orderService.orderCol
           .where(
             Filter.or(
-              Filter('sellerId', isEqualTo: userId),
-              Filter('buyerId', isEqualTo: userId),
+              Filter('seller.id', isEqualTo: userId),
+              Filter('buyer.id', isEqualTo: userId),
             ),
           )
           .where(

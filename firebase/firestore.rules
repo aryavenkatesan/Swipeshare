@@ -21,7 +21,7 @@ service cloud.firestore {
     
     // Helper function to check if the current user is a buyer or seller
     function isOrderParticipant(orderData) {
-      return isCurrentUser(orderData.buyerId) || isCurrentUser(orderData.sellerId);
+      return isCurrentUser(orderData.buyer.id) || isCurrentUser(orderData.seller.id);
     }
     
     // Users collection
@@ -74,12 +74,12 @@ service cloud.firestore {
     	function canUpdateOrder() {
       	let data = request.resource.data;
     		let existingData = resource.data;
-        
-        let isBuyer = isCurrentUser(existingData.buyerId);
-        let isSeller = isCurrentUser(existingData.sellerId);
 
-        let buyerRatingChanged = data.get('ratingByBuyer', null) != existingData.get('ratingByBuyer', null);
-        let sellerRatingChanged = data.get('ratingBySeller', null) != existingData.get('ratingBySeller', null);
+        let isBuyer = isCurrentUser(existingData.buyer.id);
+        let isSeller = isCurrentUser(existingData.seller.id);
+
+        let buyerRatingChanged = data.get('buyer.rating', null) != existingData.get('buyer.rating', null);
+        let sellerRatingChanged = data.get('seller.rating', null) != existingData.get('seller.rating', null);
 
         return (isBuyer && !sellerRatingChanged) || (isSeller && !buyerRatingChanged);
       }
@@ -90,11 +90,11 @@ service cloud.firestore {
       // This allows .get() calls in deleteAccount to function, 
       // but ONLY for queries that look for the user's OWN ID.
       allow list: if isVerified()
-                    && (isCurrentUser(request.query.where.get('buyerId', null)) || 
-                        isCurrentUser(request.query.where.get('sellerId', null)));
+                    && (isCurrentUser(request.query.where.get('buyer.id', null)) ||
+                        isCurrentUser(request.query.where.get('seller.id', null)));
 
       // Only verified users can create orders
-      allow create: if isVerified() && isCurrentUser(request.resource.data.buyerId);
+      allow create: if isVerified() && isCurrentUser(request.resource.data.buyer.id);
       
       // Both verified parties can update, delete
       allow update: if isVerified() && isOrderParticipant(resource.data) && canUpdateOrder();

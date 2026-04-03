@@ -92,20 +92,15 @@ class OrderService {
         .where('status', isEqualTo: OrderStatus.completed.name)
         .where(
           Filter.or(
-            Filter("buyerId", isEqualTo: currentUserId),
-            Filter("sellerId", isEqualTo: currentUserId),
+            Filter("buyer.id", isEqualTo: currentUserId),
+            Filter("seller.id", isEqualTo: currentUserId),
           ),
         )
         .get();
 
     return ordersToRate.docs
         .map((doc) => doc.data())
-        .where(
-          (order) => switch (order.currentUserRole) {
-            OrderRole.buyer => order.ratingByBuyer == null,
-            OrderRole.seller => order.ratingBySeller == null,
-          },
-        )
+        .where((order) => order.me.rating == null)
         .toList();
   }
 
@@ -114,8 +109,8 @@ class OrderService {
     updateMap['timestamp'] = FieldValue.serverTimestamp();
 
     final field = switch (orderData.currentUserRole) {
-      OrderRole.buyer => 'ratingByBuyer',
-      OrderRole.seller => 'ratingBySeller',
+      OrderRole.buyer => 'buyer.rating',
+      OrderRole.seller => 'seller.rating',
     };
 
     // Writing the rating triggers updateStarRatingOnOrderUpdate cloud function

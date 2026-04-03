@@ -77,20 +77,20 @@ export type OrderStatus = (typeof orderStatus)[keyof typeof orderStatus];
 
 export type OrderRole = "buyer" | "seller";
 
+export type OrderParticipant = {
+  id: string;
+  name: string;
+  stars: number;
+  hasNotifs: boolean;
+  rating?: Rating;
+};
+
 export type Order = {
-  sellerId: string;
-  sellerName: string;
-  sellerStars: number;
-  buyerId: string;
-  buyerName: string;
-  buyerStars: number;
+  seller: OrderParticipant;
+  buyer: OrderParticipant;
   diningHall: string;
   displayTime?: TimeOfDayString;
-  sellerHasNotifs: boolean;
-  buyerHasNotifs: boolean;
   transactionDate: Timestamp;
-  ratingByBuyer?: Rating;
-  ratingBySeller?: Rating;
   status: OrderStatus;
   price: number;
   cancelledBy?: OrderRole;

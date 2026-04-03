@@ -47,15 +47,15 @@ export const getOrder = async (
  * This matches the getRoomName() method in meal_order.dart
  */
 export const getOrderRoomName = ({
-  sellerId,
-  buyerId,
+  seller,
+  buyer,
   transactionDate,
 }: {
-  sellerId: string;
-  buyerId: string;
+  seller: { id: string };
+  buyer: { id: string };
   transactionDate: Timestamp;
 }): string => {
-  return `${sellerId}_${buyerId}_${transactionDate.toMillis()}`;
+  return `${seller.id}_${buyer.id}_${transactionDate.toMillis()}`;
 };
 
 export const patchOrder = (
@@ -97,15 +97,19 @@ export const buildOrder = (
   buyer: User & { id: string },
   overrides?: Partial<Order>,
 ): Order => ({
-  sellerId: seller.id,
-  sellerName: seller.name,
-  sellerStars: seller.stars ?? 5,
-  buyerId: buyer.id,
-  buyerName: buyer.name,
-  buyerStars: buyer.stars ?? 5,
+  seller: {
+    id: seller.id,
+    name: seller.name,
+    stars: seller.stars ?? 5,
+    hasNotifs: true,
+  },
+  buyer: {
+    id: buyer.id,
+    name: buyer.name,
+    stars: buyer.stars ?? 5,
+    hasNotifs: true,
+  },
   diningHall: "Lenoir",
-  sellerHasNotifs: true,
-  buyerHasNotifs: true,
   transactionDate: Timestamp.now(),
   status: orderStatus.active,
   price: 5.0,
@@ -232,15 +236,15 @@ export const completeExpiredOrders = async (): Promise<{
     const order = doc.data() as Order;
     const price = order.price ?? 0;
     console.log(
-      `Completing order ${doc.id} (seller: ${order.sellerId}, buyer: ${order.buyerId}, price: $${price}, date: ${order.transactionDate.toDate().toISOString()})`,
+      `Completing order ${doc.id} (seller: ${order.seller.id}, buyer: ${order.buyer.id}, price: $${price}, date: ${order.transactionDate.toDate().toISOString()})`,
     );
     patchOrder(doc.id, { status: orderStatus.completed }, batch);
 
-    const buyerUpdates = getOrCreate(order.buyerId);
+    const buyerUpdates = getOrCreate(order.buyer.id);
     buyerUpdates.transactions += 1;
     buyerUpdates.moneySaved += WALK_IN_PRICE - price;
 
-    const sellerUpdates = getOrCreate(order.sellerId);
+    const sellerUpdates = getOrCreate(order.seller.id);
     sellerUpdates.transactions += 1;
     sellerUpdates.moneyEarned += price;
   });

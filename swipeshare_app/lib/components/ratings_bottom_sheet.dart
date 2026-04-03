@@ -26,10 +26,8 @@ class RatingsBottomSheet extends StatefulWidget {
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => RatingsBottomSheet(
-        ordersToRate: orders,
-        onComplete: onComplete,
-      ),
+      builder: (context) =>
+          RatingsBottomSheet(ordersToRate: orders, onComplete: onComplete),
     );
   }
 
@@ -73,72 +71,70 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
       body: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-        height: MediaQuery.of(context).size.height * 0.75,
-        decoration: BoxDecoration(
-          color: _colors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // Title
-            Center(
-              child: Text(
-                'Rate your Experience',
-                style: _textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: _colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              // Title
+              Center(
+                child: Text(
+                  'Rate your Experience',
+                  style: _textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Divider(height: 1, color: _colors.outlineVariant),
-            // PageView
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.ordersToRate.length,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemBuilder: (context, index) =>
-                    _buildRatingPage(index, widget.ordersToRate[index]),
+              const SizedBox(height: 14),
+              Divider(height: 1, color: _colors.outlineVariant),
+              // PageView
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: widget.ordersToRate.length,
+                  onPageChanged: (index) =>
+                      setState(() => _currentPage = index),
+                  itemBuilder: (context, index) =>
+                      _buildRatingPage(index, widget.ordersToRate[index]),
+                ),
               ),
-            ),
-            // Pagination dots (only when multiple orders)
-            if (widget.ordersToRate.length > 1)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    widget.ordersToRate.length,
-                    (index) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 4.5),
-                      width: 38,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: _currentPage == index
-                            ? _colors.surfaceTint
-                            : _colors.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
+              // Pagination dots (only when multiple orders)
+              if (widget.ordersToRate.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      widget.ordersToRate.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 4.5),
+                        width: 38,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: _currentPage == index
+                              ? _colors.surfaceTint
+                              : _colors.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 
   Widget _buildRatingPage(int index, MealOrder order) {
-    final peerName = switch (order.currentUserRole) {
-      OrderRole.buyer => order.sellerName,
-      OrderRole.seller => order.buyerName,
-    };
+    final peerName = order.them.name;
 
     final date = order.transactionDate;
     final formattedDate =

@@ -12,16 +12,13 @@ import 'package:swipeshare_app/utils/time_formatter.dart';
 class ActiveOrderCard extends StatelessWidget {
   final MealOrder orderData;
 
-  bool get hasNotifs => switch (orderData.currentUserRole) {
-    OrderRole.buyer => orderData.buyerHasNotifs,
-    OrderRole.seller => orderData.sellerHasNotifs,
-  };
+  bool get hasNotifs => orderData.me.hasNotifs;
 
   bool get isCancelled => orderData.status == OrderStatus.cancelled;
 
   String get cancelledByName => orderData.cancelledBy == OrderRole.buyer
-      ? orderData.buyerName
-      : orderData.sellerName;
+      ? orderData.buyer.name
+      : orderData.seller.name;
 
   const ActiveOrderCard({super.key, required this.orderData});
 
