@@ -12,6 +12,7 @@ class OrderParticipant {
   final String name;
   final double stars;
   final bool hasNotifs;
+  final bool markedComplete;
   final Rating? rating;
 
   const OrderParticipant({
@@ -19,6 +20,7 @@ class OrderParticipant {
     required this.name,
     required this.stars,
     required this.hasNotifs,
+    this.markedComplete = false,
     this.rating,
   });
 
@@ -28,6 +30,7 @@ class OrderParticipant {
       'name': name,
       'stars': stars,
       'hasNotifs': hasNotifs,
+      'markedComplete': markedComplete,
       'rating': rating?.toMap(),
     };
   }
@@ -38,6 +41,7 @@ class OrderParticipant {
       name: map['name'] ?? '',
       stars: (map['stars'] as num?)?.toDouble() ?? 5.0,
       hasNotifs: map['hasNotifs'] ?? false,
+      markedComplete: map['markedComplete'] ?? false,
       rating: map['rating'] != null
           ? Rating.fromMap(Map<String, dynamic>.from(map['rating']))
           : null,
@@ -206,10 +210,14 @@ class Rating {
   }
 
   factory Rating.fromMap(Map<String, dynamic> map) {
+    final timestampValue = map['timestamp'];
+
     return Rating(
       stars: map['stars'] as int,
       extraInfo: map['extraInfo'] as String?,
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      timestamp: timestampValue != null
+          ? FirestoreUtils.parseTimestamp(timestampValue)
+          : DateTime.now(),
     );
   }
 }

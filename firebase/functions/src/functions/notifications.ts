@@ -2,7 +2,7 @@ import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v2";
 import { getOrder } from "../services/order-service";
 import { getUserWithFcm } from "../services/user-service";
-import { Message, messageTypes, Order } from "../types";
+import { Message, messageTypes, Order, orderStatus } from "../types";
 import {
   payloadWithNotifs,
   updateNotificationsStatus,
@@ -13,6 +13,7 @@ export const notificationType = {
   newMessage: "new_message",
   newOrder: "new_order",
   timeProposalUpdate: "time_proposal_update",
+  orderConfirmation: "order_confirmation",
 } as const;
 
 export type NotificationType =
@@ -236,3 +237,91 @@ export const sendProposalUpdateNotification =
       }
     },
   );
+
+/**
+ * Sends a push notification to the other party when one user marks an order as complete.
+ * Does not fire when both have confirmed (the completion trigger handles that case).
+ */
+export const sendMarkCompleteNotification =
+  functions.firestore.onDocumentUpdated("orders/{orderId}", async (event) => {
+    const { orderId } = event.params;
+    const before = event.data?.before.data() as Order | undefined;
+    const after = event.data?.after.data() as Order | undefined;
+
+    if (!before || !after) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: before or after data is missing.`,
+      );
+      return;
+    }
+
+    // Only act on active orders
+    if (after.status !== orderStatus.active) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: order status is ${after.status}.`,
+      );
+      return;
+    }
+
+    const sellerFlipped =
+      !before.seller.markedComplete && after.seller.markedComplete;
+    const buyerFlipped =
+      !before.buyer.markedComplete && after.buyer.markedComplete;
+
+    // Neither flipped — unrelated update
+    if (!sellerFlipped && !buyerFlipped) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: no mark-complete flag changed.`,
+      );
+      return;
+    }
+
+      // Both are now confirmed — the order marked-complete trigger handles this
+    if (after.seller.markedComplete && after.buyer.markedComplete) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: both parties have already confirmed completion.`,
+      );
+      return;
+    }
+
+    // Identify who confirmed and who receives the notification
+    const confirmerName = sellerFlipped ? after.seller.name : after.buyer.name;
+    const recipientId = sellerFlipped ? after.buyer.id : after.seller.id;
+
+    try {
+      const recipientData = await getUserWithFcm(recipientId);
+      if (!recipientData) {
+        console.log(
+          `Mark-complete notification skipped for order ${orderId}: no recipient data found for user ${recipientId}.`,
+        );
+        return;
+      }
+
+      if (recipientData.notifSettings?.orderConfirmations === false) {
+        console.log(
+          `User ${recipientId} has disabled order confirmation notifications. No notification sent.`,
+        );
+        return;
+      }
+
+      await updateNotificationsStatus(orderId, recipientId);
+
+      const payload = await payloadWithNotifs(recipientId, {
+        notification: {
+          title: `${confirmerName}`,
+          body: "Marked the order complete. Tap to confirm",
+        },
+        data: {
+          orderId,
+          type: notificationType.orderConfirmation,
+        },
+        token: recipientData.fcmToken,
+      });
+
+      const response = await admin.messaging().send(payload);
+      console.log(`Mark-complete notification sent successfully: ${response}`);
+    } catch (error) {
+      console.error("Error sending mark-complete notification:", error);
+      throw error;
+    }
+  });

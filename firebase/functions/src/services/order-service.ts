@@ -3,6 +3,7 @@ import {
   DocumentData,
   DocumentReference,
   FieldValue,
+  PartialWithFieldValue,
   Timestamp,
   Transaction,
   UpdateData,
@@ -72,6 +73,44 @@ export const patchOrder = (
   }
 };
 
+export const getOrderMessagesCollection = (orderId: string) =>
+  admin.firestore().collection("orders").doc(orderId).collection("messages");
+
+export const buildSystemMessage = (content: string): SystemMessage => ({
+  messageType: "system",
+  senderId: "system",
+  senderEmail: "system@swipeshare.app",
+  senderName: "SwipeShare",
+  content,
+});
+
+export function createOrderSystemMessage(
+  orderId: string,
+  content: string,
+): Promise<WriteResult>;
+export function createOrderSystemMessage(
+  orderId: string,
+  content: string,
+  transaction: Transaction,
+): void;
+export function createOrderSystemMessage(
+  orderId: string,
+  content: string,
+  transaction?: Transaction,
+): Promise<WriteResult> | void {
+  const messageDoc = getOrderMessagesCollection(orderId).doc();
+  const message: PartialWithFieldValue<DocumentData> = {
+    ...buildSystemMessage(content),
+    timestamp: FieldValue.serverTimestamp(),
+  };
+
+  if (transaction) {
+    transaction.set(messageDoc, message);
+  } else {
+    return messageDoc.set(message);
+  }
+}
+
 /**
  * Checks for duplicates, then writes the order within a transaction.
  * Returns the order DocumentReference on success, or null if the order already exists.
@@ -102,12 +141,14 @@ export const buildOrder = (
     name: seller.name,
     stars: seller.stars ?? 5,
     hasNotifs: true,
+    markedComplete: false,
   },
   buyer: {
     id: buyer.id,
     name: buyer.name,
     stars: buyer.stars ?? 5,
     hasNotifs: true,
+    markedComplete: false,
   },
   diningHall: "Lenoir",
   transactionDate: Timestamp.now(),
@@ -116,6 +157,18 @@ export const buildOrder = (
   cancellationAcknowledged: false,
   ...overrides,
 });
+
+const assertDistinctOrderParticipants = (
+  sellerId: string,
+  buyerId: string,
+): void => {
+  if (sellerId === buyerId) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Buyer and seller must be different users",
+    );
+  }
+};
 
 /**
  * Claims a listing and creates an order from it, including the system message.
@@ -142,6 +195,8 @@ export const claimListingForOrder = async (
         `Listing data for id ${listingId} not found`,
       );
     }
+
+    assertDistinctOrderParticipants(listing.sellerId, buyerId);
 
     const seller = await getUser(listing.sellerId, transaction);
     if (!seller) {
@@ -174,18 +229,11 @@ export const claimListingForOrder = async (
       { status: listingStatus.claimed },
     );
 
-    const messageDoc = orderDoc.collection("messages").doc();
-    const messageData: SystemMessage = {
-      messageType: "system",
-      senderId: "system",
-      senderEmail: "system@swipeshare.app",
-      senderName: "SwipeShare",
-      content: newOrderSystemMessageContent(newOrder.price),
-    };
-    transaction.set(messageDoc, {
-      ...messageData,
-      timestamp: FieldValue.serverTimestamp(),
-    });
+    createOrderSystemMessage(
+      orderDoc.id,
+      newOrderSystemMessageContent(newOrder.price),
+      transaction,
+    );
 
     return { orderId: orderDoc.id, order: newOrder };
   });
@@ -274,6 +322,7 @@ export const createOrder = async (
   buyer: User & { id: string },
   overrides?: Partial<Order>,
 ): Promise<{ orderId: string; order: Order }> => {
+  assertDistinctOrderParticipants(seller.id, buyer.id);
   const order = buildOrder(seller, buyer, overrides);
   const orderId = getOrderRoomName(order);
   await admin.firestore().collection("orders").doc(orderId).set(order);

@@ -24,6 +24,9 @@ class ChatService extends ChangeNotifier {
   DocumentReference<MealOrder> get _orderDoc =>
       _orderService.orderCol.doc(orderId);
 
+  Stream<MealOrder> get orderStream =>
+      _orderDoc.snapshots().map((snap) => snap.data()!);
+
   CollectionReference<Map<String, dynamic>> get _chatRef =>
       _orderDoc.collection('messages');
 

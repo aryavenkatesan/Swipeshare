@@ -113,15 +113,22 @@ service cloud.firestore {
                );
       }
 
+      function isClientAuthoredMessageCreate() {
+        return isCurrentUser(request.resource.data.senderId)
+          && (
+            request.resource.data.messageType == "text"
+            || (
+              request.resource.data.messageType == "timeProposal"
+              && request.resource.data.status == "pending"
+            )
+          );
+      }
+
       // Allow participant to read/list
       allow read, list: if isVerifiedOrderParticipant();
         
-      // TODO: Make all system messages sent in cloud functions,
-      // making users unable to send system messages
-      allow create: if isVerifiedOrderParticipant() && (
-      	request.resource.data.messageType == "system" 
-        || isCurrentUser(request.resource.data.senderId)
-      );
+      allow create: if isVerifiedOrderParticipant()
+        && isClientAuthoredMessageCreate();
       
       // Only time proposals can be updated
       allow update: if isVerifiedOrderParticipant()

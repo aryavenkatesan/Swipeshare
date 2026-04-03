@@ -34,6 +34,10 @@ class _DevPageState extends State<DevPage> {
         SeedEmail.nick;
     _listingSeller = _currentUser;
     _orderSeller = _currentUser;
+    _orderBuyer = SeedEmail.values.firstWhere(
+      (email) => email != _orderSeller,
+      orElse: () => SeedEmail.nick,
+    );
   }
 
   bool _clearLoading = false;
@@ -191,6 +195,16 @@ class _DevPageState extends State<DevPage> {
   }
 
   Future<void> _createOrder() async {
+    if (_orderSeller == _orderBuyer) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Seller and buyer must be different users'),
+          backgroundColor: _colors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _orderLoading = true);
     try {
       await DevService.instance.createOrder(

@@ -82,6 +82,7 @@ export type OrderParticipant = {
   name: string;
   stars: number;
   hasNotifs: boolean;
+  markedComplete: boolean;
   rating?: Rating;
 };
 
@@ -127,6 +128,7 @@ export type User = {
 export type NotifSettings = {
   newOrders: boolean;
   newMessages: boolean;
+  orderConfirmations?: boolean;
 };
 
 export type Rating = {

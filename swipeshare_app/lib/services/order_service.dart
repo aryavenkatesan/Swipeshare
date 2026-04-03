@@ -22,6 +22,14 @@ class OrderService {
 
   Future<MealOrder> postOrder(Listing listing) async {
     try {
+      final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId == null) {
+        throw StateError('User must be signed in to create an order');
+      }
+      if (listing.sellerId == currentUserId) {
+        throw StateError('Buyer and seller must be different users');
+      }
+
       final result = await _functions
           .httpsCallable('createOrderFromListing')
           .call({'listingId': listing.id});
@@ -82,6 +90,14 @@ class OrderService {
 
   Future<void> acknowledgeCancellation(String orderId) async {
     await orderCol.doc(orderId).update({'cancellationAcknowledged': true});
+  }
+
+  Future<void> markComplete(String orderId, OrderRole role) async {
+    final field = switch (role) {
+      OrderRole.seller => 'seller.markedComplete',
+      OrderRole.buyer => 'buyer.markedComplete',
+    };
+    await orderCol.doc(orderId).update({field: true});
   }
 
   Future<List<MealOrder>> getOrdersToRate() async {
