@@ -74,12 +74,19 @@ class ListingDetailCard extends StatelessWidget {
             // Sold by
             Text('Sold by:', style: labelStyle),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(listing.sellerName, style: valueStyle),
-                const SizedBox(width: 4),
-                Text(
-                  '(\u2605 ${listing.sellerRating.toStringAsFixed(2)})',
-                  style: valueStyle,
+                Row(
+                  children: [
+                    Icon(Icons.star_rounded, size: 20, color: Theme.of(context).colorScheme.onSurface),
+                    const SizedBox(width: 2),
+                    Text(
+                      listing.sellerRating.toStringAsFixed(2),
+                      style: valueStyle,
+                    ),
+                  ],
                 ),
               ],
             ),
