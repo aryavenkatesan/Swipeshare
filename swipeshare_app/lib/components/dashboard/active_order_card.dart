@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/pages/chat_page.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
@@ -56,14 +57,17 @@ class ActiveOrderCard extends StatelessWidget {
                             // "Chase 1/13" – medium + light inline
                             RichText(
                               text: TextSpan(
-                                style: textTheme.titleMedium,
                                 children: [
-                                  TextSpan(text: '${order.diningHall} '),
+                                  TextSpan(
+                                    text: order.diningHall,
+                                    style: textTheme.titleMedium,
+                                  ),
                                   TextSpan(
                                     text:
-                                        '${order.transactionDate.month}/${order.transactionDate.day}',
-                                    style: textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w300,
+                                        ' ${order.transactionDate.month}/${order.transactionDate.day}',
+                                    style: textTheme.labelMedium?.copyWith(
+                                      fontSize: 15,
+                                      color: SwipeshareColors.subtleText,
                                     ),
                                   ),
                                 ],

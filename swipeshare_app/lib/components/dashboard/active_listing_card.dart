@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/models/listing.dart';
 import 'package:swipeshare_app/pages/dashboard/your_listing_page.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
@@ -34,39 +35,58 @@ class ActiveListingCard extends StatelessWidget {
           onTap(context);
         },
         child: Padding(
-          padding: const EdgeInsets.only(
-            left: 16,
-            top: 13,
-            bottom: 13,
-            right: 8,
-          ),
+          padding: const EdgeInsets.only(left: 16, top: 9, bottom: 9, right: 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Text column
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // "Chase 1/13"
-                    RichText(
-                      text: TextSpan(
-                        style: textTheme.titleMedium,
-                        children: [
-                          TextSpan(text: '${listing.diningHall} '),
-                          TextSpan(
-                            text:
-                                '${listing.transactionDate.month}/${listing.transactionDate.day}',
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w300,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: listing.diningHall,
+                                    style: textTheme.titleMedium?.copyWith(),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        ' ${listing.transactionDate.month}/${listing.transactionDate.day}',
+                                    style: textTheme.labelMedium?.copyWith(
+                                      fontSize: 15,
+                                      color: SwipeshareColors.subtleText,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        if (listing.price != null)
+                          Text(
+                            '\$${listing.price!.toStringAsFixed(listing.price! % 1 == 0 ? 0 : 2)}',
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              // height: 1,
+                              color: SwipeshareColors.primary,
+                            ),
+                          ),
+                      ],
                     ),
-                    // "From 3:30 PM to 4:00 PM"
-                    Text(timeRangeText, style: textTheme.bodyLarge),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(timeRangeText, style: textTheme.bodyLarge),
+                    ),
                   ],
                 ),
               ),
