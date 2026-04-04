@@ -397,7 +397,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  _maxPrice != null ? '< \$$_maxPrice' : '—',
+                                  _maxPrice != null ? '\$$_maxPrice' : '—',
                                   style: textTheme.bodyMedium,
                                 ),
                               ),
@@ -478,7 +478,7 @@ class _SwipeFilterSheetContentState extends State<_SwipeFilterSheetContent> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  _minRating != null ? '≥ $_minRating' : '—',
+                                  _minRating != null ? '$_minRating★' : '—',
                                   style: textTheme.bodyMedium,
                                 ),
                               ),

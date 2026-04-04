@@ -487,7 +487,7 @@ class _FilterPillRow extends StatelessWidget {
           if (filterData.maxPrice != null) ...[
             const SizedBox(width: 8),
             _Pill(
-              label: ' < \$${filterData.maxPrice} ',
+              label: '  \$${filterData.maxPrice} ',
               selected: true,
               onTap: onClearPrice,
             ),
@@ -495,7 +495,7 @@ class _FilterPillRow extends StatelessWidget {
           if (filterData.minRating != null) ...[
             const SizedBox(width: 8),
             _Pill(
-              label: ' ≥ ${filterData.minRating}★ ',
+              label: ' ${filterData.minRating}★+ ',
               selected: true,
               onTap: onClearRating,
             ),
