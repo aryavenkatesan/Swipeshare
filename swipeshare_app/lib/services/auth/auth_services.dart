@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/main.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 
 class AuthServices extends ChangeNotifier {
@@ -63,7 +64,9 @@ class AuthServices extends ChangeNotifier {
   //sign user out
   Future<void> signOut() async {
     debugPrint('Signing out user: ${_firebaseAuth.currentUser?.uid}');
+    // if (!isDevMode) {
     await NotificationService.instance.removeTokenFromFirestore();
+    // }
     await FirebaseAuth.instance.signOut();
     debugPrint('User signed out successfully.');
   }

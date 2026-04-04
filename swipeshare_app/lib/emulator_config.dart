@@ -5,7 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-const String _emulatorHost = 'localhost';
+const String _emulatorHost = '127.0.0.1';
 
 Future<void> connectToEmulators() async {
   // On Android, localhost on the device refers to the emulator itself.
