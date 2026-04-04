@@ -91,6 +91,7 @@ flutter:
     - assets/onboarding5.png
     - assets/onboarding6.png
     - assets/onboarding7.png
+    - assets/profanity/en.json
       #   - images/a_dot_ham.jpeg
 
 flutter_launcher_icons:
