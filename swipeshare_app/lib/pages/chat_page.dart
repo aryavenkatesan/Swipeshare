@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:swipeshare_app/components/colors.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
+import 'package:swipeshare_app/components/colors.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_bubble.dart';
@@ -98,15 +98,14 @@ class _ChatPageState extends State<ChatPage> {
     TimeOfDay? pickedTime = await AdaptiveTimePicker.showAdaptiveTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
-      helpText: "What time would you like to propose?",
+      helpText: "Propose a time to meet",
+      confirmText: "Send",
     );
 
     if (pickedTime != null) {
       await _chatService.sendTimeProposal(pickedTime);
     }
   }
-  //if sent go to chat_service and post a thingy
-  //yada yada
 
   @override
   Widget build(BuildContext context) {
@@ -198,26 +197,26 @@ class _ChatPageState extends State<ChatPage> {
         return RefreshIndicator(
           onRefresh: () async => _chatService.readNotifications(),
           child: ListView.builder(
-          controller: _scrollController,
-          reverse: true,
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          itemCount: reversedDocs.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return const SizedBox(height: 14);
-            }
+            controller: _scrollController,
+            reverse: true,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            itemCount: reversedDocs.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return const SizedBox(height: 14);
+              }
 
-            final previousMessage = index < reversedDocs.length
-                ? reversedDocs[index]
-                : null;
+              final previousMessage = index < reversedDocs.length
+                  ? reversedDocs[index]
+                  : null;
 
-            final message = reversedDocs[index - 1];
-            return switch (message) {
-              SystemMessage() => _buildSystemMessage(message),
-              TimeProposal() => _buildTimeProposal(message),
-              TextMessage() => _buildTextMessage(message, previousMessage),
-            };
-          },
+              final message = reversedDocs[index - 1];
+              return switch (message) {
+                SystemMessage() => _buildSystemMessage(message),
+                TimeProposal() => _buildTimeProposal(message),
+                TextMessage() => _buildTextMessage(message, previousMessage),
+              };
+            },
           ),
         );
       },
@@ -253,8 +252,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildTimeProposal(TimeProposal proposal) {
-    final bool isSent =
-        proposal.senderId == _firebaseAuth.currentUser!.uid;
+    final bool isSent = proposal.senderId == _firebaseAuth.currentUser!.uid;
     final String timeString = TimeFormatter.formatTimeOfDayString(
       TimeFormatter.productionToString(proposal.proposedTime),
     );
@@ -281,7 +279,9 @@ class _ChatPageState extends State<ChatPage> {
       bottomSection = Text(
         "Pending...",
         textAlign: TextAlign.center,
-        style: textTheme.bodyLarge?.copyWith(color: SwipeshareColors.cardAccent),
+        style: textTheme.bodyLarge?.copyWith(
+          color: SwipeshareColors.cardAccent,
+        ),
       );
     } else {
       // Pending, received — show Accept + Decline
@@ -336,8 +336,9 @@ class _ChatPageState extends State<ChatPage> {
       child: Align(
         alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
-          crossAxisAlignment:
-              isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isSent
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             SizedBox(height: 8),
             Container(
@@ -432,16 +433,16 @@ class _ChatPageState extends State<ChatPage> {
       padding: EdgeInsets.symmetric(horizontal: vw * 0.01),
       child: Row(
         children: [
-          //time widget
+          // time widget
           IconButton(
             onPressed: sendTimePicker,
-            icon: Icon(Icons.lock_clock_outlined, size: 30),
+            icon: Icon(Icons.more_time, size: 30),
           ),
 
-          //textfield - platform adaptive
+          // textfield
           Expanded(child: _buildAdaptiveTextField()),
 
-          //send button
+          // send button
           IconButton(
             onPressed: sendTextMessage,
             icon: Icon(Icons.arrow_upward, size: 35),
