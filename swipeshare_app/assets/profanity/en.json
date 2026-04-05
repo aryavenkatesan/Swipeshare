@@ -554,10 +554,6 @@
         "match": "intercourse"
       },
       {
-        "id": "jelly-donut",
-        "match": "jelly donut"
-      },
-      {
         "id": "kennebunkport-surprise",
         "match": "kennebunkport surprise"
       },
@@ -660,10 +656,6 @@
       {
         "id": "ponyplay",
         "match": "ponyplay|pony-play"
-      },
-      {
-        "id": "ramen-yarmulke",
-        "match": "ramen yarmulke"
       },
       {
         "id": "reverse-cowgirl",
@@ -969,10 +961,6 @@
       {
         "id": "jizz",
         "match": "jizz"
-      },
-      {
-        "id": "juggs",
-        "match": "juggs"
       },
       {
         "id": "nude",
@@ -1339,11 +1327,6 @@
           "t*"
         ]
       },
-      {
-        "id": "xxx",
-        "match": "xxx",
-        "allow_partial": false
-      }
     ]
   },
   {
@@ -1775,18 +1758,6 @@
         "match": "lezzie|lezzies"
       },
       {
-        "id": "light-loafers",
-        "match": "light in the loafers"
-      },
-      {
-        "id": "light-pants",
-        "match": "light in the pants"
-      },
-      {
-        "id": "light-fedora",
-        "match": "light in the fedora"
-      },
-      {
         "id": "limp-wristed",
         "match": "limp wristed|limp-wristed"
       },
@@ -1866,10 +1837,6 @@
       {
         "id": "switch-hitter",
         "match": "switch hitter"
-      },
-      {
-        "id": "t-girl",
-        "match": "t-girl|tgirl"
       },
       {
         "id": "tranny",
@@ -2313,14 +2280,6 @@
     "severity": 2,
     "tags": ["religious"],
     "dictionary": [
-      {
-        "id": "god-damn",
-        "match": "god damn|god-damn|goddamn|god damned|god-damned|goddamned"
-      },
-      {
-        "id": "jesus-christ",
-        "match": "je*su*s chri*st"
-      }
     ]
   },
   {
@@ -2328,45 +2287,7 @@
     "severity": 1,
     "tags": ["religious"],
     "dictionary": [
-      {
-        "id": "christ",
-        "match": "chri*st",
-        "exceptions": [
-          "*en",
-          "*ian",
-          "*ie",
-          "*y"
-        ]
-      },
-      {
-        "id": "damn",
-        "match": "da*mn"
-      },
-      {
-        "id": "hell",
-        "match": "hell",
-        "exceptions": [
-          "*cat",
-          "*er",
-          "*fire",
-          "*kite",
-          "*ed",
-          "*en",
-          "*ion",
-          "*ish",
-          "*o",
-          "ec*e",
-          "p*",
-          "s*"
-        ]
-      },
-      {
-        "id": "jesus",
-        "match": "je*su*s",
-        "exceptions": [
-          "be*"
-        ]
-      }
+      
     ]
   },
   {
@@ -2494,20 +2415,6 @@
         "match": "retard|retarded"
       },
       {
-        "id": "shit",
-        "match": "sh*i*t",
-        "exceptions": [
-          "*ake",
-          "mi*",
-          "*tah",
-          "*tim"
-        ]
-      },
-      {
-        "id": "shitty",
-        "match": "shi*tt*y"
-      },
-      {
         "id": "spastic",
         "match": "spastic"
       },
@@ -2537,22 +2444,6 @@
           "de*",
           "hum*"
         ]
-      },
-      {
-        "id": "crap",
-        "match": "cra*p",
-        "exceptions": [
-          "*e",
-          "*ing",
-          "*shoot",
-          "*ulent",
-          "*ulous",
-          "s*"
-        ]
-      },
-      {
-        "id": "dingleberry",
-        "match": "dingleberry|dingleberries"
       },
       {
         "id": "sodding",
