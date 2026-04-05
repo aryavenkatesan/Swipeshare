@@ -113,17 +113,27 @@ class UserModel {
 class NotifSettings {
   final bool newOrders;
   final bool newMessages;
+  final bool orderConfirmations;
 
-  const NotifSettings({this.newOrders = true, this.newMessages = true});
+  const NotifSettings({
+    this.newOrders = true,
+    this.newMessages = true,
+    this.orderConfirmations = true,
+  });
 
   factory NotifSettings.fromMap(Map<String, dynamic> data) {
     return NotifSettings(
       newOrders: data['newOrders'] ?? true,
       newMessages: data['newMessages'] ?? true,
+      orderConfirmations: data['orderConfirmations'] ?? true,
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {'newOrders': newOrders, 'newMessages': newMessages};
+    return {
+      'newOrders': newOrders,
+      'newMessages': newMessages,
+      'orderConfirmations': orderConfirmations,
+    };
   }
 }

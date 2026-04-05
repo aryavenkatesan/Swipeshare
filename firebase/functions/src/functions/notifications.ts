@@ -1,7 +1,8 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v2";
-import { Message, messageTypes, Order } from "../types";
-import { getOrder, getUserWithFcm } from "../utils/firestore";
+import { getOrder } from "../services/order-service";
+import { getUserWithFcm } from "../services/user-service";
+import { Message, messageTypes, Order, orderStatus } from "../types";
 import {
   payloadWithNotifs,
   updateNotificationsStatus,
@@ -12,6 +13,7 @@ export const notificationType = {
   newMessage: "new_message",
   newOrder: "new_order",
   timeProposalUpdate: "time_proposal_update",
+  orderConfirmation: "order_confirmation",
 } as const;
 
 export type NotificationType =
@@ -47,9 +49,9 @@ export const sendMessageNotification = functions.firestore.onDocumentCreated(
       }
 
       const recipientId =
-        orderData.buyerId === message.senderId
-          ? orderData.sellerId
-          : orderData.buyerId;
+        orderData.buyer.id === message.senderId
+          ? orderData.seller.id
+          : orderData.buyer.id;
 
       const recipientData = await getUserWithFcm(recipientId);
       if (!recipientData) {
@@ -108,14 +110,14 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
     }
 
     try {
-      const sellerData = await getUserWithFcm(orderData.sellerId);
+      const sellerData = await getUserWithFcm(orderData.seller.id);
       if (!sellerData) {
         return;
       }
 
       if (sellerData.notifSettings?.newOrders === false) {
         console.log(
-          `User ${orderData.sellerId} has disabled new order notifications. No notification sent.`,
+          `User ${orderData.seller.id} has disabled new order notifications. No notification sent.`,
         );
         return;
       }
@@ -127,17 +129,17 @@ export const sendNewOrderNotification = functions.firestore.onDocumentCreated(
         day: "numeric",
       });
 
-      await updateNotificationsStatus(orderId, orderData.sellerId);
+      await updateNotificationsStatus(orderId, orderData.seller.id);
 
-      const payload = await payloadWithNotifs(orderData.sellerId, {
+      const payload = await payloadWithNotifs(orderData.seller.id, {
         notification: {
           title: "You have a new buyer!",
           body: `For ${readableDate} — tap to coordinate a time`,
         },
         data: {
           orderId,
-          buyerId: orderData.buyerId,
-          buyerName: orderData.buyerName,
+          buyerId: orderData.buyer.id,
+          buyerName: orderData.buyer.name,
           type: notificationType.newOrder,
         },
         token: sellerData.fcmToken,
@@ -203,10 +205,10 @@ export const sendProposalUpdateNotification =
         }
 
         const receiverName =
-          senderId === orderData.buyerId
-            ? orderData.buyerName
-            : orderData.sellerId === senderId
-              ? orderData.sellerName
+          senderId === orderData.buyer.id
+            ? orderData.buyer.name
+            : orderData.seller.id === senderId
+              ? orderData.seller.name
               : "Someone";
 
         const proposalTime = timeOfDayStringToTime(
@@ -235,3 +237,91 @@ export const sendProposalUpdateNotification =
       }
     },
   );
+
+/**
+ * Sends a push notification to the other party when one user marks an order as complete.
+ * Does not fire when both have confirmed (the completion trigger handles that case).
+ */
+export const sendMarkCompleteNotification =
+  functions.firestore.onDocumentUpdated("orders/{orderId}", async (event) => {
+    const { orderId } = event.params;
+    const before = event.data?.before.data() as Order | undefined;
+    const after = event.data?.after.data() as Order | undefined;
+
+    if (!before || !after) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: before or after data is missing.`,
+      );
+      return;
+    }
+
+    // Only act on active orders
+    if (after.status !== orderStatus.active) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: order status is ${after.status}.`,
+      );
+      return;
+    }
+
+    const sellerFlipped =
+      !before.seller.markedComplete && after.seller.markedComplete;
+    const buyerFlipped =
+      !before.buyer.markedComplete && after.buyer.markedComplete;
+
+    // Neither flipped — unrelated update
+    if (!sellerFlipped && !buyerFlipped) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: no mark-complete flag changed.`,
+      );
+      return;
+    }
+
+      // Both are now confirmed — the order marked-complete trigger handles this
+    if (after.seller.markedComplete && after.buyer.markedComplete) {
+      console.log(
+        `Mark-complete notification skipped for order ${orderId}: both parties have already confirmed completion.`,
+      );
+      return;
+    }
+
+    // Identify who confirmed and who receives the notification
+    const confirmerName = sellerFlipped ? after.seller.name : after.buyer.name;
+    const recipientId = sellerFlipped ? after.buyer.id : after.seller.id;
+
+    try {
+      const recipientData = await getUserWithFcm(recipientId);
+      if (!recipientData) {
+        console.log(
+          `Mark-complete notification skipped for order ${orderId}: no recipient data found for user ${recipientId}.`,
+        );
+        return;
+      }
+
+      if (recipientData.notifSettings?.orderConfirmations === false) {
+        console.log(
+          `User ${recipientId} has disabled order confirmation notifications. No notification sent.`,
+        );
+        return;
+      }
+
+      await updateNotificationsStatus(orderId, recipientId);
+
+      const payload = await payloadWithNotifs(recipientId, {
+        notification: {
+          title: `${confirmerName}`,
+          body: "Marked the order complete. Tap to confirm",
+        },
+        data: {
+          orderId,
+          type: notificationType.orderConfirmation,
+        },
+        token: recipientData.fcmToken,
+      });
+
+      const response = await admin.messaging().send(payload);
+      console.log(`Mark-complete notification sent successfully: ${response}`);
+    } catch (error) {
+      console.error("Error sending mark-complete notification:", error);
+      throw error;
+    }
+  });

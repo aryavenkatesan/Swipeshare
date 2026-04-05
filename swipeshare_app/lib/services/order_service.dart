@@ -22,6 +22,14 @@ class OrderService {
 
   Future<MealOrder> postOrder(Listing listing) async {
     try {
+      final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId == null) {
+        throw StateError('User must be signed in to create an order');
+      }
+      if (listing.sellerId == currentUserId) {
+        throw StateError('Buyer and seller must be different users');
+      }
+
       final result = await _functions
           .httpsCallable('createOrderFromListing')
           .call({'listingId': listing.id});
@@ -80,29 +88,40 @@ class OrderService {
     await orderCol.doc(orderId).update({'cancellationAcknowledged': true});
   }
 
+  Future<void> markComplete(String orderId, OrderRole role) async {
+    final field = switch (role) {
+      OrderRole.seller => 'seller.markedComplete',
+      OrderRole.buyer => 'buyer.markedComplete',
+    };
+    await orderCol.doc(orderId).update({field: true});
+  }
+
   Future<List<MealOrder>> getOrdersToRate() async {
     if (_auth.currentUser == null) return [];
     final currentUserId = _auth.currentUser!.uid;
 
-    final ordersToRate = await orderCol
-        .where('status', isEqualTo: OrderStatus.completed.name)
-        .where(
-          Filter.or(
-            Filter("buyerId", isEqualTo: currentUserId),
-            Filter("sellerId", isEqualTo: currentUserId),
-          ),
-        )
-        .get();
+    final results = await Future.wait([
+      orderCol
+          .where('status', isEqualTo: OrderStatus.completed.name)
+          .where('buyer.id', isEqualTo: currentUserId)
+          .get(),
+      orderCol
+          .where('status', isEqualTo: OrderStatus.completed.name)
+          .where('seller.id', isEqualTo: currentUserId)
+          .get(),
+    ]);
 
-    return ordersToRate.docs
-        .map((doc) => doc.data())
-        .where(
-          (order) => switch (order.currentUserRole) {
-            OrderRole.buyer => order.ratingByBuyer == null,
-            OrderRole.seller => order.ratingBySeller == null,
-          },
-        )
-        .toList();
+    final seen = <String>{};
+    final orders = <MealOrder>[];
+    for (final snapshot in results) {
+      for (final doc in snapshot.docs) {
+        if (seen.add(doc.id)) {
+          orders.add(doc.data());
+        }
+      }
+    }
+
+    return orders.where((order) => order.me.rating == null).toList();
   }
 
   Future<void> rateOrder(MealOrder orderData, Rating rating) async {
@@ -110,8 +129,8 @@ class OrderService {
     updateMap['timestamp'] = FieldValue.serverTimestamp();
 
     final field = switch (orderData.currentUserRole) {
-      OrderRole.buyer => 'ratingByBuyer',
-      OrderRole.seller => 'ratingBySeller',
+      OrderRole.buyer => 'buyer.rating',
+      OrderRole.seller => 'seller.rating',
     };
 
     // Writing the rating triggers updateStarRatingOnOrderUpdate cloud function

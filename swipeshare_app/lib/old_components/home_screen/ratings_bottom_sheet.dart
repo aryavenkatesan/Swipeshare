@@ -125,10 +125,7 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
   }
 
   Widget _buildRatingPage(int index, MealOrder order) {
-    final peerName = switch (order.currentUserRole) {
-      OrderRole.buyer => order.sellerName,
-      OrderRole.seller => order.buyerName,
-    };
+    final peerName = order.them.name;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),

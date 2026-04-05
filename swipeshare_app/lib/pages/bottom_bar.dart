@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/app_feedback_bottom_sheet.dart';
 import 'package:swipeshare_app/components/ratings_bottom_sheet.dart';
 import 'package:swipeshare_app/components/refreshable_page.dart';
+import 'package:swipeshare_app/main.dart';
 import 'package:swipeshare_app/models/user.dart';
+import 'package:swipeshare_app/pages/dev/dev_page.dart';
 import 'package:swipeshare_app/pages/inbox_page.dart';
 import 'package:swipeshare_app/pages/profile_page.dart';
 import 'package:swipeshare_app/pages/sell/create_swipe_listing_page.dart';
@@ -14,7 +16,6 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'dashboard/dashboard_page.dart';
-import 'home_page.dart';
 
 class BottomBar extends StatefulWidget {
   const BottomBar({super.key});
@@ -123,8 +124,7 @@ class _BottomBarState extends State<BottomBar>
   Future<void> _checkOrdersToRate() async {
     final ordersToRate = await _orderService.getOrdersToRate();
     if (ordersToRate.isNotEmpty && mounted) {
-      final showFeedback =
-          userData != null && !userData!.hasSeenAppFeedback;
+      final showFeedback = userData != null && !userData!.hasSeenAppFeedback;
       RatingsBottomSheet.show(
         context,
         ordersToRate,
@@ -249,6 +249,7 @@ class _BottomBarState extends State<BottomBar>
       swipesHeader(),
       pageHeader("Inbox"),
       pageHeader("Profile"),
+      if (isDevMode) pageHeader("Dev Panel"),
     ];
 
     final bodies = <Widget>[
@@ -256,6 +257,7 @@ class _BottomBarState extends State<BottomBar>
       const SwipesPage(),
       const InboxPage(),
       const ProfilePage(),
+      if (isDevMode) const DevPage(),
     ];
 
     return FadeTransition(
@@ -265,36 +267,33 @@ class _BottomBarState extends State<BottomBar>
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
           duration: const Duration(milliseconds: 140),
-          child: _selectedIndex == 4
-              ? HomeScreen(key: const ValueKey(4))
-              : RefreshablePage(
-                  key: ValueKey(_selectedIndex),
-                  header: headers[_selectedIndex],
-                  onRefresh: _loadUserData,
-                  stickyBottom: _selectedIndex == 1
-                      ? Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const CreateSwipeListingPage(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              CupertinoIcons.add,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            label: const Text('Sell a Swipe'),
+          child: RefreshablePage(
+            key: ValueKey(_selectedIndex),
+            header: headers[_selectedIndex],
+            onRefresh: _loadUserData,
+            stickyBottom: _selectedIndex == 1
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CreateSwipeListingPage(),
                           ),
-                        )
-                      : null,
-                  child: bodies[_selectedIndex],
-                ),
+                        );
+                      },
+                      icon: const Icon(
+                        CupertinoIcons.add,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      label: const Text('Sell a Swipe'),
+                    ),
+                  )
+                : null,
+            child: bodies[_selectedIndex],
+          ),
         ),
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
@@ -309,27 +308,28 @@ class _BottomBarState extends State<BottomBar>
               currentIndex: _selectedIndex,
               onTap: _onItemTapped,
               type: BottomNavigationBarType.fixed,
-              items: const <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
+              items: <BottomNavigationBarItem>[
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.home_outlined),
                   label: 'Dashboard',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.attach_money_rounded),
                   label: 'Swipes',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.chat_outlined),
                   label: 'Inbox',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline),
                   label: 'Profile',
                 ),
-                // BottomNavigationBarItem(
-                //   icon: Icon(Icons.sunny_snowing),
-                //   label: 'Old Home',
-                // ),
+                if (isDevMode)
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.bug_report_outlined),
+                    label: 'Dev',
+                  ),
               ],
             ),
           ],

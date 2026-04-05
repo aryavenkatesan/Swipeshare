@@ -1,3 +1,16 @@
+import type { DocumentData, DocumentReference, Timestamp, UpdateData } from "firebase-admin/firestore";
+
+/**
+ * Structural interface satisfied by both WriteBatch and Transaction.
+ * Avoids union-type overload resolution issues when passing either to service patch functions.
+ */
+export interface FirestoreWriter {
+  update(
+    documentRef: DocumentReference<DocumentData>,
+    data: UpdateData<DocumentData>,
+  ): unknown;
+}
+
 export const messageTypes = ["text", "system", "timeProposal"] as const;
 export type MessageType = (typeof messageTypes)[number];
 
@@ -11,6 +24,7 @@ type BaseMessage = {
   senderId: string;
   senderEmail: string;
   senderName: string;
+  timestamp?: Timestamp; // optional: set by server on creation
 };
 
 export type TextMessage = BaseMessage & {
@@ -26,7 +40,7 @@ export type SystemMessage = BaseMessage & {
 export type TimeProposal = BaseMessage & {
   messageType: "timeProposal";
   proposedTime: TimeOfDayString;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "accepted" | "declined";
 };
 
 export type Message = TextMessage | SystemMessage | TimeProposal;
@@ -46,7 +60,7 @@ export type Listing = {
   diningHall: string;
   timeStart: number; // minutes since midnight (TimeOfDay converted via toMinutes)
   timeEnd: number; // minutes since midnight (TimeOfDay converted via toMinutes)
-  transactionDate: FirebaseFirestore.Timestamp;
+  transactionDate: Timestamp;
   sellerRating: number;
   paymentTypes: string[];
   price?: number;
@@ -61,43 +75,64 @@ export const orderStatus = {
 
 export type OrderStatus = (typeof orderStatus)[keyof typeof orderStatus];
 
-export type Order = {
-  sellerId: string;
-  sellerName: string;
-  sellerStars: number;
-  buyerId: string;
-  buyerName: string;
-  buyerStars: number;
-  diningHall: string;
-  displayTime?: TimeOfDayString;
-  sellerHasNotifs: boolean;
-  buyerHasNotifs: boolean;
-  transactionDate: FirebaseFirestore.Timestamp;
-  ratingByBuyer?: Rating;
-  ratingBySeller?: Rating;
-  status: OrderStatus;
-  price: number;
+export type OrderRole = "buyer" | "seller";
+
+export type OrderParticipant = {
+  id: string;
+  name: string;
+  stars: number;
+  hasNotifs: boolean;
+  markedComplete: boolean;
+  rating?: Rating;
 };
 
+export type Order = {
+  seller: OrderParticipant;
+  buyer: OrderParticipant;
+  diningHall: string;
+  displayTime?: TimeOfDayString;
+  transactionDate: Timestamp;
+  status: OrderStatus;
+  price: number;
+  cancelledBy?: OrderRole;
+  cancellationAcknowledged: boolean;
+};
+
+export const userStatus = {
+  active: "active",
+  deleted: "deleted",
+  banned: "banned",
+} as const;
+
+export type UserStatus = (typeof userStatus)[keyof typeof userStatus];
+
 export type User = {
+  email: string;
   name: string;
   stars: number;
   fcmToken?: string;
   isEmailVerified: boolean;
+  verificationCode?: string;
+  verificationCodeExpires?: Timestamp;
+  status: UserStatus;
+  payment_types: string[];
   transactions_completed: number;
+  referral_email: string;
+  blocked_users: string[];
   moneySaved: number;
   moneyEarned: number;
   notifSettings: NotifSettings;
-  // other fields aren't relevant
+  hasSeenAppFeedback: boolean;
 };
 
 export type NotifSettings = {
   newOrders: boolean;
   newMessages: boolean;
+  orderConfirmations?: boolean;
 };
 
 export type Rating = {
   stars: number;
   extraInfo?: string;
-  timestamp: FirebaseFirestore.Timestamp;
+  timestamp: Timestamp;
 };

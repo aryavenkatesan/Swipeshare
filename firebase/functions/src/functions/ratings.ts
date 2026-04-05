@@ -1,11 +1,11 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions/v2";
+import { updateUserStars } from "../services/user-service";
 import { Order, Rating, orderStatus } from "../types";
-import { updateUserStars } from "../utils/firestore";
 
 /**
  * Updates a user's star rating when an order is updated with a new rating.
- * Triggers when ratingByBuyer or ratingBySeller is added to an order.
+ * Triggers when buyer.rating or seller.rating is added to an order.
  */
 export const updateStarRatingOnOrderUpdate =
   functions.firestore.onDocumentUpdated("orders/{orderId}", async (event) => {
@@ -38,38 +38,38 @@ export const updateStarRatingOnOrderUpdate =
     const db = admin.firestore();
     const updates: Promise<void>[] = [];
 
-    // Check if ratingByBuyer was added (buyer rated the seller)
-    if (!beforeData.ratingByBuyer && afterData.ratingByBuyer) {
-      if (!isValidRating(afterData.ratingByBuyer)) {
+    // Check if buyer.rating was added (buyer rated the seller)
+    if (!beforeData.buyer.rating && afterData.buyer.rating) {
+      if (!isValidRating(afterData.buyer.rating)) {
         console.error(
-          `Invalid buyer rating for order ${orderId}: ${afterData.ratingByBuyer.stars}`,
+          `Invalid buyer rating for order ${orderId}: ${afterData.buyer.rating.stars}`,
         );
       } else {
         updates.push(
           updateUserStars(
             db,
             orderId,
-            afterData.sellerId,
-            afterData.ratingByBuyer,
+            afterData.seller.id,
+            afterData.buyer.rating,
             "buyer",
           ),
         );
       }
     }
 
-    // Check if ratingBySeller was added (seller rated the buyer)
-    if (!beforeData.ratingBySeller && afterData.ratingBySeller) {
-      if (!isValidRating(afterData.ratingBySeller)) {
+    // Check if seller.rating was added (seller rated the buyer)
+    if (!beforeData.seller.rating && afterData.seller.rating) {
+      if (!isValidRating(afterData.seller.rating)) {
         console.error(
-          `Invalid seller rating for order ${orderId}: ${afterData.ratingBySeller.stars}`,
+          `Invalid seller rating for order ${orderId}: ${afterData.seller.rating.stars}`,
         );
       } else {
         updates.push(
           updateUserStars(
             db,
             orderId,
-            afterData.buyerId,
-            afterData.ratingBySeller,
+            afterData.buyer.id,
+            afterData.seller.rating,
             "seller",
           ),
         );

@@ -1,128 +1,19 @@
 import * as admin from "firebase-admin";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/https";
 import * as functions from "firebase-functions/v2";
 import {
-  Listing,
-  listingStatus,
-  Order,
-  orderStatus,
-  SystemMessage,
-} from "../types";
-import { newOrderSystemMessageContent } from "../utils/constants";
-import {
-  getListing,
-  getOrderRoomName,
-  getUser,
-  validateOrderParticipant,
-} from "../utils/firestore";
-import { dateToTimeOfDayString } from "../utils/time";
-
-/**
- * Creates an order between two users identified by their email addresses.
- * Transaction time is set to now. This is an admin/debug function.
- *
- * Set env var before running shell: ADMIN_SECRET=your-secret npm run shell
- * Call from shell: createOrderFromEmails({data: {sellerEmail: "...", buyerEmail: "...", secret: "your-secret"}})
- */
-export const createOrderFromEmails = functions.https.onCall(async (request) => {
-  const { sellerEmail, buyerEmail, diningHall, price, secret } =
-    request.data ?? request;
-
-  if (secret !== process.env.ADMIN_SECRET) {
-    throw new HttpsError("permission-denied", "Admin secret required");
-  }
-
-  if (!sellerEmail || !buyerEmail) {
-    throw new HttpsError(
-      "invalid-argument",
-      "sellerEmail and buyerEmail are required",
-    );
-  }
-
-  // Look up users by email using Firebase Auth
-  let sellerAuth, buyerAuth;
-  try {
-    sellerAuth = await admin.auth().getUserByEmail(sellerEmail);
-  } catch {
-    throw new HttpsError(
-      "not-found",
-      `Seller with email ${sellerEmail} not found`,
-    );
-  }
-
-  try {
-    buyerAuth = await admin.auth().getUserByEmail(buyerEmail);
-  } catch {
-    throw new HttpsError(
-      "not-found",
-      `Buyer with email ${buyerEmail} not found`,
-    );
-  }
-
-  const sellerId = sellerAuth.uid;
-  const buyerId = buyerAuth.uid;
-
-  // Get user data from Firestore
-  const seller = await getUser(sellerId);
-  if (!seller) {
-    throw new HttpsError(
-      "not-found",
-      `Seller user data for ${sellerEmail} not found`,
-    );
-  }
-
-  const buyer = await getUser(buyerId);
-  if (!buyer) {
-    throw new HttpsError(
-      "not-found",
-      `Buyer user data for ${buyerEmail} not found`,
-    );
-  }
-
-  const now = new Date();
-  const transactionDate = Timestamp.fromDate(now);
-  const displayTime = dateToTimeOfDayString(now);
-
-  const newOrder: Order = {
-    sellerId,
-    sellerName: seller.name,
-    sellerStars: seller.stars,
-    buyerId,
-    buyerName: buyer.name,
-    buyerStars: buyer.stars,
-    diningHall: diningHall ?? "Test Dining Hall",
-    displayTime,
-    sellerHasNotifs: true,
-    buyerHasNotifs: true,
-    transactionDate,
-    status: orderStatus.active,
-    price: price ?? 0,
-  };
-
-  const orderId = getOrderRoomName(newOrder);
-  const orderDoc = admin.firestore().collection("orders").doc(orderId);
-  const orderSnapshot = await orderDoc.get();
-
-  if (orderSnapshot.exists) {
-    throw new HttpsError(
-      "already-exists",
-      `Order with id ${orderId} already exists`,
-    );
-  }
-
-  await orderDoc.set(newOrder);
-
-  console.log(
-    `Created order ${orderId} between seller ${sellerEmail} and buyer ${buyerEmail}`,
-  );
-
-  return { orderId, ...newOrder };
-});
+  claimListingForOrder,
+  createOrderSystemMessage,
+  getOrder,
+  patchOrder,
+} from "../services/order-service";
+import { getUser, patchUser } from "../services/user-service";
+import { Order, orderStatus } from "../types";
+import { WALK_IN_PRICE } from "../utils/constants";
 
 export const createOrderFromListing = functions.https.onCall(
   async (request) => {
-    // Verify user is authenticated
     if (!request.auth) {
       throw new HttpsError(
         "unauthenticated",
@@ -133,103 +24,114 @@ export const createOrderFromListing = functions.https.onCall(
     const { listingId } = request.data;
     const buyerId = request.auth.uid;
 
-    // Validate input parameters
     if (!listingId) {
       throw new HttpsError("invalid-argument", "listingId is required");
     }
 
+    const buyer = await getUser(buyerId);
+    if (!buyer?.isEmailVerified) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Email must be verified to create an order",
+      );
+    }
+
     console.log(`Creating order for listing ${listingId} by buyer ${buyerId}`);
 
-    return await admin.firestore().runTransaction(async (transaction) => {
-      const buyer = await getUser(buyerId, transaction);
-      if (!buyer) {
-        throw new HttpsError(
-          "not-found",
-          `Buyer user data for id ${buyerId} not found`,
-        );
-      }
-
-      if (!buyer.isEmailVerified) {
-        throw new HttpsError(
-          "failed-precondition",
-          "Email must be verified to create an order",
-        );
-      }
-
-      const listing = await getListing(listingId, transaction);
-      if (!listing) {
-        throw new HttpsError(
-          "not-found",
-          `Listing data for id ${listingId} not found`,
-        );
-      }
-
-      const seller = await getUser(listing.sellerId, transaction);
-      if (!seller) {
-        throw new HttpsError(
-          "not-found",
-          `Seller user data for id ${listing.sellerId} not found`,
-        );
-      }
-
-      const newOrder: Order = {
-        sellerId: listing.sellerId,
-        sellerName: listing.sellerName,
-        sellerStars: seller.stars ?? 5,
-        buyerId: buyerId,
-        buyerName: buyer.name,
-        buyerStars: buyer.stars ?? 5,
-        diningHall: listing.diningHall,
-        // displayTime: undefined,
-        sellerHasNotifs: true,
-        buyerHasNotifs: true,
-        transactionDate: listing.transactionDate,
-        status: orderStatus.active,
-        price: listing.price ?? 0,
-      };
-
-      const orderId = getOrderRoomName(newOrder);
-      const orderDoc = admin.firestore().collection("orders").doc(orderId);
-      const orderSnapshot = await transaction.get(orderDoc);
-      if (orderSnapshot.exists) {
-        throw new HttpsError(
-          "already-exists",
-          `Order with id ${orderId} already exists`,
-        );
-      }
-
-      transaction.set(orderDoc, newOrder);
-
-      const listingDoc = admin
-        .firestore()
-        .collection("listings")
-        .doc(listingId);
-      const listingUpdate: Partial<Listing> = {
-        status: listingStatus.claimed,
-      };
-      transaction.update(listingDoc, listingUpdate);
-
-      // Send welcome system message
-      const messageDoc = orderDoc.collection("messages").doc();
-
-      const messageData: SystemMessage = {
-        messageType: "system",
-        senderId: "system",
-        senderEmail: "system@swipeshare.app",
-        senderName: "SwipeShare",
-        content: newOrderSystemMessageContent(newOrder.price),
-      };
-      transaction.set(messageDoc, {
-        ...messageData,
-        timestamp: FieldValue.serverTimestamp(),
-      });
-
-      console.log(`New order system message sent for order ${orderId}`);
-
-      return newOrder;
-    });
+    const { order } = await claimListingForOrder(listingId, buyerId);
+    return order;
   },
 );
+
+/**
+ * Firestore trigger that handles marked-complete updates on active orders.
+ * It writes server-authored system messages for each new confirmation and
+ * completes the order once both parties have confirmed.
+ */
+export const handleOrderMarkedCompleteUpdate =
+  functions.firestore.onDocumentUpdated("orders/{orderId}", async (event) => {
+    const before = event.data?.before.data() as Order | undefined;
+    const after = event.data?.after.data() as Order | undefined;
+
+    if (!before || !after) return;
+    if (after.status !== orderStatus.active) return;
+
+    const sellerFlipped =
+      !before.seller.markedComplete && after.seller.markedComplete;
+    const buyerFlipped =
+      !before.buyer.markedComplete && after.buyer.markedComplete;
+
+    if (!sellerFlipped && !buyerFlipped) return;
+
+    const orderId = event.params.orderId;
+    const writes: Promise<unknown>[] = [];
+
+    if (sellerFlipped) {
+      writes.push(
+        createOrderSystemMessage(
+          orderId,
+          `${after.seller.name} marked this order as complete.`,
+        ),
+      );
+    }
+
+    if (buyerFlipped) {
+      writes.push(
+        createOrderSystemMessage(
+          orderId,
+          `${after.buyer.name} marked this order as complete.`,
+        ),
+      );
+    }
+
+    await Promise.all(writes);
+
+    if (writes.length > 0) {
+      console.log(
+        `Wrote ${writes.length} mark-complete system message(s) for order ${orderId}.`,
+      );
+    }
+
+    // If there is still a party left to confirm, we're done here
+    if (!after.seller.markedComplete || !after.buyer.markedComplete) {
+      console.log(
+        `Order ${orderId} is not yet fully confirmed: seller markedComplete=${after.seller.markedComplete}, buyer markedComplete=${after.buyer.markedComplete}. Waiting for other party to confirm.`,
+      );
+      return;
+    }
+
+    const price = after.price ?? 0;
+
+    console.log(
+      `Both parties confirmed completion for order ${orderId}. Completing order.`,
+    );
+
+    const batch = admin.firestore().batch();
+
+    patchOrder(orderId, { status: orderStatus.completed }, batch);
+
+    patchUser(
+      after.buyer.id,
+      {
+        transactions_completed: FieldValue.increment(1),
+        moneySaved: FieldValue.increment(WALK_IN_PRICE - price),
+      },
+      batch,
+    );
+
+    patchUser(
+      after.seller.id,
+      {
+        transactions_completed: FieldValue.increment(1),
+        moneyEarned: FieldValue.increment(price),
+      },
+      batch,
+    );
+
+    await batch.commit();
+
+    console.log(`Order ${orderId} completed via mutual confirmation.`);
+  });
 
 export const cancelOrder = functions.https.onCall(async (request) => {
   if (!request.auth) {
@@ -246,7 +148,18 @@ export const cancelOrder = functions.https.onCall(async (request) => {
     throw new HttpsError("invalid-argument", "orderId is required");
   }
 
-  const orderData = await validateOrderParticipant(orderId, callerUid);
+  const orderData = await getOrder(orderId);
+
+  if (!orderData) {
+    throw new HttpsError("not-found", `Order ${orderId} not found`);
+  }
+
+  if (callerUid !== orderData.buyer.id && callerUid !== orderData.seller.id) {
+    throw new HttpsError(
+      "permission-denied",
+      "You are not a participant in this order",
+    );
+  }
 
   if (orderData.status !== orderStatus.active) {
     throw new HttpsError(
@@ -255,8 +168,7 @@ export const cancelOrder = functions.https.onCall(async (request) => {
     );
   }
 
-  const cancelledBy =
-    callerUid === orderData.buyerId ? "buyer" : "seller";
+  const cancelledBy = callerUid === orderData.buyer.id ? "buyer" : "seller";
 
   await admin.firestore().collection("orders").doc(orderId).update({
     status: orderStatus.cancelled,

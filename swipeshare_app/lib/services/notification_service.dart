@@ -230,13 +230,13 @@ class NotificationService {
 
     final buyerOrders = _firestore
         .collection('orders')
-        .where('buyerId', isEqualTo: user.uid)
-        .where('buyerHasNotifs', isEqualTo: true);
+        .where('buyer.id', isEqualTo: user.uid)
+        .where('buyer.hasNotifs', isEqualTo: true);
 
     final sellerOrders = _firestore
         .collection('orders')
-        .where('sellerId', isEqualTo: user.uid)
-        .where('sellerHasNotifs', isEqualTo: true);
+        .where('seller.id', isEqualTo: user.uid)
+        .where('seller.hasNotifs', isEqualTo: true);
 
     final (buyerSnapshots, sellerSnapshots) = await (
       buyerOrders.get(),

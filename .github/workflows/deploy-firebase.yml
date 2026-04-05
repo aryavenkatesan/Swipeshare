@@ -1,0 +1,44 @@
+name: Deploy Firebase
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'firebase/**'
+      - '.github/workflows/deploy-firebase.yml'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Functions, Rules, and Indexes
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firebase
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: firebase/functions/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: firebase/functions
+
+      - name: Build functions
+        run: npm run build
+        working-directory: firebase/functions
+
+      - name: Deploy to Firebase
+        run: npx firebase deploy --only functions,firestore:rules,firestore:indexes --project swipeshare-c24d1
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

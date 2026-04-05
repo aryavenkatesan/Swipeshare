@@ -1,0 +1,153 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if the authenticated user is a certain user
+    function isCurrentUser(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Check if authenticated user is signed in and has email verified
+    function isVerified() {
+      // Check if user is signed in AND their document has 'isEmailVerified: true'
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isEmailVerified == true;
+    }
+    
+    // Helper function to check if the current user is a buyer or seller
+    function isOrderParticipant(orderData) {
+      return isCurrentUser(orderData.buyer.id) || isCurrentUser(orderData.seller.id);
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // All signed-in users can read other user profiles
+      allow read: if isSignedIn(); 
+      // User can create, update, and delete their own doc
+      allow write, delete: if isSignedIn() && isCurrentUser(userId);
+			// Allow user to update other user's only if updating the stars
+      // TODO: Make star updates a cloud function to tighten permissions
+      allow update: if isVerified() && (
+      		isCurrentUser(userId)
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stars']))
+      )
+      
+      // Password Resets Collection
+    match /password_resets/{email} {
+      // Strictly deny all direct client access.
+      // Access is handled exclusively by Cloud Functions via the Admin SDK.
+        allow read, write, list: if false;
+      }
+    
+    }
+    
+    // Accounts collection (assuming this is sensitive, only user can read/write)
+    match /accounts/{accountId} {
+      allow read, write: if isSignedIn() && isCurrentUser(accountId);
+    }
+
+    // Allows a user to create a document in the 'mail' collection
+    match /mail/{mailId} {
+      // Any authenticated user can create an email.
+      allow create: if isSignedIn();
+    }
+    
+    // Listings collection
+    match /listings/{listingId} {
+      // Anyone verified can read or list listings
+      allow read, list: if isVerified(); 
+      
+      // Only the seller can create/update/delete their own listings
+      allow create: if isVerified() && isCurrentUser(request.resource.data.sellerId);
+      allow update: if isVerified() && isCurrentUser(resource.data.sellerId);
+    }
+    
+    // Orders collection
+    match /orders/{orderId} {
+    	// Checks if the user is updating the order to add a rating, 
+    	// and makes sure they don't add a rating for themselves
+    	function canUpdateOrder() {
+      	let data = request.resource.data;
+    		let existingData = resource.data;
+
+        let isBuyer = isCurrentUser(existingData.buyer.id);
+        let isSeller = isCurrentUser(existingData.seller.id);
+
+        let buyerRatingChanged = data.get('buyer.rating', null) != existingData.get('buyer.rating', null);
+        let sellerRatingChanged = data.get('seller.rating', null) != existingData.get('seller.rating', null);
+
+        return (isBuyer && !sellerRatingChanged) || (isSeller && !buyerRatingChanged);
+      }
+    
+      // Only VERIFIED participants can read an order
+      allow read: if isVerified() && isOrderParticipant(resource.data);
+
+      // This allows .get() calls in deleteAccount to function, 
+      // but ONLY for queries that look for the user's OWN ID.
+      allow list: if isVerified()
+                    && (isCurrentUser(request.query.where.get('buyer.id', null)) ||
+                        isCurrentUser(request.query.where.get('seller.id', null)));
+
+      // Only verified users can create orders
+      allow create: if isVerified() && isCurrentUser(request.resource.data.buyer.id);
+      
+      // Both verified parties can update, delete
+      allow update: if isVerified() && isOrderParticipant(resource.data) && canUpdateOrder();
+    }
+    
+    // Chat messages
+    match /orders/{orderId}/messages/{messageId} {
+      function isVerifiedOrderParticipant() {
+        // A user can read/write a message if...
+        // 1. They are verified
+        // 2. AND the order *already exists*
+        // 3. AND they are a participant
+        return isVerified() &&
+               (exists(/databases/$(database)/documents/orders/$(orderId)) && 
+                isOrderParticipant(get(/databases/$(database)/documents/orders/$(orderId)).data)
+               );
+      }
+
+      function isClientAuthoredMessageCreate() {
+        return isCurrentUser(request.resource.data.senderId)
+          && (
+            request.resource.data.messageType == "text"
+            || (
+              request.resource.data.messageType == "timeProposal"
+              && request.resource.data.status == "pending"
+            )
+          );
+      }
+
+      // Allow participant to read/list
+      allow read, list: if isVerifiedOrderParticipant();
+        
+      allow create: if isVerifiedOrderParticipant()
+        && isClientAuthoredMessageCreate();
+      
+      // Only time proposals can be updated
+      allow update: if isVerifiedOrderParticipant()
+        && resource.data.messageType == "timeProposal"
+        && request.resource.data.messageType == "timeProposal";
+      
+      // Allows the _deleteSubcollection helper to work
+      allow delete: if isVerifiedOrderParticipant();
+    }
+    
+    // Feedback
+    match /feedback/{feedbackId} {
+      allow create: if isVerified() && isCurrentUser(request.resource.data.userId);
+    }
+    
+    // Reports
+    match /reports/{reportId} {
+      // Only VERIFIED users can create reports
+      allow create: if isVerified() && isCurrentUser(request.resource.data.reporterId);
+    }
+  }
+}
