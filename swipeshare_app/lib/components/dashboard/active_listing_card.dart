@@ -71,15 +71,6 @@ class ActiveListingCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (listing.price != null)
-                          Text(
-                            '\$${listing.price!.toStringAsFixed(listing.price! % 1 == 0 ? 0 : 2)}',
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              // height: 1,
-                              color: SwipeshareColors.primary,
-                            ),
-                          ),
                       ],
                     ),
                     FittedBox(
@@ -90,13 +81,29 @@ class ActiveListingCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.more_horiz,
-                  size: 24,
-                  color: colors.onSurface,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 1, top: 8, right: 8, left: 8),
+                    child: Icon(
+                      Icons.more_horiz,
+                      size: 24,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  if (listing.price != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Text(
+                        '\$${listing.price!.toStringAsFixed(listing.price! % 1 == 0 ? 0 : 2)}',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: SwipeshareColors.primary,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
