@@ -1,6 +1,5 @@
 {
   "private": true,
-  "workspaces": ["functions"],
   "scripts": {
     "emulate": "cd functions && npm run emulate",
     "seed": "cd scripts && npx ts-node seed.ts"
