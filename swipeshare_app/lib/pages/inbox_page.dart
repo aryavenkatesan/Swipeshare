@@ -48,8 +48,8 @@ class _InboxPageState extends State<InboxPage> {
     _ordersSub = _orderService.orderCol
         .where(
           Filter.or(
-            Filter('buyerId', isEqualTo: uid),
-            Filter('sellerId', isEqualTo: uid),
+            Filter('buyer.id', isEqualTo: uid),
+            Filter('seller.id', isEqualTo: uid),
           ),
         )
         .snapshots()
@@ -272,10 +272,7 @@ class _InboxOrderTileState extends State<_InboxOrderTile> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final otherName = (uid == widget.order.sellerId)
-        ? widget.order.buyerName
-        : widget.order.sellerName;
+    final otherName = widget.order.them.name;
 
     final nameColor = widget.isActive
         ? colorScheme.onSurface

@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:swipeshare_app/components/colors.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_dialog.dart';
 import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
+import 'package:swipeshare_app/components/colors.dart';
+import 'package:swipeshare_app/components/ratings_bottom_sheet.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_bubble.dart';
@@ -12,6 +17,7 @@ import 'package:swipeshare_app/old_components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/old_components/star_container.dart';
 import 'package:swipeshare_app/services/chat_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
+import 'package:swipeshare_app/services/order_service.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:swipeshare_app/utils/profanity_utils.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
@@ -21,16 +27,6 @@ class ChatPage extends StatefulWidget {
   final MealOrder orderData;
 
   const ChatPage({super.key, required this.orderData});
-
-  String get receiverUserName =>
-      orderData.sellerId == FirebaseAuth.instance.currentUser!.uid
-      ? orderData.buyerName
-      : orderData.sellerName;
-
-  String get receiverUserId =>
-      orderData.sellerId == FirebaseAuth.instance.currentUser!.uid
-      ? orderData.buyerId
-      : orderData.sellerId;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -43,20 +39,75 @@ class _ChatPageState extends State<ChatPage> {
   final NotificationService _notifService = NotificationService.instance;
   final ScrollController _scrollController = ScrollController();
 
+  MealOrder? _liveOrder;
+  StreamSubscription<MealOrder>? _orderSub;
+  bool _barVisible = true;
+
+  MealOrder get _order => _liveOrder ?? widget.orderData;
+
+  ColorScheme get _colors => Theme.of(context).colorScheme;
+  TextTheme get _textTheme => Theme.of(context).textTheme;
+
   @override
   void initState() {
     super.initState();
     _notifService.activeChatId = widget.orderData.getRoomName();
     _chatService = ChatService(widget.orderData.getRoomName());
     _chatService.readNotifications();
+    _orderSub = _chatService.orderStream.listen((order) {
+      if (mounted) setState(() => _liveOrder = order);
+    });
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _orderSub?.cancel();
     _notifService.activeChatId = null;
     _scrollController.dispose();
     _messageController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final direction = _scrollController.position.userScrollDirection;
+    final isSticky = _order.them.markedComplete && !_order.me.markedComplete;
+    if (isSticky) return;
+
+    if (direction == ScrollDirection.forward && _barVisible) {
+      setState(() => _barVisible = false);
+    } else if (direction == ScrollDirection.reverse && !_barVisible) {
+      setState(() => _barVisible = true);
+    }
+  }
+
+  bool _buildBarVisible() {
+    final order = _order;
+    if (order.status != OrderStatus.active) return false;
+    final isSticky = order.them.markedComplete && !order.me.markedComplete;
+    return _barVisible || isSticky;
+  }
+
+  Future<void> _onMarkComplete() async {
+    final confirmed = await AdaptiveDialog.showConfirmation(
+      context: context,
+      title: 'Mark as Complete',
+      content: 'Confirm that the transaction was completed in person.',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final order = _order;
+    await safeVibrate(HapticsType.heavy);
+    await OrderService.instance.markComplete(
+      order.getRoomName(),
+      order.currentUserRole,
+    );
+
+    if (!mounted) return;
+    RatingsBottomSheet.show(context, [order]);
   }
 
   void _scrollToBottom() {
@@ -105,45 +156,36 @@ class _ChatPageState extends State<ChatPage> {
       await _chatService.sendTimeProposal(pickedTime);
     }
   }
-  //if sent go to chat_service and post a thingy
-  //yada yada
 
   @override
   Widget build(BuildContext context) {
+    final order = _order;
+
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0.0,
         toolbarHeight: 72,
-        leadingWidth: 130,
+        centerTitle: true,
         leading: Row(
           mainAxisSize: MainAxisSize.min,
           children: [SizedBox(width: 8), BackButton()],
         ),
         title: Column(
           children: [
-            Text(widget.receiverUserName),
+            FittedBox(fit: BoxFit.scaleDown, child: Text(order.them.name)),
             SizedBox(height: 3),
             Transform.translate(
               offset: Offset(-2, 0),
-              child: StarContainer(
-                stars:
-                    _firebaseAuth.currentUser!.uid != widget.orderData.buyerId
-                    ? widget.orderData.buyerStars
-                    : widget.orderData.sellerStars,
-                background: false,
-              ),
+              child: StarContainer(stars: order.them.stars, background: false),
             ),
           ],
         ),
         actions: <Widget>[
           Row(
             children: [
-              ChatSettingsMenu(
-                chatService: _chatService,
-                orderData: widget.orderData,
-              ),
+              ChatSettingsMenu(chatService: _chatService, orderData: order),
             ],
           ),
         ],
@@ -161,18 +203,123 @@ class _ChatPageState extends State<ChatPage> {
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              //messages
-              Expanded(child: _buildMessageList()),
+              //messages + input always fill full height
+              Column(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    height: _buildBarVisible() ? 56.0 : 0.0,
+                  ),
+                  Expanded(child: _buildMessageList()),
+                  _buildMessageInput(),
+                  SizedBox(height: 10),
+                ],
+              ),
 
-              //userInput
-              _buildMessageInput(),
-
-              SizedBox(height: 10),
+              //complete bar slides up behind the AppBar when hidden
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: ClipRect(
+                  child: AnimatedSlide(
+                    offset: _buildBarVisible()
+                        ? Offset.zero
+                        : const Offset(0, -1),
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: _buildCompleteBar(),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCompleteBar() {
+    final order = _order;
+    if (order.status != OrderStatus.active) return const SizedBox.shrink();
+
+    final myMarked = order.me.markedComplete;
+    final theyMarked = order.them.markedComplete;
+
+    final buttonStyle = TextButton.styleFrom(
+      minimumSize: Size.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      backgroundColor: Colors.grey.withValues(alpha: 0.12),
+    );
+    final buttonTextStyle = _textTheme.labelLarge?.copyWith(
+      fontSize: 16,
+      color: _colors.primary,
+    );
+
+    Widget actionArea;
+    if (!myMarked && !theyMarked) {
+      // State 1: neither confirmed
+      actionArea = TextButton(
+        onPressed: _onMarkComplete,
+        style: buttonStyle,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Mark Complete', style: buttonTextStyle),
+            const SizedBox(width: 6),
+            Icon(Icons.thumb_up_alt_outlined, size: 16, color: _colors.primary),
+          ],
+        ),
+      );
+    } else if (myMarked && !theyMarked) {
+      // State 2: I confirmed, waiting for them
+      actionArea = Text(
+        'Waiting for ${order.them.name}...',
+        style: _textTheme.bodyMedium?.copyWith(
+          color: SwipeshareColors.cardAccent,
+        ),
+      );
+    } else if (theyMarked && !myMarked) {
+      // State 3: they confirmed, I haven't (sticky)
+      actionArea = TextButton(
+        onPressed: _onMarkComplete,
+        style: buttonStyle,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Confirm Complete', style: buttonTextStyle),
+            const SizedBox(width: 4),
+            Icon(Icons.check, size: 16, color: _colors.primary),
+          ],
+        ),
+      );
+    } else {
+      // State 4: both confirmed — order.status will become completed via Cloud Function
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: _colors.surface,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '\$${order.price.toStringAsFixed(2)}',
+            style: _textTheme.bodyMedium,
+          ),
+          actionArea,
+        ],
       ),
     );
   }
@@ -198,26 +345,26 @@ class _ChatPageState extends State<ChatPage> {
         return RefreshIndicator(
           onRefresh: () async => _chatService.readNotifications(),
           child: ListView.builder(
-          controller: _scrollController,
-          reverse: true,
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          itemCount: reversedDocs.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return const SizedBox(height: 14);
-            }
+            controller: _scrollController,
+            reverse: true,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            itemCount: reversedDocs.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return const SizedBox(height: 14);
+              }
 
-            final previousMessage = index < reversedDocs.length
-                ? reversedDocs[index]
-                : null;
+              final previousMessage = index < reversedDocs.length
+                  ? reversedDocs[index]
+                  : null;
 
-            final message = reversedDocs[index - 1];
-            return switch (message) {
-              SystemMessage() => _buildSystemMessage(message),
-              TimeProposal() => _buildTimeProposal(message),
-              TextMessage() => _buildTextMessage(message, previousMessage),
-            };
-          },
+              final message = reversedDocs[index - 1];
+              return switch (message) {
+                SystemMessage() => _buildSystemMessage(message),
+                TimeProposal() => _buildTimeProposal(message),
+                TextMessage() => _buildTextMessage(message, previousMessage),
+              };
+            },
           ),
         );
       },
@@ -247,14 +394,12 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
         ),
-        SizedBox(height: 32),
       ],
     );
   }
 
   Widget _buildTimeProposal(TimeProposal proposal) {
-    final bool isSent =
-        proposal.senderId == _firebaseAuth.currentUser!.uid;
+    final bool isSent = proposal.senderId == _firebaseAuth.currentUser!.uid;
     final String timeString = TimeFormatter.formatTimeOfDayString(
       TimeFormatter.productionToString(proposal.proposedTime),
     );
@@ -281,7 +426,9 @@ class _ChatPageState extends State<ChatPage> {
       bottomSection = Text(
         "Pending...",
         textAlign: TextAlign.center,
-        style: textTheme.bodyLarge?.copyWith(color: SwipeshareColors.cardAccent),
+        style: textTheme.bodyLarge?.copyWith(
+          color: SwipeshareColors.cardAccent,
+        ),
       );
     } else {
       // Pending, received — show Accept + Decline
@@ -336,8 +483,9 @@ class _ChatPageState extends State<ChatPage> {
       child: Align(
         alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
-          crossAxisAlignment:
-              isSent ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isSent
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             SizedBox(height: 8),
             Container(
@@ -411,7 +559,7 @@ class _ChatPageState extends State<ChatPage> {
 
   //build message input
   Widget _buildMessageInput() {
-    if (widget.orderData.status != OrderStatus.active) {
+    if (_order.status != OrderStatus.active) {
       return Container(
         // width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

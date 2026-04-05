@@ -7,41 +7,67 @@ enum OrderRole { buyer, seller }
 
 enum OrderStatus { active, completed, cancelled }
 
+class OrderParticipant {
+  final String id;
+  final String name;
+  final double stars;
+  final bool hasNotifs;
+  final bool markedComplete;
+  final Rating? rating;
+
+  const OrderParticipant({
+    required this.id,
+    required this.name,
+    required this.stars,
+    required this.hasNotifs,
+    this.markedComplete = false,
+    this.rating,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'stars': stars,
+      'hasNotifs': hasNotifs,
+      'markedComplete': markedComplete,
+      'rating': rating?.toMap(),
+    };
+  }
+
+  factory OrderParticipant.fromMap(Map<String, dynamic> map) {
+    return OrderParticipant(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      stars: (map['stars'] as num?)?.toDouble() ?? 5.0,
+      hasNotifs: map['hasNotifs'] ?? false,
+      markedComplete: map['markedComplete'] ?? false,
+      rating: map['rating'] != null
+          ? Rating.fromMap(Map<String, dynamic>.from(map['rating']))
+          : null,
+    );
+  }
+}
+
 class MealOrder {
   //its called meal order instead of order because order is a keyword in firestore
-  final String sellerId;
-  final String sellerName;
-  final double sellerStars;
-  final String buyerId;
-  final String buyerName;
-  final double buyerStars;
+  final OrderParticipant seller;
+  final OrderParticipant buyer;
   final String diningHall;
   final String?
   displayTime; //TimeOfDay.toString() use the static methods in time_formatter.dart to convert
-  final bool sellerHasNotifs;
-  final bool buyerHasNotifs;
   final DateTime transactionDate;
-  final Rating? ratingByBuyer;
-  final Rating? ratingBySeller;
   final OrderStatus status;
   final double price;
   final OrderRole? cancelledBy;
   final bool cancellationAcknowledged;
 
   MealOrder({
-    required this.sellerId,
-    required this.sellerName,
-    required this.sellerStars,
-    required this.buyerId,
-    required this.buyerName,
-    required this.buyerStars,
+    required this.seller,
+    required this.buyer,
     required this.diningHall,
     this.displayTime,
-    required this.sellerHasNotifs,
-    required this.buyerHasNotifs,
     required this.transactionDate,
-    this.ratingByBuyer,
-    this.ratingBySeller,
     required this.status,
     this.price = 0,
     this.cancelledBy,
@@ -67,30 +93,30 @@ class MealOrder {
       throw StateError('No user is currently signed in');
     }
 
-    if (user.uid == sellerId) {
+    if (user.uid == seller.id) {
       return OrderRole.seller;
-    } else if (user.uid == buyerId) {
+    } else if (user.uid == buyer.id) {
       return OrderRole.buyer;
     } else {
       throw StateError('Current user is neither the buyer nor the seller');
     }
   }
 
+  /// The current user's participant data within this order.
+  OrderParticipant get me =>
+      currentUserRole == OrderRole.seller ? seller : buyer;
+
+  /// The other party's participant data within this order.
+  OrderParticipant get them =>
+      currentUserRole == OrderRole.seller ? buyer : seller;
+
   Map<String, dynamic> toMap() {
     return {
-      'sellerId': sellerId,
-      'sellerName': sellerName,
-      'sellerStars': sellerStars,
-      'buyerId': buyerId,
-      'buyerName': buyerName,
-      'buyerStars': buyerStars,
+      'seller': seller.toMap(),
+      'buyer': buyer.toMap(),
       'diningHall': diningHall,
       'displayTime': displayTime,
-      'sellerHasNotifs': sellerHasNotifs,
-      'buyerHasNotifs': buyerHasNotifs,
       'transactionDate': Timestamp.fromDate(transactionDate),
-      'ratingByBuyer': ratingByBuyer?.toMap(),
-      'ratingBySeller': ratingBySeller?.toMap(),
       'status': status.name,
       'price': price,
       'cancelledBy': cancelledBy?.name,
@@ -100,23 +126,13 @@ class MealOrder {
 
   factory MealOrder.fromMap(Map<String, dynamic> map) {
     return MealOrder(
-      sellerId: map['sellerId'] ?? '',
-      sellerName: map['sellerName'] ?? '',
-      sellerStars: map['sellerStars'].toDouble() ?? 5.0,
-      buyerId: map['buyerId'] ?? '',
-      buyerName: map['buyerName'] ?? '',
-      buyerStars: (map['buyerStars'] as num?)?.toDouble() ?? 5.0,
+      seller: OrderParticipant.fromMap(
+        Map<String, dynamic>.from(map['seller']),
+      ),
+      buyer: OrderParticipant.fromMap(Map<String, dynamic>.from(map['buyer'])),
       diningHall: map['diningHall'] ?? '',
       displayTime: map['displayTime'],
-      sellerHasNotifs: map['sellerHasNotifs'] ?? false,
-      buyerHasNotifs: map['buyerHasNotifs'] ?? false,
       transactionDate: FirestoreUtils.parseTimestamp(map['transactionDate']),
-      ratingByBuyer: map['ratingByBuyer'] != null
-          ? Rating.fromMap(Map<String, dynamic>.from(map['ratingByBuyer']))
-          : null,
-      ratingBySeller: map['ratingBySeller'] != null
-          ? Rating.fromMap(Map<String, dynamic>.from(map['ratingBySeller']))
-          : null,
       status: map['status'] != null
           ? OrderStatus.values.byName(map['status'])
           : OrderStatus.cancelled,
@@ -140,7 +156,7 @@ class MealOrder {
 
   getRoomName() {
     //something unique between the two people and their specific interaction, it will never be repeated
-    return '${sellerId}_${buyerId}_${transactionDate.millisecondsSinceEpoch}';
+    return '${seller.id}_${buyer.id}_${transactionDate.millisecondsSinceEpoch}';
   }
 
   /// Determines if this order is active or needs acknowledgment.
@@ -194,10 +210,14 @@ class Rating {
   }
 
   factory Rating.fromMap(Map<String, dynamic> map) {
+    final timestampValue = map['timestamp'];
+
     return Rating(
       stars: map['stars'] as int,
       extraInfo: map['extraInfo'] as String?,
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      timestamp: timestampValue != null
+          ? FirestoreUtils.parseTimestamp(timestampValue)
+          : DateTime.now(),
     );
   }
 }

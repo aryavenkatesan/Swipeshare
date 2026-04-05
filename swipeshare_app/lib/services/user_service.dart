@@ -61,9 +61,7 @@ class UserService {
 
   Future<void> blockUser(MealOrder orderData) async {
     final currentUser = await getCurrentUser();
-    final String otherUserId = orderData.buyerId != currentUser.id
-        ? orderData.buyerId
-        : orderData.sellerId;
+    final String otherUserId = orderData.them.id;
 
     if (currentUser.blockedUsers.contains(otherUserId)) {
       return;
@@ -144,7 +142,7 @@ class UserService {
       // 2. Anonymize orders as seller and their messages
       final ordersAsSellerSnapshot = await _firestore
           .collection('orders')
-          .where('sellerId', isEqualTo: currentUserId)
+          .where('seller.id', isEqualTo: currentUserId)
           .get();
 
       for (final doc in ordersAsSellerSnapshot.docs) {
@@ -166,13 +164,13 @@ class UserService {
         }
 
         // Anonymize the order
-        await doc.reference.update({'sellerName': deletedName});
+        await doc.reference.update({'seller.name': deletedName});
       }
 
       // 3. Anonymize orders as buyer and their messages
       final ordersAsBuyerSnapshot = await _firestore
           .collection('orders')
-          .where('buyerId', isEqualTo: currentUserId)
+          .where('buyer.id', isEqualTo: currentUserId)
           .get();
 
       for (final doc in ordersAsBuyerSnapshot.docs) {
@@ -194,7 +192,7 @@ class UserService {
         }
 
         // Anonymize the order
-        await doc.reference.update({'buyerName': deletedName});
+        await doc.reference.update({'buyer.name': deletedName});
       }
 
       // 4. Anonymize reports where user is reporter

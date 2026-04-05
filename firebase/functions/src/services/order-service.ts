@@ -3,6 +3,7 @@ import {
   DocumentData,
   DocumentReference,
   FieldValue,
+  PartialWithFieldValue,
   Timestamp,
   Transaction,
   UpdateData,
@@ -47,15 +48,15 @@ export const getOrder = async (
  * This matches the getRoomName() method in meal_order.dart
  */
 export const getOrderRoomName = ({
-  sellerId,
-  buyerId,
+  seller,
+  buyer,
   transactionDate,
 }: {
-  sellerId: string;
-  buyerId: string;
+  seller: { id: string };
+  buyer: { id: string };
   transactionDate: Timestamp;
 }): string => {
-  return `${sellerId}_${buyerId}_${transactionDate.toMillis()}`;
+  return `${seller.id}_${buyer.id}_${transactionDate.toMillis()}`;
 };
 
 export const patchOrder = (
@@ -71,6 +72,44 @@ export const patchOrder = (
     return orderDoc.update(data);
   }
 };
+
+export const getOrderMessagesCollection = (orderId: string) =>
+  admin.firestore().collection("orders").doc(orderId).collection("messages");
+
+export const buildSystemMessage = (content: string): SystemMessage => ({
+  messageType: "system",
+  senderId: "system",
+  senderEmail: "system@swipeshare.app",
+  senderName: "SwipeShare",
+  content,
+});
+
+export function createOrderSystemMessage(
+  orderId: string,
+  content: string,
+): Promise<WriteResult>;
+export function createOrderSystemMessage(
+  orderId: string,
+  content: string,
+  transaction: Transaction,
+): void;
+export function createOrderSystemMessage(
+  orderId: string,
+  content: string,
+  transaction?: Transaction,
+): Promise<WriteResult> | void {
+  const messageDoc = getOrderMessagesCollection(orderId).doc();
+  const message: PartialWithFieldValue<DocumentData> = {
+    ...buildSystemMessage(content),
+    timestamp: FieldValue.serverTimestamp(),
+  };
+
+  if (transaction) {
+    transaction.set(messageDoc, message);
+  } else {
+    return messageDoc.set(message);
+  }
+}
 
 /**
  * Checks for duplicates, then writes the order within a transaction.
@@ -97,21 +136,39 @@ export const buildOrder = (
   buyer: User & { id: string },
   overrides?: Partial<Order>,
 ): Order => ({
-  sellerId: seller.id,
-  sellerName: seller.name,
-  sellerStars: seller.stars ?? 5,
-  buyerId: buyer.id,
-  buyerName: buyer.name,
-  buyerStars: buyer.stars ?? 5,
+  seller: {
+    id: seller.id,
+    name: seller.name,
+    stars: seller.stars ?? 5,
+    hasNotifs: true,
+    markedComplete: false,
+  },
+  buyer: {
+    id: buyer.id,
+    name: buyer.name,
+    stars: buyer.stars ?? 5,
+    hasNotifs: true,
+    markedComplete: false,
+  },
   diningHall: "Lenoir",
-  sellerHasNotifs: true,
-  buyerHasNotifs: true,
   transactionDate: Timestamp.now(),
   status: orderStatus.active,
   price: 5.0,
   cancellationAcknowledged: false,
   ...overrides,
 });
+
+const assertDistinctOrderParticipants = (
+  sellerId: string,
+  buyerId: string,
+): void => {
+  if (sellerId === buyerId) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Buyer and seller must be different users",
+    );
+  }
+};
 
 /**
  * Claims a listing and creates an order from it, including the system message.
@@ -138,6 +195,8 @@ export const claimListingForOrder = async (
         `Listing data for id ${listingId} not found`,
       );
     }
+
+    assertDistinctOrderParticipants(listing.sellerId, buyerId);
 
     const seller = await getUser(listing.sellerId, transaction);
     if (!seller) {
@@ -170,18 +229,11 @@ export const claimListingForOrder = async (
       { status: listingStatus.claimed },
     );
 
-    const messageDoc = orderDoc.collection("messages").doc();
-    const messageData: SystemMessage = {
-      messageType: "system",
-      senderId: "system",
-      senderEmail: "system@swipeshare.app",
-      senderName: "SwipeShare",
-      content: newOrderSystemMessageContent(newOrder.price),
-    };
-    transaction.set(messageDoc, {
-      ...messageData,
-      timestamp: FieldValue.serverTimestamp(),
-    });
+    createOrderSystemMessage(
+      orderDoc.id,
+      newOrderSystemMessageContent(newOrder.price),
+      transaction,
+    );
 
     return { orderId: orderDoc.id, order: newOrder };
   });
@@ -232,15 +284,15 @@ export const completeExpiredOrders = async (): Promise<{
     const order = doc.data() as Order;
     const price = order.price ?? 0;
     console.log(
-      `Completing order ${doc.id} (seller: ${order.sellerId}, buyer: ${order.buyerId}, price: $${price}, date: ${order.transactionDate.toDate().toISOString()})`,
+      `Completing order ${doc.id} (seller: ${order.seller.id}, buyer: ${order.buyer.id}, price: $${price}, date: ${order.transactionDate.toDate().toISOString()})`,
     );
     patchOrder(doc.id, { status: orderStatus.completed }, batch);
 
-    const buyerUpdates = getOrCreate(order.buyerId);
+    const buyerUpdates = getOrCreate(order.buyer.id);
     buyerUpdates.transactions += 1;
     buyerUpdates.moneySaved += WALK_IN_PRICE - price;
 
-    const sellerUpdates = getOrCreate(order.sellerId);
+    const sellerUpdates = getOrCreate(order.seller.id);
     sellerUpdates.transactions += 1;
     sellerUpdates.moneyEarned += price;
   });
@@ -270,6 +322,7 @@ export const createOrder = async (
   buyer: User & { id: string },
   overrides?: Partial<Order>,
 ): Promise<{ orderId: string; order: Order }> => {
+  assertDistinctOrderParticipants(seller.id, buyer.id);
   const order = buildOrder(seller, buyer, overrides);
   const orderId = getOrderRoomName(order);
   await admin.firestore().collection("orders").doc(orderId).set(order);

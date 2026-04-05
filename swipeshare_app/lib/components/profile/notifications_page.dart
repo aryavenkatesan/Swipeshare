@@ -17,6 +17,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   bool _isLoading = true;
   bool _orderReminders = true;
   bool _messages = false;
+  bool _orderConfirmations = true;
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       setState(() {
         _orderReminders = user.notifSettings.newOrders;
         _messages = user.notifSettings.newMessages;
+        _orderConfirmations = user.notifSettings.orderConfirmations;
         _isLoading = false;
       });
     }
@@ -38,7 +40,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void _savePreferences() {
     _userService.updateNotificationPreferences(
       _uid,
-      NotifSettings(newOrders: _orderReminders, newMessages: _messages),
+      NotifSettings(
+        newOrders: _orderReminders,
+        newMessages: _messages,
+        orderConfirmations: _orderConfirmations,
+      ),
     );
   }
 
@@ -100,6 +106,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     activeColor: colorScheme.primary,
                     onChanged: (val) {
                       setState(() => _messages = val);
+                      _savePreferences();
+                    },
+                  ),
+                  _NotificationTile(
+                    title: "Order Confirmations",
+                    description:
+                        "Be notified when your counterpart marks an order as complete.",
+                    value: _orderConfirmations,
+                    activeColor: colorScheme.primary,
+                    onChanged: (val) {
+                      setState(() => _orderConfirmations = val);
                       _savePreferences();
                     },
                   ),

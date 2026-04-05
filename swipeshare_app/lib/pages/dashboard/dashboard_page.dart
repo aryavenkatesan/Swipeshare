@@ -122,8 +122,8 @@ class _OrdersList extends StatelessWidget {
       stream: OrderService.instance.orderCol
           .where(
             Filter.or(
-              Filter('sellerId', isEqualTo: userId),
-              Filter('buyerId', isEqualTo: userId),
+              Filter('seller.id', isEqualTo: userId),
+              Filter('buyer.id', isEqualTo: userId),
             ),
           )
           .where(

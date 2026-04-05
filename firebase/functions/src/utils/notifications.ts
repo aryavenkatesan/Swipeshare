@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { getOrder, patchOrder } from "../services/order-service";
-/** Sets `sellerHasNotifs` or `buyerHasNotifs` to true for the given order and notification recipient */
+/** Sets `seller.hasNotifs` or `buyer.hasNotifs` to true for the given order and notification recipient */
 export const updateNotificationsStatus = async (
   orderId: string,
   recipientId: string,
@@ -18,7 +18,9 @@ export const updateNotificationsStatus = async (
   }
 
   const updateField =
-    recipientId === orderData.sellerId ? "sellerHasNotifs" : "buyerHasNotifs";
+    recipientId === orderData.seller.id
+      ? "seller.hasNotifs"
+      : "buyer.hasNotifs";
   await patchOrder(orderId, { [updateField]: true });
 };
 
@@ -31,15 +33,15 @@ export const payloadWithNotifs = async (
     .firestore()
     .collection("orders")
     .where("status", "==", "active")
-    .where("buyerId", "==", userId)
-    .where("buyerHasNotifs", "==", true);
+    .where("buyer.id", "==", userId)
+    .where("buyer.hasNotifs", "==", true);
 
   const sellerOrders = admin
     .firestore()
     .collection("orders")
     .where("status", "==", "active")
-    .where("sellerId", "==", userId)
-    .where("sellerHasNotifs", "==", true);
+    .where("seller.id", "==", userId)
+    .where("seller.hasNotifs", "==", true);
 
   const [userOrdersAsBuyer, userOrdersAsSeller] = await Promise.all([
     buyerOrders.get(),
