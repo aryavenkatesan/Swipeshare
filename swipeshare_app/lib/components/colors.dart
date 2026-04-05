@@ -22,6 +22,9 @@ class SwipeshareColors {
   /// Grey left-bar accent used on active order cards.
   static const Color cardAccent = Color(0xFF999999);
 
+  /// Darker grey for secondary/subdued text.
+  static const Color subtleText = Color(0xFF4E4E4E);
+
   /// Rating chip / secondary container background.
   static const Color secondaryContainer = Color(0xFFDDDDDD);
   static const Color onSecondaryContainer = Color(0xFF000000);
