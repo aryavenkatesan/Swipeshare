@@ -95,7 +95,7 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: const PageScrollPhysics(),
                   itemCount: widget.ordersToRate.length,
                   onPageChanged: (index) =>
                       setState(() => _currentPage = index),
@@ -140,7 +140,13 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     final formattedDate =
         '${date.month}/${date.day}/${date.year.toString().substring(2)}';
 
-    final starsSelected = _selectedStars[index] != null;
+    final isLastPage = index == widget.ordersToRate.length - 1;
+    final allStarsSelected = widget.ordersToRate.asMap().keys.every(
+      (i) => _selectedStars[i] != null,
+    );
+    final buttonEnabled = isLastPage
+        ? allStarsSelected
+        : _selectedStars[index] != null;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -185,23 +191,30 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            // Send Feedback button
+            // Next / Submit button
             GestureDetector(
-              onTap: starsSelected ? () => _submitRating(index, order) : null,
+              onTap: buttonEnabled
+                  ? () => isLastPage
+                        ? _submitAllRatings()
+                        : _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          )
+                  : null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 height: 55,
                 decoration: BoxDecoration(
-                  color: starsSelected
+                  color: buttonEnabled
                       ? _colors.primary
                       : _colors.secondaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  'Send Feedback',
+                  isLastPage ? 'Submit' : 'Next',
                   style: _textTheme.labelLarge?.copyWith(
-                    color: starsSelected
+                    color: buttonEnabled
                         ? _colors.onPrimary
                         : _colors.onSecondaryContainer,
                   ),
@@ -243,22 +256,23 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     );
   }
 
-  Future<void> _submitRating(int index, MealOrder order) async {
-    final stars = _selectedStars[index];
-    if (stars == null) return;
-
+  Future<void> _submitAllRatings() async {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      await _orderService.rateOrder(
-        order,
-        Rating(
-          stars: stars,
-          extraInfo: _feedbackControllers[index]?.text.isEmpty ?? true
-              ? null
-              : _feedbackControllers[index]!.text,
-        ),
-      );
+      for (int i = 0; i < widget.ordersToRate.length; i++) {
+        final stars = _selectedStars[i];
+        if (stars == null) continue;
+        await _orderService.rateOrder(
+          widget.ordersToRate[i],
+          Rating(
+            stars: stars,
+            extraInfo: _feedbackControllers[i]?.text.isEmpty ?? true
+                ? null
+                : _feedbackControllers[i]!.text,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       messenger.removeCurrentSnackBar();
@@ -274,21 +288,10 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     await safeVibrate(HapticsType.success);
 
     if (!mounted) return;
-
-    if (index < widget.ordersToRate.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      messenger.showSnackBar(
-        SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
-      );
-    } else {
-      Navigator.of(context).pop();
-      widget.onComplete?.call();
-      messenger.showSnackBar(
-        SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
-      );
-    }
+    Navigator.of(context).pop();
+    widget.onComplete?.call();
+    messenger.showSnackBar(
+      SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
+    );
   }
 }
