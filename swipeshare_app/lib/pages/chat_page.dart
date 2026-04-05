@@ -149,7 +149,8 @@ class _ChatPageState extends State<ChatPage> {
     TimeOfDay? pickedTime = await AdaptiveTimePicker.showAdaptiveTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
-      helpText: "What time would you like to propose?",
+      helpText: "Propose a time to meet",
+      confirmText: "Send",
     );
 
     if (pickedTime != null) {
@@ -580,16 +581,16 @@ class _ChatPageState extends State<ChatPage> {
       padding: EdgeInsets.symmetric(horizontal: vw * 0.01),
       child: Row(
         children: [
-          //time widget
+          // time widget
           IconButton(
             onPressed: sendTimePicker,
-            icon: Icon(Icons.lock_clock_outlined, size: 30),
+            icon: Icon(Icons.more_time, size: 30),
           ),
 
-          //textfield - platform adaptive
+          // textfield
           Expanded(child: _buildAdaptiveTextField()),
 
-          //send button
+          // send button
           IconButton(
             onPressed: sendTextMessage,
             icon: Icon(Icons.arrow_upward, size: 35),

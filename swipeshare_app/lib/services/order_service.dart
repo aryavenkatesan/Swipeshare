@@ -81,11 +81,7 @@ class OrderService {
   }
 
   Future<void> cancelOrder(String orderId, OrderRole cancelledBy) async {
-    await orderCol.doc(orderId).update({
-      'status': OrderStatus.cancelled.name,
-      'cancelledBy': cancelledBy.name,
-      'cancellationAcknowledged': false,
-    });
+    await _functions.httpsCallable('cancelOrder').call({'orderId': orderId});
   }
 
   Future<void> acknowledgeCancellation(String orderId) async {

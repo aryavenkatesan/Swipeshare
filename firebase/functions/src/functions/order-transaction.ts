@@ -5,6 +5,7 @@ import * as functions from "firebase-functions/v2";
 import {
   claimListingForOrder,
   createOrderSystemMessage,
+  getOrder,
   patchOrder,
 } from "../services/order-service";
 import { getUser, patchUser } from "../services/user-service";
@@ -131,3 +132,51 @@ export const handleOrderMarkedCompleteUpdate =
 
     console.log(`Order ${orderId} completed via mutual confirmation.`);
   });
+
+export const cancelOrder = functions.https.onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "User must be authenticated to cancel an order",
+    );
+  }
+
+  const { orderId } = request.data;
+  const callerUid = request.auth.uid;
+
+  if (!orderId) {
+    throw new HttpsError("invalid-argument", "orderId is required");
+  }
+
+  const orderData = await getOrder(orderId);
+
+  if (!orderData) {
+    throw new HttpsError("not-found", `Order ${orderId} not found`);
+  }
+
+  if (callerUid !== orderData.buyer.id && callerUid !== orderData.seller.id) {
+    throw new HttpsError(
+      "permission-denied",
+      "You are not a participant in this order",
+    );
+  }
+
+  if (orderData.status !== orderStatus.active) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Only active orders can be cancelled.",
+    );
+  }
+
+  const cancelledBy = callerUid === orderData.buyer.id ? "buyer" : "seller";
+
+  await admin.firestore().collection("orders").doc(orderId).update({
+    status: orderStatus.cancelled,
+    cancelledBy,
+    cancellationAcknowledged: false,
+  });
+
+  console.log(`Order ${orderId} cancelled by ${cancelledBy} (${callerUid})`);
+
+  return { success: true };
+});
