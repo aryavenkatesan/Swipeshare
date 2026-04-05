@@ -39,45 +39,69 @@ class _InboxPageState extends State<InboxPage> {
   // Tracks the latest message timestamp per chat room for sorting.
   final Map<String, DateTime?> _lastMsgTimes = {};
   final Map<String, StreamSubscription<QuerySnapshot<Message>>> _msgSubs = {};
-  StreamSubscription<QuerySnapshot<MealOrder>>? _ordersSub;
+  StreamSubscription<QuerySnapshot<MealOrder>>? _buyerOrdersSub;
+  StreamSubscription<QuerySnapshot<MealOrder>>? _sellerOrdersSub;
+
+  QuerySnapshot<MealOrder>? _buyerSnap;
+  QuerySnapshot<MealOrder>? _sellerSnap;
 
   @override
   void initState() {
     super.initState();
     final uid = _auth.currentUser!.uid;
-    _ordersSub = _orderService.orderCol
-        .where(
-          Filter.or(
-            Filter('buyer.id', isEqualTo: uid),
-            Filter('seller.id', isEqualTo: uid),
-          ),
-        )
+
+    // Use two separate queries instead of Filter.or() — OR/disjunction queries
+    // are rejected by Firestore security rules when the list rule cannot inspect
+    // query where-filters (request.query.where is not a valid rules expression).
+    void mergeAndUpdate() {
+      if (_buyerSnap == null || _sellerSnap == null) return;
+      final seen = <String>{};
+      final orders = <MealOrder>[];
+      for (final doc in [..._buyerSnap!.docs, ..._sellerSnap!.docs]) {
+        if (seen.add(doc.id)) orders.add(doc.data());
+      }
+
+      final active = orders
+          .where((o) => o.status == OrderStatus.active)
+          .toList();
+
+      final past =
+          orders.where((o) => o.status != OrderStatus.active).toList()
+            ..sort(
+              (a, b) => b.transactionDate.compareTo(a.transactionDate),
+            );
+
+      _syncMsgSubscriptions(active);
+
+      if (mounted) {
+        setState(() {
+          _activeOrders = active;
+          _pastOrders = past;
+          _loading = false;
+        });
+      }
+    }
+
+    _buyerOrdersSub = _orderService.orderCol
+        .where('buyer.id', isEqualTo: uid)
         .snapshots()
         .listen(
-          (snapshot) {
-            final orders = snapshot.docs.map((doc) => doc.data()).toList();
+          (snap) {
+            _buyerSnap = snap;
+            mergeAndUpdate();
+          },
+          onError: (e) {
+            if (mounted) setState(() => _error = e);
+          },
+        );
 
-            final active = orders
-                .where((o) => o.status == OrderStatus.active)
-                .toList();
-
-            final past =
-                orders.where((o) => o.status != OrderStatus.active).toList()
-                  ..sort(
-                    (a, b) => b.transactionDate.compareTo(a.transactionDate),
-                  );
-
-            // Set up per-room message subscriptions so we can sort by
-            // most-recent activity whenever Firebase delivers a new message.
-            _syncMsgSubscriptions(active);
-
-            if (mounted) {
-              setState(() {
-                _activeOrders = active;
-                _pastOrders = past;
-                _loading = false;
-              });
-            }
+    _sellerOrdersSub = _orderService.orderCol
+        .where('seller.id', isEqualTo: uid)
+        .snapshots()
+        .listen(
+          (snap) {
+            _sellerSnap = snap;
+            mergeAndUpdate();
           },
           onError: (e) {
             if (mounted) setState(() => _error = e);
@@ -133,7 +157,8 @@ class _InboxPageState extends State<InboxPage> {
 
   @override
   void dispose() {
-    _ordersSub?.cancel();
+    _buyerOrdersSub?.cancel();
+    _sellerOrdersSub?.cancel();
     for (final sub in _msgSubs.values) {
       sub.cancel();
     }

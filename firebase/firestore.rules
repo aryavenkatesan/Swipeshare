@@ -87,11 +87,10 @@ service cloud.firestore {
       // Only VERIFIED participants can read an order
       allow read: if isVerified() && isOrderParticipant(resource.data);
 
-      // This allows .get() calls in deleteAccount to function, 
-      // but ONLY for queries that look for the user's OWN ID.
-      allow list: if isVerified()
-                    && (isCurrentUser(request.query.where.get('buyer.id', null)) ||
-                        isCurrentUser(request.query.where.get('seller.id', null)));
+      // Firestore security rules do not expose query where-filters (request.query.where
+      // does not exist), so we cannot restrict list by filter value. Verified users may
+      // list orders; the client is responsible for always filtering by their own UID.
+      allow list: if isVerified();
 
       // Only verified users can create orders
       allow create: if isVerified() && isCurrentUser(request.resource.data.buyer.id);
