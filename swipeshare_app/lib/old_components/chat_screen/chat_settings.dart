@@ -42,10 +42,11 @@ class ChatSettingsMenu extends StatelessWidget {
           value: SettingsItems.block,
           child: Text('Block This User'),
         ),
-        const PopupMenuItem<SettingsItems>(
-          value: SettingsItems.cancelOrder,
-          child: Text('Cancel Order'),
-        ),
+        if (orderData.status == OrderStatus.active)
+          const PopupMenuItem<SettingsItems>(
+            value: SettingsItems.cancelOrder,
+            child: Text('Cancel Order'),
+          ),
       ],
     );
   }

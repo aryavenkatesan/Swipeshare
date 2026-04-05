@@ -10,7 +10,12 @@ import {
   SystemMessage,
 } from "../types";
 import { newOrderSystemMessageContent } from "../utils/constants";
-import { getListing, getOrderRoomName, getUser } from "../utils/firestore";
+import {
+  getListing,
+  getOrderRoomName,
+  getUser,
+  validateOrderParticipant,
+} from "../utils/firestore";
 import { dateToTimeOfDayString } from "../utils/time";
 
 /**
@@ -225,3 +230,41 @@ export const createOrderFromListing = functions.https.onCall(
     });
   },
 );
+
+export const cancelOrder = functions.https.onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "User must be authenticated to cancel an order",
+    );
+  }
+
+  const { orderId } = request.data;
+  const callerUid = request.auth.uid;
+
+  if (!orderId) {
+    throw new HttpsError("invalid-argument", "orderId is required");
+  }
+
+  const orderData = await validateOrderParticipant(orderId, callerUid);
+
+  if (orderData.status !== orderStatus.active) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Only active orders can be cancelled.",
+    );
+  }
+
+  const cancelledBy =
+    callerUid === orderData.buyerId ? "buyer" : "seller";
+
+  await admin.firestore().collection("orders").doc(orderId).update({
+    status: orderStatus.cancelled,
+    cancelledBy,
+    cancellationAcknowledged: false,
+  });
+
+  console.log(`Order ${orderId} cancelled by ${cancelledBy} (${callerUid})`);
+
+  return { success: true };
+});
