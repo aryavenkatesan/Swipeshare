@@ -1326,7 +1326,7 @@
           "s*",
           "t*"
         ]
-      },
+      }
     ]
   },
   {
@@ -2382,22 +2382,6 @@
     "severity": 2,
     "tags": ["general"],
     "dictionary": [
-      {
-        "id": "apeshit",
-        "match": "apeshit|ape-shit|ape shit"
-      },
-      {
-        "id": "bullshit",
-        "match": "bullshit|bull-shit|bull shit"
-      },
-      {
-        "id": "dogshit",
-        "match": "dogshit|dog-shit|dog shit"
-      },
-      {
-        "id": "horseshit",
-        "match": "horseshit|horse-shit|horse shit"
-      },
       {
         "id": "piece-of-shit",
         "match": "piece of shit|pieces of shit"
