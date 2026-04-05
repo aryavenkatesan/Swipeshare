@@ -104,20 +104,28 @@ class OrderService {
     if (_auth.currentUser == null) return [];
     final currentUserId = _auth.currentUser!.uid;
 
-    final ordersToRate = await orderCol
-        .where('status', isEqualTo: OrderStatus.completed.name)
-        .where(
-          Filter.or(
-            Filter("buyer.id", isEqualTo: currentUserId),
-            Filter("seller.id", isEqualTo: currentUserId),
-          ),
-        )
-        .get();
+    final results = await Future.wait([
+      orderCol
+          .where('status', isEqualTo: OrderStatus.completed.name)
+          .where('buyer.id', isEqualTo: currentUserId)
+          .get(),
+      orderCol
+          .where('status', isEqualTo: OrderStatus.completed.name)
+          .where('seller.id', isEqualTo: currentUserId)
+          .get(),
+    ]);
 
-    return ordersToRate.docs
-        .map((doc) => doc.data())
-        .where((order) => order.me.rating == null)
-        .toList();
+    final seen = <String>{};
+    final orders = <MealOrder>[];
+    for (final snapshot in results) {
+      for (final doc in snapshot.docs) {
+        if (seen.add(doc.id)) {
+          orders.add(doc.data());
+        }
+      }
+    }
+
+    return orders.where((order) => order.me.rating == null).toList();
   }
 
   Future<void> rateOrder(MealOrder orderData, Rating rating) async {
