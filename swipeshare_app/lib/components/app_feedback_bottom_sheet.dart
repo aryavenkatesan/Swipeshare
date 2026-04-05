@@ -5,15 +5,16 @@ import 'package:swipeshare_app/utils/snackbar_messages.dart';
 class AppFeedbackBottomSheet extends StatefulWidget {
   const AppFeedbackBottomSheet({super.key});
 
-  static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
+  static Future<void> show(BuildContext context, {VoidCallback? onComplete}) async {
+    final submitted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
+      isDismissible: true,
+      enableDrag: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const AppFeedbackBottomSheet(),
     );
+    if (submitted == true) onComplete?.call();
   }
 
   @override
@@ -59,7 +60,7 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
       return;
     }
 
-    navigator.pop();
+    navigator.pop(true);
     messenger.showSnackBar(
       SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
     );
@@ -94,7 +95,18 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: _colors.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               Center(
                 child: Text(
                   'Share Feedback',
@@ -125,7 +137,7 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
                         Container(
                           height: 130,
                           decoration: BoxDecoration(
-                            border: Border.all(color: _colors.outline),
+                            border: Border.all(color: _colors.outline, width: 0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: TextField(
@@ -141,6 +153,8 @@ class _AppFeedbackBottomSheetState extends State<AppFeedbackBottomSheet> {
                                 color: _colors.surfaceTint,
                               ),
                               border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                               contentPadding:
                                   const EdgeInsets.fromLTRB(16, 16, 9, 4),
                             ),
