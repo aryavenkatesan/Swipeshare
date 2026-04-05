@@ -26,10 +26,8 @@ class RatingsBottomSheet extends StatefulWidget {
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => RatingsBottomSheet(
-        ordersToRate: orders,
-        onComplete: onComplete,
-      ),
+      builder: (context) =>
+          RatingsBottomSheet(ordersToRate: orders, onComplete: onComplete),
     );
   }
 
@@ -73,63 +71,64 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
       body: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-        height: MediaQuery.of(context).size.height * 0.75,
-        decoration: BoxDecoration(
-          color: _colors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // Title
-            Center(
-              child: Text(
-                'Rate your Experience',
-                style: _textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: _colors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              // Title
+              Center(
+                child: Text(
+                  'Rate your Experience',
+                  style: _textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Divider(height: 1, color: _colors.outlineVariant),
-            // PageView
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.ordersToRate.length,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemBuilder: (context, index) =>
-                    _buildRatingPage(index, widget.ordersToRate[index]),
+              const SizedBox(height: 14),
+              Divider(height: 1, color: _colors.outlineVariant),
+              // PageView
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const PageScrollPhysics(),
+                  itemCount: widget.ordersToRate.length,
+                  onPageChanged: (index) =>
+                      setState(() => _currentPage = index),
+                  itemBuilder: (context, index) =>
+                      _buildRatingPage(index, widget.ordersToRate[index]),
+                ),
               ),
-            ),
-            // Pagination dots (only when multiple orders)
-            if (widget.ordersToRate.length > 1)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    widget.ordersToRate.length,
-                    (index) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 4.5),
-                      width: 38,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: _currentPage == index
-                            ? _colors.surfaceTint
-                            : _colors.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
+              // Pagination dots (only when multiple orders)
+              if (widget.ordersToRate.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      widget.ordersToRate.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 4.5),
+                        width: 38,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: _currentPage == index
+                              ? _colors.surfaceTint
+                              : _colors.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -144,7 +143,13 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     final formattedDate =
         '${date.month}/${date.day}/${date.year.toString().substring(2)}';
 
-    final starsSelected = _selectedStars[index] != null;
+    final isLastPage = index == widget.ordersToRate.length - 1;
+    final allStarsSelected = widget.ordersToRate.asMap().keys.every(
+      (i) => _selectedStars[i] != null,
+    );
+    final buttonEnabled = isLastPage
+        ? allStarsSelected
+        : _selectedStars[index] != null;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -189,23 +194,30 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            // Send Feedback button
+            // Next / Submit button
             GestureDetector(
-              onTap: starsSelected ? () => _submitRating(index, order) : null,
+              onTap: buttonEnabled
+                  ? () => isLastPage
+                        ? _submitAllRatings()
+                        : _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          )
+                  : null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 height: 55,
                 decoration: BoxDecoration(
-                  color: starsSelected
+                  color: buttonEnabled
                       ? _colors.primary
                       : _colors.secondaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  'Send Feedback',
+                  isLastPage ? 'Submit' : 'Next',
                   style: _textTheme.labelLarge?.copyWith(
-                    color: starsSelected
+                    color: buttonEnabled
                         ? _colors.onPrimary
                         : _colors.onSecondaryContainer,
                   ),
@@ -247,22 +259,23 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     );
   }
 
-  Future<void> _submitRating(int index, MealOrder order) async {
-    final stars = _selectedStars[index];
-    if (stars == null) return;
-
+  Future<void> _submitAllRatings() async {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      await _orderService.rateOrder(
-        order,
-        Rating(
-          stars: stars,
-          extraInfo: _feedbackControllers[index]?.text.isEmpty ?? true
-              ? null
-              : _feedbackControllers[index]!.text,
-        ),
-      );
+      for (int i = 0; i < widget.ordersToRate.length; i++) {
+        final stars = _selectedStars[i];
+        if (stars == null) continue;
+        await _orderService.rateOrder(
+          widget.ordersToRate[i],
+          Rating(
+            stars: stars,
+            extraInfo: _feedbackControllers[i]?.text.isEmpty ?? true
+                ? null
+                : _feedbackControllers[i]!.text,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       messenger.removeCurrentSnackBar();
@@ -278,21 +291,10 @@ class _RatingsBottomSheetState extends State<RatingsBottomSheet> {
     await safeVibrate(HapticsType.success);
 
     if (!mounted) return;
-
-    if (index < widget.ordersToRate.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      messenger.showSnackBar(
-        SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
-      );
-    } else {
-      Navigator.of(context).pop();
-      widget.onComplete?.call();
-      messenger.showSnackBar(
-        SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
-      );
-    }
+    Navigator.of(context).pop();
+    widget.onComplete?.call();
+    messenger.showSnackBar(
+      SnackBar(content: Text(SnackbarMessages.feedbackSubmitted)),
+    );
   }
 }
