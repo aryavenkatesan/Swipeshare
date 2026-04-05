@@ -1,11 +1,35 @@
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
 import 'package:profanity_filter/profanity_filter.dart';
 
 class ProfanityUtils {
-  // Private constructor to prevent instantiation
   ProfanityUtils._();
 
-  // Singleton instance
   static final ProfanityFilter _filter = ProfanityFilter();
+  static bool _initialized = false;
+
+  /// Load custom word list from bundled asset. Call once at app startup.
+  static Future<void> init() async {
+    if (_initialized) return;
+
+    final jsonString = await rootBundle.loadString('assets/profanity/en.json');
+    final List<dynamic> categories = json.decode(jsonString);
+
+    final List<String> customWords = [];
+    for (final category in categories) {
+      final List<dynamic> dictionary = category['dictionary'] ?? [];
+      for (final entry in dictionary) {
+        final match = entry['match'] as String?;
+        if (match == null) continue;
+        // Each match field contains pipe-delimited variants
+        customWords.addAll(match.split('|').map((w) => w.trim()));
+      }
+    }
+
+    _filter.wordsToFilterOutList.addAll(customWords);
+    _initialized = true;
+  }
 
   // Check if text contains profanity - for messages
   static bool hasProfanity(String text) {
@@ -30,11 +54,5 @@ class ProfanityUtils {
   // Censor profanity in text
   static String censor(String text, {String replaceWith = '*'}) {
     return _filter.censor(text, replaceWith: replaceWith);
-  }
-
-  // Add custom bad words
-  static void addCustomWords(List<String> words) {
-    // You'd need to recreate the filter with additional words
-    // or keep a list and check manually
   }
 }
