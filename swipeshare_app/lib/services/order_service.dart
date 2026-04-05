@@ -22,6 +22,14 @@ class OrderService {
 
   Future<MealOrder> postOrder(Listing listing) async {
     try {
+      final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId == null) {
+        throw StateError('User must be signed in to create an order');
+      }
+      if (listing.sellerId == currentUserId) {
+        throw StateError('Buyer and seller must be different users');
+      }
+
       final result = await _functions
           .httpsCallable('createOrderFromListing')
           .call({'listingId': listing.id});
@@ -84,6 +92,14 @@ class OrderService {
     await orderCol.doc(orderId).update({'cancellationAcknowledged': true});
   }
 
+  Future<void> markComplete(String orderId, OrderRole role) async {
+    final field = switch (role) {
+      OrderRole.seller => 'seller.markedComplete',
+      OrderRole.buyer => 'buyer.markedComplete',
+    };
+    await orderCol.doc(orderId).update({field: true});
+  }
+
   Future<List<MealOrder>> getOrdersToRate() async {
     if (_auth.currentUser == null) return [];
     final currentUserId = _auth.currentUser!.uid;
@@ -92,20 +108,15 @@ class OrderService {
         .where('status', isEqualTo: OrderStatus.completed.name)
         .where(
           Filter.or(
-            Filter("buyerId", isEqualTo: currentUserId),
-            Filter("sellerId", isEqualTo: currentUserId),
+            Filter("buyer.id", isEqualTo: currentUserId),
+            Filter("seller.id", isEqualTo: currentUserId),
           ),
         )
         .get();
 
     return ordersToRate.docs
         .map((doc) => doc.data())
-        .where(
-          (order) => switch (order.currentUserRole) {
-            OrderRole.buyer => order.ratingByBuyer == null,
-            OrderRole.seller => order.ratingBySeller == null,
-          },
-        )
+        .where((order) => order.me.rating == null)
         .toList();
   }
 
@@ -114,8 +125,8 @@ class OrderService {
     updateMap['timestamp'] = FieldValue.serverTimestamp();
 
     final field = switch (orderData.currentUserRole) {
-      OrderRole.buyer => 'ratingByBuyer',
-      OrderRole.seller => 'ratingBySeller',
+      OrderRole.buyer => 'buyer.rating',
+      OrderRole.seller => 'seller.rating',
     };
 
     // Writing the rating triggers updateStarRatingOnOrderUpdate cloud function

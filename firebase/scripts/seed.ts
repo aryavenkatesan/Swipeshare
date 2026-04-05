@@ -93,10 +93,17 @@ async function seedUsers() {
   for (const user of users) {
     // Create Auth user
     try {
-      await auth.createUser({ uid: user.uid, email: user.email, password: "password" });
+      await auth.createUser({
+        uid: user.uid,
+        email: user.email,
+        password: "password",
+      });
       console.log(`  ✓ Auth: ${user.email}`);
     } catch (err: any) {
-      if (err.code === "auth/uid-already-exists" || err.code === "auth/email-already-exists") {
+      if (
+        err.code === "auth/uid-already-exists" ||
+        err.code === "auth/email-already-exists"
+      ) {
         console.log(`  ~ Auth already exists, skipping: ${user.email}`);
       } else {
         throw err;
@@ -104,7 +111,10 @@ async function seedUsers() {
     }
 
     // Create Firestore document
-    await db.collection("users").doc(user.uid).set(userDefaults(user), { merge: true });
+    await db
+      .collection("users")
+      .doc(user.uid)
+      .set(userDefaults(user), { merge: true });
     console.log(`  ✓ Firestore: ${user.email}`);
   }
 
