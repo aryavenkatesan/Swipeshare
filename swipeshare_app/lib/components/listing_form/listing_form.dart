@@ -63,6 +63,11 @@ class ListingForm extends StatefulWidget {
   State<ListingForm> createState() => _ListingFormState();
 }
 
+const _diningHallHours = {
+  'Lenoir': (min: TimeOfDay(hour: 7, minute: 0), max: TimeOfDay(hour: 20, minute: 30)),
+  'Chase':  (min: TimeOfDay(hour: 7, minute: 0), max: TimeOfDay(hour: 23, minute: 59)),
+};
+
 class _ListingFormState extends State<ListingForm> {
   String? _diningHall;
   DateTime? _transactionDate;
@@ -70,6 +75,24 @@ class _ListingFormState extends State<ListingForm> {
   TimeOfDay? _timeEnd;
   int _price = 5;
   List<String> _paymentTypes = [];
+
+  static int _tod2min(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  TimeOfDay _clampToHall(TimeOfDay t) {
+    final hours = _diningHallHours[_diningHall];
+    if (hours == null) return t;
+    final mins = _tod2min(t)
+        .clamp(_tod2min(hours.min), _tod2min(hours.max));
+    return TimeOfDay(hour: mins ~/ 60, minute: mins % 60);
+  }
+
+  void _onDiningHallChanged(String hall) {
+    setState(() {
+      _diningHall = hall;
+      if (_timeStart != null) _timeStart = _clampToHall(_timeStart!);
+      if (_timeEnd != null) _timeEnd = _clampToHall(_timeEnd!);
+    });
+  }
 
   bool get _isValidTimeRange {
     if (_timeStart == null || _timeEnd == null) return true;
@@ -171,7 +194,7 @@ class _ListingFormState extends State<ListingForm> {
           // Dining hall toggle
           DiningHallSelector(
             selected: _diningHall,
-            onChanged: (hall) => setState(() => _diningHall = hall),
+            onChanged: _onDiningHallChanged,
           ),
           const SizedBox(height: 16),
 
@@ -186,6 +209,8 @@ class _ListingFormState extends State<ListingForm> {
           TimeRangeSelector(
             timeStart: _timeStart,
             timeEnd: _timeEnd,
+            minTime: _diningHallHours[_diningHall]?.min,
+            maxTime: _diningHallHours[_diningHall]?.max,
             onStartChanged: (t) => setState(() => _timeStart = t),
             onEndChanged: (t) => setState(() => _timeEnd = t),
             onNow: () {

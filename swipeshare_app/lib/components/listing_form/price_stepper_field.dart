@@ -4,7 +4,7 @@ import 'package:swipeshare_app/utils/haptics.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 
 const _minPrice = 1;
-const _maxPrice = 20;
+const _maxPrice = 17;
 
 /// A row field with a dollar icon, a label, and +/- stepper buttons.
 ///

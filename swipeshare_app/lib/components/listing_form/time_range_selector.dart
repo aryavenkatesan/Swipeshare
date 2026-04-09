@@ -12,6 +12,8 @@ class TimeRangeSelector extends StatefulWidget {
   final ValueChanged<TimeOfDay> onStartChanged;
   final ValueChanged<TimeOfDay> onEndChanged;
   final VoidCallback? onNow;
+  final TimeOfDay? minTime;
+  final TimeOfDay? maxTime;
 
   const TimeRangeSelector({
     super.key,
@@ -20,6 +22,8 @@ class TimeRangeSelector extends StatefulWidget {
     required this.onStartChanged,
     required this.onEndChanged,
     this.onNow,
+    this.minTime,
+    this.maxTime,
   });
 
   @override
@@ -31,6 +35,13 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
   bool _nowFaded = false;
 
   static int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  TimeOfDay _clamp(TimeOfDay t) {
+    int mins = _toMinutes(t);
+    if (widget.minTime != null) mins = mins.clamp(_toMinutes(widget.minTime!), 1439);
+    if (widget.maxTime != null) mins = mins.clamp(0, _toMinutes(widget.maxTime!));
+    return TimeOfDay(hour: mins ~/ 60, minute: mins % 60);
+  }
 
   bool get _hasRangeError =>
       widget.timeStart != null &&
@@ -131,13 +142,14 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
     TimeOfDay initial,
     ValueChanged<TimeOfDay> onChanged,
   ) async {
+    final clampedInitial = _clamp(initial);
     TimeOfDay? result;
     if (Platform.isIOS || Platform.isMacOS) {
-      result = await _showCupertinoTimePicker(context, initial);
+      result = await _showCupertinoTimePicker(context, clampedInitial);
     } else {
-      result = await showTimePicker(context: context, initialTime: initial);
+      result = await showTimePicker(context: context, initialTime: clampedInitial);
     }
-    if (result != null) onChanged(result);
+    if (result != null) onChanged(_clamp(result));
   }
 
   Future<TimeOfDay?> _showCupertinoTimePicker(
@@ -145,6 +157,14 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
     TimeOfDay initial,
   ) async {
     TimeOfDay picked = initial;
+    const refDate = (year: 2000, month: 1, day: 1);
+
+    final minDt = widget.minTime != null
+        ? DateTime(refDate.year, refDate.month, refDate.day, widget.minTime!.hour, widget.minTime!.minute)
+        : null;
+    final maxDt = widget.maxTime != null
+        ? DateTime(refDate.year, refDate.month, refDate.day, widget.maxTime!.hour, widget.maxTime!.minute)
+        : null;
 
     return showCupertinoModalPopup<TimeOfDay>(
       context: context,
@@ -170,10 +190,12 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
               child: CupertinoDatePicker(
                 mode: CupertinoDatePickerMode.time,
                 use24hFormat: false,
+                minimumDate: minDt,
+                maximumDate: maxDt,
                 initialDateTime: DateTime(
-                  2000,
-                  1,
-                  1,
+                  refDate.year,
+                  refDate.month,
+                  refDate.day,
                   initial.hour,
                   initial.minute,
                 ),
