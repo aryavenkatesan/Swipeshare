@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/old_components/text_styles.dart';
+import 'package:swipeshare_app/components/onboarding/onboarding_layout.dart';
 
 class Page1 extends StatelessWidget {
   final bool tutorial;
@@ -7,30 +7,27 @@ class Page1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double vh = MediaQuery.of(context).size.height;
+    final vh = MediaQuery.of(context).size.height;
+    final layout = OnboardingLayout.of(context);
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: vh > 767 ? (vh * 0.03) : 0),
+          SizedBox(height: layout.topSpacing(vh * 0.03, 0)),
           Image.asset(
             'assets/onboarding1.png',
             width: vh,
             fit: BoxFit.fitWidth,
           ),
 
-          SizedBox(height: vh > 767 ? 60 : 0),
-          tutorial
-              ? Text(
-                  "Welcome to the Tutorial!",
-                  style: AppTextStyles.subHeaderStyle,
-                )
-              : Text(
-                  "Welcome to Swipeshare!",
-                  style: AppTextStyles.subHeaderStyle,
-                ),
+          SizedBox(height: layout.sectionSpacing(60, 0)),
+          Text(
+            tutorial ? 'Welcome to the Tutorial!' : 'Welcome to Swipeshare!',
+            style: textTheme.headlineMedium,
+          ),
         ],
       ),
     );

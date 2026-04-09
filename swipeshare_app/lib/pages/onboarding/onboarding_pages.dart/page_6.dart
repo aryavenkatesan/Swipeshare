@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:swipeshare_app/components/onboarding/onboarding_layout.dart';
 import 'package:swipeshare_app/models/user.dart';
-import 'package:swipeshare_app/old_components/text_styles.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
 class Page6 extends StatelessWidget {
@@ -14,8 +14,9 @@ class Page6 extends StatelessWidget {
     required this.onPaymentOptionsChanged,
   });
 
-  void _toggleOption(String option) async {
+  void _toggleOption(BuildContext context, String option) async {
     await safeVibrate(HapticsType.selection);
+    if (!context.mounted) return;
     final updated = List<String>.from(selectedPaymentOptions);
     if (updated.contains(option)) {
       updated.remove(option);
@@ -27,24 +28,27 @@ class Page6 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double vh = MediaQuery.of(context).size.height;
+    final vh = MediaQuery.of(context).size.height;
+    final layout = OnboardingLayout.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          SizedBox(height: vh > 767 ? (vh * 0.02) : 8),
+          SizedBox(height: layout.topSpacing(vh * 0.02, 8)),
 
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: vh * 0.03),
+            padding: EdgeInsets.symmetric(
+              horizontal: layout.horizontalBodyPadding,
+            ),
             child: Column(
               children: [
-                Text("Payment", style: AppTextStyles.subHeaderStyle),
+                Text('Payment', style: textTheme.headlineMedium),
                 SizedBox(height: vh * 0.01),
                 Text(
-                  "Select your preferred payment methods.",
-                  style: AppTextStyles.bodyText,
+                  'Select your preferred payment methods.',
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -57,24 +61,18 @@ class Page6 extends StatelessWidget {
 
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               itemCount: PaymentOption.allPaymentOptions.length,
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                color: Color(0xFFE0E0E0),
-              ),
+              separatorBuilder: (_, __) =>
+                  const Divider(height: 1, color: Color(0xFFE0E0E0)),
               itemBuilder: (context, index) {
                 final option = PaymentOption.allPaymentOptions[index];
-                final isSelected =
-                    selectedPaymentOptions.contains(option.name);
+                final isSelected = selectedPaymentOptions.contains(option.name);
                 return _PaymentOptionTile(
                   option: option,
                   isSelected: isSelected,
                   primaryColor: colorScheme.primary,
-                  onTap: () => _toggleOption(option.name),
+                  onTap: () => _toggleOption(context, option.name),
                 );
               },
             ),
@@ -84,8 +82,8 @@ class Page6 extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
-                "Select at least one to continue",
-                style: AppTextStyles.subText.copyWith(
+                'Select at least one to continue',
+                style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
                   color: Colors.red.shade400,
                 ),
               ),

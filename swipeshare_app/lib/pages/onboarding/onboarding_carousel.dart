@@ -26,6 +26,9 @@ class OnboardingCarousel extends StatefulWidget {
 }
 
 class _OnboardingCarouselState extends State<OnboardingCarousel> {
+  static const int _lastPageIndex = 6;
+  static const int _paymentPageIndex = 5;
+
   final PageController _controller = PageController();
   // Controller for the code input
   final TextEditingController _codeController = TextEditingController();
@@ -34,12 +37,14 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   final _userService = UserService.instance;
 
   int _currentPage = 0;
+  bool _isPageTransitioning = false;
   bool _isCheckingVerification = false;
   bool _isResending = false;
+  bool _didFinishFlow = false;
   List<String> _selectedPaymentOptions = [];
 
-  bool get onLastPage => _currentPage == 6;
-  bool get onPaymentPage => _currentPage == 5;
+  bool get onLastPage => _currentPage == _lastPageIndex;
+  bool get onPaymentPage => _currentPage == _paymentPageIndex;
 
   @override
   void initState() {
@@ -57,6 +62,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   }
 
   void _onNextPressed() {
+    if (_isPageTransitioning) return;
+
     // Block advancing past payment page if no options selected
     if (onPaymentPage && _selectedPaymentOptions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,10 +74,30 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
       );
       return;
     }
-    _controller.nextPage(
+
+    if (_currentPage >= _lastPageIndex) return;
+
+    _animateToPage(_currentPage + 1);
+  }
+
+  void _jumpToLastPage() {
+    if (_isPageTransitioning || !_controller.hasClients) return;
+    _controller.jumpToPage(_lastPageIndex);
+  }
+
+  Future<void> _animateToPage(int index) async {
+    if (!_controller.hasClients) return;
+    if (_isPageTransitioning) return;
+
+    _isPageTransitioning = true;
+    await _controller.animateToPage(
+      index,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeIn,
     );
+    if (mounted) {
+      _isPageTransitioning = false;
+    }
   }
 
   @override
@@ -97,9 +124,11 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
             child: PageView(
               controller: _controller,
               onPageChanged: (index) {
+                if (!mounted) return;
                 setState(() {
                   _currentPage = index;
                 });
+                _isPageTransitioning = false;
               },
               children: [
                 const Page1(tutorial: false),
@@ -110,6 +139,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                 Page6(
                   selectedPaymentOptions: _selectedPaymentOptions,
                   onPaymentOptionsChanged: (options) {
+                    if (!mounted) return;
                     setState(() => _selectedPaymentOptions = options);
                   },
                 ),
@@ -131,23 +161,20 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                   // --- Resend / Skip Button ---
                   !onLastPage
                       ? GestureDetector(
-                          onTap: () {
-                            _controller.jumpToPage(6);
-                          },
+                          onTap: _jumpToLastPage,
                           child: const Text("skip"),
                         )
                       : _isResending
-                          // Show a small spinner while resending
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : GestureDetector(
-                              onTap: _resendCode,
-                              child: const Text("    resend "),
-                            ),
+                      // Show a small spinner while resending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : GestureDetector(
+                          onTap: _resendCode,
+                          child: const Text("    resend "),
+                        ),
 
                   SmoothPageIndicator(
                     controller: _controller,
@@ -183,8 +210,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
                                         Colors.white,
                                       ),
                                     ),
@@ -225,21 +251,38 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
       return;
     }
 
+    final code = _codeController.text.trim();
+    final digitsOnly = RegExp(r'^\d{6}$').hasMatch(code);
+    if (!digitsOnly) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid 6-digit code.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isCheckingVerification = true);
 
     try {
-      await _verificationService.checkVerificationCode(_codeController.text);
+      await _verificationService.checkVerificationCode(code);
 
       // Save payment preferences if any were selected
       if (_selectedPaymentOptions.isNotEmpty) {
-        final uid = FirebaseAuth.instance.currentUser!.uid;
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          throw Exception('You are no longer signed in. Please log in again.');
+        }
+        final uid = user.uid;
         await _userService.updatePaymentTypes(uid, _selectedPaymentOptions);
       }
 
       // Email verified — request notification permissions before entering the app
       await NotificationService.instance.requestPermissions();
 
-      if (mounted) {
+      if (mounted && !_didFinishFlow) {
+        _didFinishFlow = true;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(SnackbarMessages.emailVerified),
@@ -268,6 +311,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   /// New function to resend the code
   Future<void> _resendCode() async {
     if (_isResending) return;
+    if (!mounted) return;
     setState(() => _isResending = true);
 
     try {

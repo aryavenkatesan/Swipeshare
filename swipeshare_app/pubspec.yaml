@@ -85,11 +85,6 @@ flutter:
     - assets/star.svg
     - assets/logo.png
     - assets/onboarding1.png
-    - assets/onboarding2.png
-    - assets/onboarding3.png
-    - assets/onboarding4.png
-    - assets/onboarding5.png
-    - assets/onboarding6.png
     - assets/onboarding7.png
     - assets/profanity/en.json
       #   - images/a_dot_ham.jpeg

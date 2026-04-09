@@ -16,8 +16,42 @@ class TutorialCarousel extends StatefulWidget {
 
 class _TutorialCarouselState extends State<TutorialCarousel> {
   final PageController _controller = PageController();
+  static const int _lastPageIndex = 5;
 
-  bool onLastPage = false;
+  int _currentPage = 0;
+  bool _isPageTransitioning = false;
+
+  bool get onLastPage => _currentPage == _lastPageIndex;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _goToPage(int index) async {
+    if (!_controller.hasClients) return;
+    if (_isPageTransitioning) return;
+    if (index < 0 || index > _lastPageIndex) return;
+
+    _isPageTransitioning = true;
+    await _controller.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeIn,
+    );
+    if (mounted) {
+      _isPageTransitioning = false;
+    }
+  }
+
+  void _onBackPressed() {
+    _goToPage(_currentPage - 1);
+  }
+
+  void _onNextPressed() {
+    _goToPage(_currentPage + 1);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,17 +71,19 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
             child: PageView(
               controller: _controller,
               onPageChanged: (index) {
+                if (!mounted) return;
                 setState(() {
-                  onLastPage = (index == 5);
+                  _currentPage = index;
                 });
+                _isPageTransitioning = false;
               },
               children: [
-                Page1(tutorial: true),
-                Page2(),
-                Page3(),
-                Page4(),
-                Page5(),
-                Page7(tutorial: true),
+                const Page1(tutorial: true),
+                const Page2(),
+                const Page3(),
+                const Page4(),
+                const Page5(),
+                const Page7(tutorial: true),
               ],
             ),
           ),
@@ -62,12 +98,7 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      _controller.previousPage(
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.easeIn,
-                      );
-                    },
+                    onTap: _onBackPressed,
                     child: const Text("back"),
                   ),
 
@@ -84,12 +115,7 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
 
                   !onLastPage
                       ? GestureDetector(
-                          onTap: () {
-                            _controller.nextPage(
-                              duration: Duration(milliseconds: 500),
-                              curve: Curves.easeIn,
-                            );
-                          },
+                          onTap: _onNextPressed,
                           child: const Text("next"),
                         )
                       : GestureDetector(
