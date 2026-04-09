@@ -206,9 +206,9 @@ export const sendProposalUpdateNotification =
 
         const receiverName =
           senderId === orderData.buyer.id
-            ? orderData.buyer.name
+            ? orderData.seller.name
             : orderData.seller.id === senderId
-              ? orderData.seller.name
+              ? orderData.buyer.name
               : "Someone";
 
         const proposalTime = timeOfDayStringToTime(
