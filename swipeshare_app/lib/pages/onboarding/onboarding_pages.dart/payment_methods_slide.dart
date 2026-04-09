@@ -4,11 +4,11 @@ import 'package:swipeshare_app/components/onboarding/onboarding_layout.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
-class Page6 extends StatelessWidget {
+class OnboardingPaymentMethodsSlide extends StatelessWidget {
   final List<String> selectedPaymentOptions;
   final ValueChanged<List<String>> onPaymentOptionsChanged;
 
-  const Page6({
+  const OnboardingPaymentMethodsSlide({
     super.key,
     required this.selectedPaymentOptions,
     required this.onPaymentOptionsChanged,

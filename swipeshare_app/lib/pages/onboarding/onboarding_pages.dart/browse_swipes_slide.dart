@@ -6,14 +6,16 @@ import 'package:swipeshare_app/components/onboarding/onboarding_slide_scaffold.d
 import 'package:swipeshare_app/components/onboarding/swipes_marketplace_mockup.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
-class Page2 extends StatefulWidget {
-  const Page2({super.key});
+class OnboardingBrowseSwipesSlide extends StatefulWidget {
+  const OnboardingBrowseSwipesSlide({super.key});
 
   @override
-  State<Page2> createState() => _Page2State();
+  State<OnboardingBrowseSwipesSlide> createState() =>
+      _OnboardingBrowseSwipesSlideState();
 }
 
-class _Page2State extends State<Page2> {
+class _OnboardingBrowseSwipesSlideState
+    extends State<OnboardingBrowseSwipesSlide> {
   late final OnboardingPage2Controller _controller;
 
   @override

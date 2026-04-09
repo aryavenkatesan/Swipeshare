@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/onboarding/onboarding_layout.dart';
 
-class Page7 extends StatelessWidget {
+class OnboardingFinalStepSlide extends StatelessWidget {
   final bool tutorial;
   // Controller to get the code from the text field
   final TextEditingController? codeController;
 
-  const Page7({super.key, required this.tutorial, this.codeController});
+  const OnboardingFinalStepSlide({
+    super.key,
+    required this.tutorial,
+    this.codeController,
+  });
 
   @override
   Widget build(BuildContext context) {

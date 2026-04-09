@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:swipeshare_app/pages/home_page.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_1.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_2.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_7.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/browse_swipes_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/communication_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/dashboard_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/final_step_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/payment_methods_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/sell_listing_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/welcome_slide.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
@@ -131,20 +131,23 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                 _isPageTransitioning = false;
               },
               children: [
-                const Page1(tutorial: false),
-                const Page2(),
-                const Page3(),
-                const Page4(),
-                const Page5(),
-                Page6(
+                const OnboardingWelcomeSlide(tutorial: false),
+                const OnboardingBrowseSwipesSlide(),
+                const OnboardingSellListingSlide(),
+                const OnboardingDashboardSlide(),
+                const OnboardingCommunicationSlide(),
+                OnboardingPaymentMethodsSlide(
                   selectedPaymentOptions: _selectedPaymentOptions,
                   onPaymentOptionsChanged: (options) {
                     if (!mounted) return;
                     setState(() => _selectedPaymentOptions = options);
                   },
                 ),
-                // Pass the code controller to the new Page7
-                Page7(tutorial: false, codeController: _codeController),
+                // Pass the code controller to the final step slide
+                OnboardingFinalStepSlide(
+                  tutorial: false,
+                  codeController: _codeController,
+                ),
               ],
             ),
           ),

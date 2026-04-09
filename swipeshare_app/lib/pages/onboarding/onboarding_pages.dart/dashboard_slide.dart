@@ -6,14 +6,15 @@ import 'package:swipeshare_app/components/onboarding/onboarding_mock_controllers
 import 'package:swipeshare_app/components/onboarding/onboarding_slide_scaffold.dart';
 import 'package:swipeshare_app/utils/haptics.dart';
 
-class Page4 extends StatefulWidget {
-  const Page4({super.key});
+class OnboardingDashboardSlide extends StatefulWidget {
+  const OnboardingDashboardSlide({super.key});
 
   @override
-  State<Page4> createState() => _Page4State();
+  State<OnboardingDashboardSlide> createState() =>
+      _OnboardingDashboardSlideState();
 }
 
-class _Page4State extends State<Page4> {
+class _OnboardingDashboardSlideState extends State<OnboardingDashboardSlide> {
   late final OnboardingPage4Controller _controller;
 
   @override

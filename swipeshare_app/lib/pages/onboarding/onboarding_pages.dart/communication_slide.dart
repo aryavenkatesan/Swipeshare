@@ -3,8 +3,8 @@ import 'package:swipeshare_app/components/onboarding/chat_mockup.dart';
 import 'package:swipeshare_app/components/onboarding/onboarding_layout.dart';
 import 'package:swipeshare_app/components/onboarding/onboarding_slide_scaffold.dart';
 
-class Page5 extends StatelessWidget {
-  const Page5({super.key});
+class OnboardingCommunicationSlide extends StatelessWidget {
+  const OnboardingCommunicationSlide({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/components/onboarding/onboarding_layout.dart';
 
-class Page1 extends StatelessWidget {
+class OnboardingWelcomeSlide extends StatelessWidget {
   final bool tutorial;
-  const Page1({super.key, required this.tutorial});
+  const OnboardingWelcomeSlide({super.key, required this.tutorial});
 
   @override
   Widget build(BuildContext context) {
