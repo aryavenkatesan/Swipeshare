@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -14,6 +15,7 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_7.dar
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
+import 'package:swipeshare_app/services/user_service.dart';
 import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 class OnboardingCarousel extends StatefulWidget {
@@ -29,10 +31,15 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   final TextEditingController _codeController = TextEditingController();
   // Use the new service
   final _verificationService = EmailCodeVerificationService();
+  final _userService = UserService.instance;
 
-  bool onLastPage = false;
+  int _currentPage = 0;
   bool _isCheckingVerification = false;
   bool _isResending = false;
+  List<String> _selectedPaymentOptions = [];
+
+  bool get onLastPage => _currentPage == 6;
+  bool get onPaymentPage => _currentPage == 5;
 
   @override
   void initState() {
@@ -49,23 +56,39 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
     super.dispose();
   }
 
+  void _onNextPressed() {
+    // Block advancing past payment page if no options selected
+    if (onPaymentPage && _selectedPaymentOptions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select at least one payment method"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    _controller.nextPage(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeIn,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final double vh = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Color(0xFFFEF8FF),
-        title: Text("Hello!", style: textTheme.displayLarge,),
+        backgroundColor: const Color(0xFFFEF8FF),
+        title: Text("Hello!", style: textTheme.displayLarge),
         actions: [
           //signout button
           IconButton(onPressed: signOut, icon: const Icon(Icons.logout)),
         ],
       ),
-      backgroundColor: Color(0xFFFEF8FF),
+      backgroundColor: const Color(0xFFFEF8FF),
       resizeToAvoidBottomInset: true,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -75,55 +98,61 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
               controller: _controller,
               onPageChanged: (index) {
                 setState(() {
-                  onLastPage = (index == 6);
+                  _currentPage = index;
                 });
               },
               children: [
-                Page1(tutorial: false),
-                Page2(),
-                Page3(),
-                Page4(),
-                Page5(),
-                Page6(),
+                const Page1(tutorial: false),
+                const Page2(),
+                const Page3(),
+                const Page4(),
+                const Page5(),
+                Page6(
+                  selectedPaymentOptions: _selectedPaymentOptions,
+                  onPaymentOptionsChanged: (options) {
+                    setState(() => _selectedPaymentOptions = options);
+                  },
+                ),
                 // Pass the code controller to the new Page7
                 Page7(tutorial: false, codeController: _codeController),
               ],
             ),
           ),
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           Container(
             height: 50,
             alignment: Alignment.center,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: vh > 767 ? 8.0 : 0.0 ),
+              padding: EdgeInsets.symmetric(horizontal: vh > 767 ? 8.0 : 0.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // --- Resend Button ---
+                  // --- Resend / Skip Button ---
                   !onLastPage
                       ? GestureDetector(
                           onTap: () {
                             _controller.jumpToPage(6);
                           },
-                          child: Text("skip"),
+                          child: const Text("skip"),
                         )
                       : _isResending
-                      // Show a small spinner while resending
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : GestureDetector(
-                          onTap: _resendCode,
-                          child: Text("    resend "),
-                        ),
+                          // Show a small spinner while resending
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : GestureDetector(
+                              onTap: _resendCode,
+                              child: const Text("    resend "),
+                            ),
 
                   SmoothPageIndicator(
                     controller: _controller,
                     count: 7,
-                    effect: WormEffect(
+                    effect: const WormEffect(
                       dotHeight: 20,
                       dotWidth: 20,
                       activeDotColor: Colors.black,
@@ -134,26 +163,19 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                   // --- Next / Enter Button ---
                   !onLastPage
                       ? GestureDetector(
-                          onTap: () {
-                            _controller.nextPage(
-                              duration: Duration(milliseconds: 500),
-                              curve: Curves.easeIn,
-                            );
-                          },
+                          onTap: _onNextPressed,
                           child: const Text("next"),
                         )
                       : GestureDetector(
-                          onTap: _checkCode, // Point to the new check function
+                          onTap: _checkCode,
                           child: Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 14,
                               vertical: 7,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.black,
-                              borderRadius: BorderRadius.circular(
-                                30,
-                              ), // Capsule shape
+                              borderRadius: BorderRadius.circular(30),
                             ),
                             child: _isCheckingVerification
                                 ? const SizedBox(
@@ -161,7 +183,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                      valueColor:
+                                          AlwaysStoppedAnimation<Color>(
                                         Colors.white,
                                       ),
                                     ),
@@ -179,7 +202,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
               ),
             ),
           ),
-          SizedBox(height: 50),
+          const SizedBox(height: 50),
         ],
       ),
     );
@@ -206,6 +229,12 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
     try {
       await _verificationService.checkVerificationCode(_codeController.text);
+
+      // Save payment preferences if any were selected
+      if (_selectedPaymentOptions.isNotEmpty) {
+        final uid = FirebaseAuth.instance.currentUser!.uid;
+        await _userService.updatePaymentTypes(uid, _selectedPaymentOptions);
+      }
 
       // Email verified — request notification permissions before entering the app
       await NotificationService.instance.requestPermissions();

@@ -5,7 +5,6 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_2.dar
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_7.dart';
 
 class TutorialCarousel extends StatefulWidget {
@@ -39,7 +38,6 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
               controller: _controller,
               onPageChanged: (index) {
                 setState(() {
-                  // The last page is at index 5 (since there are 6 pages, 0-5)
                   onLastPage = (index == 5);
                 });
               },
@@ -49,7 +47,6 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
                 Page3(),
                 Page4(),
                 Page5(),
-                Page6(),
                 Page7(tutorial: true),
               ],
             ),
