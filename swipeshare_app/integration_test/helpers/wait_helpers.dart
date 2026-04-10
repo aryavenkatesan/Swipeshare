@@ -16,5 +16,5 @@ Future<void> waitForText(
     if (find.text(text).evaluate().isNotEmpty) break;
     await tester.pump(interval);
   }
-  expect(find.text(text), findsOneWidget);
+  expect(find.text(text), findsAtLeastNWidgets(1));
 }

@@ -9,6 +9,9 @@ on:
       - 'firebase/**'
       - '.github/workflows/integration-tests.yml'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     name: Run Integration Tests
@@ -117,7 +120,7 @@ jobs:
         working-directory: firebase
         run: npm run seed
 
-      # Cache the Android Virtual Device snapshot 
+      # Cache the Android Virtual Device snapshot
       - name: Cache AVD snapshot
         uses: actions/cache@v4
         id: avd-cache
@@ -125,7 +128,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-api33
+          key: avd-api33-pixel6
 
       # Only runs on cache miss to create and snapshot the AVD for future runs
       - name: Create AVD snapshot
@@ -134,6 +137,7 @@ jobs:
         with:
           api-level: 33
           arch: x86_64
+          profile: pixel_6
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
@@ -144,6 +148,7 @@ jobs:
         with:
           api-level: 33
           arch: x86_64
+          profile: pixel_6
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
