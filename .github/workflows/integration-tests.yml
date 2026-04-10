@@ -149,6 +149,12 @@ jobs:
           working-directory: swipeshare_app
           script: flutter test integration_test/app_test.dart -d android --ignore-timeouts --reporter expanded 2>&1 | tee /tmp/flutter-test.log; exit ${PIPESTATUS[0]}
 
-      - name: Print flutter test log
+      - name: Upload logs
         if: always()
-        run: cat /tmp/flutter-test.log || true
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: |
+            /tmp/flutter-test.log
+            /tmp/emulator.log
+          if-no-files-found: ignore
