@@ -40,11 +40,8 @@ void main() {
     // --- A proposes a time ---
     await switchUser(tester, buyer);
     await goToChat(tester, seller.displayName);
+    setTimePickerValue(const TimeOfDay(hour: 14, minute: 0)); // 2 PM
     await tester.tap(find.byIcon(Icons.more_time));
-    await tester.pumpAndSettle();
-    setPickerValue(tester, DateTime(2000, 1, 1, 14, 0)); // 2 PM
-    await tester.pump();
-    await tester.tap(find.text('Send'));
     await tester.pumpAndSettle();
     await waitForText(tester, 'Pending...');
 
@@ -56,11 +53,8 @@ void main() {
     await waitForText(tester, 'Declined');
 
     // --- B proposes a different time ---
+    setTimePickerValue(const TimeOfDay(hour: 15, minute: 0)); // 3 PM
     await tester.tap(find.byIcon(Icons.more_time));
-    await tester.pumpAndSettle();
-    setPickerValue(tester, DateTime(2000, 1, 1, 15, 0)); // 3 PM
-    await tester.pump();
-    await tester.tap(find.text('Send'));
     await tester.pumpAndSettle();
     await waitForText(tester, 'Pending...');
 

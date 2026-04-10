@@ -7,8 +7,18 @@ import 'package:swipeshare_app/old_components/colors.dart';
 /// Utility class for platform-adaptive time picking.
 /// Uses Cupertino-style pickers on iOS/macOS, Material-style on Android.
 class AdaptiveTimePicker {
-  /// Returns true if the current platform should use Cupertino-style pickers
+  /// Returns true if the current platform should use Cupertino-style pickers.
   static bool get useCupertino => Platform.isIOS || Platform.isMacOS;
+
+  /// In integration tests, set this before tapping the trigger widget.
+  /// [showAdaptiveTimePicker] will return this value immediately without
+  /// showing any UI, then clear it. Avoids platform-specific picker interaction.
+  static TimeOfDay? testTimeOverride;
+
+  /// In integration tests, set this before tapping the trigger widget.
+  /// [showAdaptiveDatePicker] will return this value immediately without
+  /// showing any UI, then clear it. Avoids platform-specific picker interaction.
+  static DateTime? testDateOverride;
 
   /// Shows a platform-appropriate time picker dialog.
   /// Returns the selected TimeOfDay, or null if cancelled.
@@ -18,6 +28,11 @@ class AdaptiveTimePicker {
     String? helpText,
     String confirmText = 'Done',
   }) async {
+    if (testTimeOverride != null) {
+      final value = testTimeOverride;
+      testTimeOverride = null;
+      return value;
+    }
     if (useCupertino) {
       return _showCupertinoTimePicker(
         context: context,
@@ -137,6 +152,11 @@ class AdaptiveTimePicker {
       !initialDate.isBefore(firstDate),
       'initialDate must be >= firstDate',
     );
+    if (testDateOverride != null) {
+      final value = testDateOverride;
+      testDateOverride = null;
+      return value;
+    }
     if (useCupertino) {
       return _showCupertinoDatePicker(
         context: context,

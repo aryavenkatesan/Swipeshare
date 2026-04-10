@@ -1,14 +1,14 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 
-/// Directly invokes the [CupertinoDatePicker]'s onDateTimeChanged callback
-/// with [value], bypassing the need to physically scroll the drum roll.
-///
-/// Only works on iOS/macOS. For Android, pickers fall back to Material dialogs
-/// and need platform-conditional interaction logic instead.
-void setPickerValue(WidgetTester tester, DateTime value) {
-  final picker = tester.widget<CupertinoDatePicker>(
-    find.byType(CupertinoDatePicker),
-  );
-  picker.onDateTimeChanged(value);
+/// Sets the value returned by the next [AdaptiveTimePicker.showAdaptiveTimePicker]
+/// call, bypassing all picker UI. Platform-independent.
+void setTimePickerValue(TimeOfDay value) {
+  AdaptiveTimePicker.testTimeOverride = value;
+}
+
+/// Sets the value returned by the next [AdaptiveTimePicker.showAdaptiveDatePicker]
+/// call, bypassing all picker UI. Platform-independent.
+void setDatePickerValue(DateTime value) {
+  AdaptiveTimePicker.testDateOverride = value;
 }

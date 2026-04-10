@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:swipeshare_app/services/dev_service.dart';
@@ -42,27 +43,18 @@ void main() {
     await tester.pumpAndSettle();
 
     // Date: pick tomorrow so that default times (10 AM / 12 PM) are in the future
+    setDatePickerValue(DateTime.now().add(const Duration(days: 1)));
     await tester.tap(find.text('Select a day'));
-    await tester.pumpAndSettle();
-    setPickerValue(tester, DateTime.now().add(const Duration(days: 1)));
-    await tester.pump();
-    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
 
     // Start time: 10 AM
+    setTimePickerValue(const TimeOfDay(hour: 10, minute: 0));
     await tester.tap(find.text('Start at'));
-    await tester.pumpAndSettle();
-    setPickerValue(tester, DateTime(2000, 1, 1, 10, 0));
-    await tester.pump();
-    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
 
     // End time: 12 PM (must be > start time)
+    setTimePickerValue(const TimeOfDay(hour: 12, minute: 0));
     await tester.tap(find.text('End at'));
-    await tester.pumpAndSettle();
-    setPickerValue(tester, DateTime(2000, 1, 1, 12, 0));
-    await tester.pump();
-    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
 
     // Payment methods: testUser1's profile has Cash + Venmo, pre-filled automatically.
