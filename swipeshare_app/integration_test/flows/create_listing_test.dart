@@ -4,28 +4,15 @@ import 'package:swipeshare_app/services/dev_service.dart';
 
 import '../helpers/app_harness.dart';
 import '../helpers/auth_helper.dart';
+import '../helpers/nav_helpers.dart';
 import '../helpers/picker_helpers.dart';
-import '../helpers/setup.dart';
+import '../helpers/test_lifecycle.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // setUpAll(() async {
-  //   await setupFirebase();
-  // });
-
-  // setUp(() async {
-  //   await DevService.instance.clearData();
-  //   await signInAs(SeedEmail.testUser1);
-  // });
-
-  // tearDown(() async {
-  //   await signOut();
-  // });
-
   testWidgets('user can create and post a listing', (tester) async {
-    await setupFirebase();
-    await DevService.instance.clearData();
+    await testSetup();
     await signInAs(SeedEmail.testUser1);
 
     await tester.pumpWidget(buildTestApp());
@@ -100,11 +87,7 @@ void main() {
 
     // Switch to a buyer account — testUser1's own listing is hidden from
     // themselves on the Swipes page, so we need a different user to see it.
-    await signOut();
-    await tester.pumpAndSettle();
-
-    await signInAs(SeedEmail.testUser2);
-    await tester.pumpAndSettle();
+    await switchUser(tester, SeedEmail.testUser2);
 
     await tester.tap(find.text('Swipes'));
     await tester.pumpAndSettle();
@@ -114,7 +97,6 @@ void main() {
     // so this unambiguously identifies the card we just created.
     expect(find.text('\$5'), findsOneWidget);
 
-    await signOut();
-    await DevService.instance.clearData();
+    await testTeardown(tester);
   });
 }
