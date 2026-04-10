@@ -140,7 +140,7 @@ class _ChatPageState extends State<ChatPage> {
     if (_messageController.text.isNotEmpty) {
       await safeVibrate(HapticsType.medium);
       await _chatService.sendTextMessage(_messageController.text);
-      _messageController.clear();
+      if (mounted) _messageController.clear();
       _scrollToBottom();
     }
   }

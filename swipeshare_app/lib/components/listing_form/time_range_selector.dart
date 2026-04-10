@@ -1,7 +1,5 @@
-import 'dart:io' show Platform;
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 import 'package:swipeshare_app/components/listing_form/listing_field_card.dart';
 import 'package:swipeshare_app/utils/time_formatter.dart';
 
@@ -131,61 +129,11 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
     TimeOfDay initial,
     ValueChanged<TimeOfDay> onChanged,
   ) async {
-    TimeOfDay? result;
-    if (Platform.isIOS || Platform.isMacOS) {
-      result = await _showCupertinoTimePicker(context, initial);
-    } else {
-      result = await showTimePicker(context: context, initialTime: initial);
-    }
-    if (result != null) onChanged(result);
-  }
-
-  Future<TimeOfDay?> _showCupertinoTimePicker(
-    BuildContext context,
-    TimeOfDay initial,
-  ) async {
-    TimeOfDay picked = initial;
-
-    return showCupertinoModalPopup<TimeOfDay>(
+    final result = await AdaptiveTimePicker.showAdaptiveTimePicker(
       context: context,
-      builder: (ctx) => Container(
-        height: 300,
-        color: CupertinoColors.systemBackground.resolveFrom(ctx),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CupertinoButton(
-                  child: const Text('Cancel'),
-                  onPressed: () => Navigator.of(ctx).pop(null),
-                ),
-                CupertinoButton(
-                  child: const Text('Done'),
-                  onPressed: () => Navigator.of(ctx).pop(picked),
-                ),
-              ],
-            ),
-            Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.time,
-                use24hFormat: false,
-                initialDateTime: DateTime(
-                  2000,
-                  1,
-                  1,
-                  initial.hour,
-                  initial.minute,
-                ),
-                onDateTimeChanged: (dt) {
-                  picked = TimeOfDay(hour: dt.hour, minute: dt.minute);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      initialTime: initial,
     );
+    if (result != null) onChanged(result);
   }
 }
 
