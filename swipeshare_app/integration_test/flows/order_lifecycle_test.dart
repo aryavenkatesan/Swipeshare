@@ -72,7 +72,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
-    expect(find.text('Rate your Experience'), findsOneWidget);
+    await waitForText(tester, 'Rate your Experience');
     await tester.tap(find.byIcon(Icons.star_border_rounded).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Submit'));
@@ -87,7 +87,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
-    expect(find.text('Rate your Experience'), findsOneWidget);
+    await waitForText(tester, 'Rate your Experience');
     await tester.tap(find.byIcon(Icons.star_border_rounded).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Submit'));
