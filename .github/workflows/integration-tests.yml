@@ -25,7 +25,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '25'
+          java-version: '21'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -147,4 +147,8 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: swipeshare_app
-          script: flutter test integration_test/app_test.dart -d android --ignore-timeouts --reporter expanded
+          script: flutter test integration_test/app_test.dart -d android --ignore-timeouts --reporter expanded 2>&1 | tee /tmp/flutter-test.log; exit ${PIPESTATUS[0]}
+
+      - name: Print flutter test log
+        if: always()
+        run: cat /tmp/flutter-test.log || true
