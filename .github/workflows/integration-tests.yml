@@ -104,6 +104,7 @@ jobs:
         run: firebase emulators:start --project swipeshare-c24d1 > /tmp/emulator.log 2>&1 &
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          NODE_OPTIONS: --dns-result-order=ipv4first
 
       - name: Wait for emulators to be ready
         run: npx wait-on tcp:9099 tcp:8080 tcp:5001 --timeout 120000
