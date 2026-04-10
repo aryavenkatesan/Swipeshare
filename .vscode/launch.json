@@ -31,7 +31,7 @@
       "cwd": "swipeshare_app",
       "args": ["--ignore-timeouts"],
       "preLaunchTask": "Start Emulators and Seed",
-      "internalConsoleOptions": "openOnSessionStart",
+      "console": "debugConsole",
     }
   ]
 }

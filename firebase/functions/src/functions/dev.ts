@@ -36,16 +36,24 @@ export const devSeed = functions.https.onCall(async (request) => {
 
 const _clearData = async () => {
   const db = admin.firestore();
+  // Excludes 'users' — seed user profiles must survive between test runs.
   const topLevelCollections = ["listings", "orders", "password_resets", "mail"];
 
-  await Promise.all(
-    topLevelCollections.map(async (collectionName) => {
-      const snapshot = await db.collection(collectionName).get();
-      await Promise.all(
-        snapshot.docs.map((doc) => db.recursiveDelete(doc.ref)),
-      );
-    }),
-  );
+  for (const collectionName of topLevelCollections) {
+    // Retry up to 3 times: the emulator's BulkWriter occasionally cancels
+    // gRPC streams mid-delete, but a retry on the same collection succeeds.
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await db.recursiveDelete(db.collection(collectionName));
+        lastError = undefined;
+        break;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    if (lastError) throw lastError;
+  }
 
   console.log(
     `[devSeed] Cleared collections: ${topLevelCollections.join(", ")}`,

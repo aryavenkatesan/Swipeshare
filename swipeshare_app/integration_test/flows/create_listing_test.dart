@@ -10,20 +10,24 @@ import '../helpers/setup.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() async {
-    await setupFirebase();
-  });
+  // setUpAll(() async {
+  //   await setupFirebase();
+  // });
 
-  setUp(() async {
-    await DevService.instance.clearData();
-    await signInAs(SeedEmail.testUser1);
-  });
+  // setUp(() async {
+  //   await DevService.instance.clearData();
+  //   await signInAs(SeedEmail.testUser1);
+  // });
 
-  tearDown(() async {
-    await signOut();
-  });
+  // tearDown(() async {
+  //   await signOut();
+  // });
 
   testWidgets('user can create and post a listing', (tester) async {
+    await setupFirebase();
+    await DevService.instance.clearData();
+    await signInAs(SeedEmail.testUser1);
+
     await tester.pumpWidget(buildTestApp());
     // Wait for AuthGate's two StreamBuilders (auth state + Firestore user doc)
     // and BottomBar's user-loading fade-in to settle.
@@ -97,6 +101,8 @@ void main() {
     // Switch to a buyer account — testUser1's own listing is hidden from
     // themselves on the Swipes page, so we need a different user to see it.
     await signOut();
+    await tester.pumpAndSettle();
+
     await signInAs(SeedEmail.testUser2);
     await tester.pumpAndSettle();
 
@@ -107,6 +113,8 @@ void main() {
     // $5 is the default price and clearData() ensures no other listings exist,
     // so this unambiguously identifies the card we just created.
     expect(find.text('\$5'), findsOneWidget);
+
+    await signOut();
+    await DevService.instance.clearData();
   });
 }
-
