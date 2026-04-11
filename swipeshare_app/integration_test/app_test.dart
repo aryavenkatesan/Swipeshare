@@ -6,8 +6,12 @@
 
 import 'flows/create_listing_test.dart' as create_listing;
 import 'flows/order_lifecycle_test.dart' as order_lifecycle;
+import 'flows/user_signup_test.dart' as user_signup;
+import 'flows/report_user_test.dart' as report_user;
 
 void main() {
   create_listing.main();
   order_lifecycle.main();
+  user_signup.main();
+  report_user.main();
 }

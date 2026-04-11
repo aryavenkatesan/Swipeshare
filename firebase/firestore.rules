@@ -26,41 +26,38 @@ service cloud.firestore {
     
     // Users collection
     match /users/{userId} {
-      // All signed-in users can read other user profiles
-      allow read: if isSignedIn(); 
-      // User can create, update, and delete their own doc
-      allow write, delete: if isSignedIn() && isCurrentUser(userId);
-			// Allow user to update other user's only if updating the stars
-      // TODO: Make star updates a cloud function to tighten permissions
-      allow update: if isVerified() && (
-      		isCurrentUser(userId)
-          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stars']))
-      )
-      
-      // Password Resets Collection
+      // Users can only read their own document.
+      // Other users' data is embedded in orders/listings — no cross-user reads needed.
+      allow read: if isSignedIn() && isCurrentUser(userId);
+      // User can create or delete their own doc
+      allow create, delete: if isSignedIn() && isCurrentUser(userId);
+      // Only these fields may be updated directly by the client.
+      // Everything else (isEmailVerified, stars, uid, email, etc.) is managed
+      // exclusively by Cloud Functions via the Admin SDK.
+      function onlyAllowedFields() {
+        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['name', 'payment_types', 'blocked_users', 'fcmToken', 'lastTokenUpdate']);
+      }
+      // User can update their own doc, but only allowed fields
+      allow update: if isSignedIn() && isCurrentUser(userId) && onlyAllowedFields();
+
+    // Password Resets Collection
     match /password_resets/{email} {
       // Strictly deny all direct client access.
       // Access is handled exclusively by Cloud Functions via the Admin SDK.
         allow read, write, list: if false;
       }
-    
-    }
-    
-    // Accounts collection (assuming this is sensitive, only user can read/write)
-    match /accounts/{accountId} {
-      allow read, write: if isSignedIn() && isCurrentUser(accountId);
     }
 
-    // Allows a user to create a document in the 'mail' collection
+    // Mail collection is written exclusively by Cloud Functions via the Admin SDK.
     match /mail/{mailId} {
-      // Any authenticated user can create an email.
-      allow create: if isSignedIn();
+      allow read, write: if false;
     }
     
     // Listings collection
     match /listings/{listingId} {
       // Anyone verified can read or list listings
-      allow read, list: if isVerified(); 
+      allow read: if isVerified(); 
       
       // Only the seller can create/update/delete their own listings
       allow create: if isVerified() && isCurrentUser(request.resource.data.sellerId);

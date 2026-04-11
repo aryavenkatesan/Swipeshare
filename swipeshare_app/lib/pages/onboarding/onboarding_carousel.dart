@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:swipeshare_app/pages/home_page.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_1.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_2.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dart';
@@ -59,7 +58,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Color(0xFFFEF8FF),
-        title: Text("Hello!", style: textTheme.displayLarge,),
+        title: Text("Hello!", style: textTheme.displayLarge),
         actions: [
           //signout button
           IconButton(onPressed: signOut, icon: const Icon(Icons.logout)),
@@ -95,7 +94,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
             height: 50,
             alignment: Alignment.center,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: vh > 767 ? 8.0 : 0.0 ),
+              padding: EdgeInsets.symmetric(horizontal: vh > 767 ? 8.0 : 0.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -209,7 +208,6 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
       // Email verified — request notification permissions before entering the app
       await NotificationService.instance.requestPermissions();
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -218,10 +216,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
           ),
         );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        // Auth gate manages navigation to home page
       }
     } catch (e) {
       if (mounted) {
@@ -248,13 +243,20 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
           SnackBar(
             content: Text(SnackbarMessages.verificationCodeSent),
             backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 70, left: 16, right: 16),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 70, left: 16, right: 16),
+          ),
         );
       }
     } finally {

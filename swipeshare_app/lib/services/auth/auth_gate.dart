@@ -70,9 +70,19 @@ class AuthGate extends StatelessWidget {
 
         // Handle user document not found
         if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-          return const Center(
-            key: ValueKey('error'),
-            child: Text('User data not found. Please contact support.'),
+          return Center(
+            key: const ValueKey('error'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('User data not found. Please contact support.'),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => FirebaseAuth.instance.signOut(),
+                  child: const Text('Sign Out'),
+                ),
+              ],
+            ),
           );
         }
 

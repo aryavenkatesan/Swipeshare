@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/models/meal_order.dart';
 import 'package:swipeshare_app/models/message.dart';
-import 'package:swipeshare_app/models/report.dart';
 import 'package:swipeshare_app/models/user.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
 import 'package:swipeshare_app/services/order_service.dart';
@@ -43,13 +43,6 @@ class ChatService extends ChangeNotifier {
     return _cachedCurrentUser!;
   }
 
-  Future<UserModel> getReceivingUser() async {
-    final order = await _orderDoc.get().then(MealOrder.fromFirestore);
-
-    final receivingUserId = order.them.id;
-
-    return await _userService.getUserData(receivingUserId);
-  }
 
   Future<TextMessage> sendTextMessage(String content) async {
     final user = await _getCurrentUser();
@@ -120,24 +113,13 @@ class ChatService extends ChangeNotifier {
   }
 
   Future<void> reportUser(String message) async {
-    final (otherUser, thisUser) = await (
-      getReceivingUser(),
-      _getCurrentUser(),
-    ).wait;
-
-    final report = Report(
-      reporterId: _auth.currentUser!.uid,
-      reporterEmail: thisUser.email,
-      reportedId: otherUser.id,
-      reportedEmail: otherUser.email,
-      reason: message,
-      timestamp: DateTime.now(),
-    );
-
-    final reportData = report.toMap();
-    reportData['timestamp'] = FieldValue.serverTimestamp();
-
-    await _firestore.collection('reports').add(reportData);
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('reportUser')
+          .call({'orderId': orderId, 'reason': message});
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception(e.message ?? 'Failed to submit report.');
+    }
   }
 
   Future<void> readNotifications() async {

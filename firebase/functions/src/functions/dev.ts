@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/https";
 import * as functions from "firebase-functions/v2";
 import { createListing } from "../services/listing-service";
@@ -37,7 +38,7 @@ export const devSeed = functions.https.onCall(async (request) => {
 const _clearData = async () => {
   const db = admin.firestore();
   // Excludes 'users' — seed user profiles must survive between test runs.
-  const topLevelCollections = ["listings", "orders", "password_resets", "mail"];
+  const topLevelCollections = ["listings", "orders", "password_resets", "mail", "reports"];
 
   for (const collectionName of topLevelCollections) {
     // Retry up to 3 times: the emulator's BulkWriter occasionally cancels
@@ -55,10 +56,36 @@ const _clearData = async () => {
     if (lastError) throw lastError;
   }
 
+  await _resetUsers(db);
+
   console.log(
     `[devSeed] Cleared collections: ${topLevelCollections.join(", ")}`,
   );
   return { cleared: topLevelCollections };
+};
+
+const _resetUsers = async (db: admin.firestore.Firestore) => {
+  const usersSnap = await db.collection("users").get();
+  if (usersSnap.empty) return;
+
+  const batch = db.batch();
+  for (const doc of usersSnap.docs) {
+    batch.update(doc.ref, {
+      stars: 5,
+      transactions_completed: 0,
+      payment_types: [],
+      blocked_users: [],
+      moneySaved: 0,
+      moneyEarned: 0,
+      status: "active",
+      isEmailVerified: false,
+      hasSeenAppFeedback: false,
+      verificationCode: FieldValue.delete(),
+      verificationCodeExpires: FieldValue.delete(),
+    });
+  }
+  await batch.commit();
+  console.log(`[devSeed] Reset ${usersSnap.size} user(s) to defaults`);
 };
 
 const _createListing = async ({

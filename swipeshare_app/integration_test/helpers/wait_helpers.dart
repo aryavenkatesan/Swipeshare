@@ -10,11 +10,12 @@ Future<void> waitForText(
   String text, {
   Duration timeout = const Duration(seconds: 5),
   Duration interval = const Duration(milliseconds: 300),
+  dynamic matcher,
 }) async {
   final deadline = DateTime.now().add(timeout);
   while (DateTime.now().isBefore(deadline)) {
     if (find.text(text).evaluate().isNotEmpty) break;
     await tester.pump(interval);
   }
-  expect(find.text(text), findsAtLeastNWidgets(1));
+  expect(find.text(text), matcher ?? findsAtLeastNWidgets(1));
 }
