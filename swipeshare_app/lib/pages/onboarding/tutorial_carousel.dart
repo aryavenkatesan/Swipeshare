@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_1.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_2.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_3.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_4.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_5.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_6.dart';
-import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/page_7.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/browse_swipes_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/communication_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/dashboard_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/final_step_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/sell_listing_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/stars_feedback_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/welcome_slide.dart';
 
 class TutorialCarousel extends StatefulWidget {
   const TutorialCarousel({super.key});
@@ -17,11 +17,47 @@ class TutorialCarousel extends StatefulWidget {
 
 class _TutorialCarouselState extends State<TutorialCarousel> {
   final PageController _controller = PageController();
+  static const int _lastPageIndex = 6;
 
-  bool onLastPage = false;
+  int _currentPage = 0;
+  bool _isPageTransitioning = false;
+
+  bool get onLastPage => _currentPage == _lastPageIndex;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _goToPage(int index) async {
+    if (!_controller.hasClients) return;
+    if (_isPageTransitioning) return;
+    if (index < 0 || index > _lastPageIndex) return;
+
+    _isPageTransitioning = true;
+    await _controller.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeIn,
+    );
+    if (mounted) {
+      _isPageTransitioning = false;
+    }
+  }
+
+  void _onBackPressed() {
+    _goToPage(_currentPage - 1);
+  }
+
+  void _onNextPressed() {
+    _goToPage(_currentPage + 1);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final double vw = MediaQuery.of(context).size.width;
+    final double dotSize = (vw / 22).clamp(10.0, 20.0);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
@@ -32,25 +68,24 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.69,
-            //genuinly does not work on iphone se at 0.7 or 0.68
+          Expanded(
             child: PageView(
               controller: _controller,
               onPageChanged: (index) {
+                if (!mounted) return;
                 setState(() {
-                  // The last page is at index 5 (since there are 6 pages, 0-5)
-                  onLastPage = (index == 5);
+                  _currentPage = index;
                 });
+                _isPageTransitioning = false;
               },
               children: [
-                Page1(tutorial: true),
-                Page2(),
-                Page3(),
-                Page4(),
-                Page5(),
-                Page6(),
-                Page7(tutorial: true),
+                const OnboardingWelcomeSlide(tutorial: true),
+                const OnboardingBrowseSwipesSlide(),
+                const OnboardingSellListingSlide(),
+                const OnboardingDashboardSlide(),
+                const OnboardingCommunicationSlide(),
+                const OnboardingStarsFeedbackSlide(),
+                const OnboardingFinalStepSlide(tutorial: true),
               ],
             ),
           ),
@@ -65,21 +100,16 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      _controller.previousPage(
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.easeIn,
-                      );
-                    },
+                    onTap: _onBackPressed,
                     child: const Text("back"),
                   ),
 
                   SmoothPageIndicator(
                     controller: _controller,
-                    count: 6,
+                    count: 7,
                     effect: WormEffect(
-                      dotHeight: 20,
-                      dotWidth: 20,
+                      dotHeight: dotSize,
+                      dotWidth: dotSize,
                       activeDotColor: Colors.black,
                       dotColor: Colors.grey,
                     ),
@@ -87,12 +117,7 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
 
                   !onLastPage
                       ? GestureDetector(
-                          onTap: () {
-                            _controller.nextPage(
-                              duration: Duration(milliseconds: 500),
-                              curve: Curves.easeIn,
-                            );
-                          },
+                          onTap: _onNextPressed,
                           child: const Text("next"),
                         )
                       : GestureDetector(

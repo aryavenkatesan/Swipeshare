@@ -1,50 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:swipeshare_app/old_components/text_styles.dart';
+import 'package:swipeshare_app/components/onboarding/onboarding_layout.dart';
 
-class Page7 extends StatelessWidget {
+class OnboardingFinalStepSlide extends StatelessWidget {
   final bool tutorial;
   // Controller to get the code from the text field
   final TextEditingController? codeController;
 
-  const Page7({super.key, required this.tutorial, this.codeController});
+  const OnboardingFinalStepSlide({
+    super.key,
+    required this.tutorial,
+    this.codeController,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final double vh = MediaQuery.of(context).size.height;
-    final double vw = MediaQuery.of(context).size.width;
-    final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final vh = MediaQuery.of(context).size.height;
+    final vw = MediaQuery.of(context).size.width;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final layout = OnboardingLayout.of(context);
+    final textTheme = Theme.of(context).textTheme;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: EdgeInsets.only(
-          left: vh * 0.03,
-          right: vh * 0.03,
+          left: layout.horizontalBodyPadding,
+          right: layout.horizontalBodyPadding,
           bottom: keyboardHeight > 0 ? 20 : 0,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            SizedBox(height: vh > 767 ? (vh * 0.065) : (vh * 0.01)),
+            SizedBox(height: layout.topSpacing(vh * 0.065, vh * 0.01)),
             Image.asset(
               'assets/onboarding7.png',
               width: vw * 0.8,
               fit: BoxFit.fitWidth,
             ),
-            SizedBox(height: vh > 767 ? 30 : 0), // Adjusted spacing
+            SizedBox(height: layout.sectionSpacing(30, 0)),
             Column(
               children: [
                 Text(
                   tutorial ? "Don't Forget!" : "Let's get started!",
-                  style: AppTextStyles.subHeaderStyle,
+                  style: textTheme.headlineMedium,
                 ),
                 SizedBox(height: vh * 0.02),
                 Text(
                   tutorial
                       ? "Whenever using the app, always make sure to be courteous and respectful!"
                       : "Please check your email inbox for the 6-digit verification code. It may be in your spam folder.",
-                  style: AppTextStyles.bodyText,
                   textAlign: TextAlign.center,
                 ),
               ],
