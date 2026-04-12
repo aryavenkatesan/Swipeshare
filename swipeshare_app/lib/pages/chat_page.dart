@@ -407,6 +407,9 @@ class _ChatPageState extends State<ChatPage> {
 
     final textTheme = Theme.of(context).textTheme;
 
+    final bool showsActionButtons =
+        proposal.status == ProposalStatus.pending && !isSent;
+
     Widget bottomSection;
     if (proposal.status != ProposalStatus.pending) {
       final String statusText = switch (proposal.status) {
@@ -433,7 +436,8 @@ class _ChatPageState extends State<ChatPage> {
       );
     } else {
       // Pending, received — show Accept + Decline
-      bottomSection = Column(
+      bottomSection = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           GestureDetector(
             onTap: () async {
@@ -443,8 +447,8 @@ class _ChatPageState extends State<ChatPage> {
               );
             },
             child: Container(
-              width: 108,
-              height: 28,
+              width: 82,
+              height: 32,
               decoration: BoxDecoration(
                 color: SwipeshareColors.primary,
                 borderRadius: BorderRadius.circular(24),
@@ -453,13 +457,14 @@ class _ChatPageState extends State<ChatPage> {
               child: Text(
                 "Accept",
                 style: textTheme.bodyLarge?.copyWith(
+                  fontSize: 14,
                   color: SwipeshareColors.onPrimary,
                   height: 1,
                 ),
               ),
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: () async {
               await _chatService.updateTimeProposal(
@@ -467,11 +472,21 @@ class _ChatPageState extends State<ChatPage> {
                 ProposalStatus.declined,
               );
             },
-            child: Text(
-              "Decline",
-              style: textTheme.bodyLarge?.copyWith(
-                fontSize: 14,
-                color: SwipeshareColors.cardAccent,
+            child: Container(
+              width: 82,
+              height: 32,
+              decoration: BoxDecoration(
+                color: SwipeshareColors.secondaryContainer,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                "Decline",
+                style: textTheme.bodyLarge?.copyWith(
+                  fontSize: 14,
+                  color: SwipeshareColors.subtleText,
+                  height: 1,
+                ),
               ),
             ),
           ),
@@ -488,10 +503,10 @@ class _ChatPageState extends State<ChatPage> {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 8),
+            const SizedBox(height: 12),
             Container(
-              width: 212,
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              width: 214,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFFE2ECF9),
                 borderRadius: BorderRadius.circular(12),
@@ -503,13 +518,12 @@ class _ChatPageState extends State<ChatPage> {
                     textAlign: TextAlign.center,
                     style: textTheme.bodyLarge,
                   ),
-                  SizedBox(height: isSent ? 13 : 8),
                   Text(
                     timeString,
                     textAlign: TextAlign.center,
-                    style: textTheme.bodyLarge?.copyWith(fontSize: 32),
+                    style: textTheme.bodyLarge?.copyWith(fontSize: 27),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: showsActionButtons ? 8 : 4),
                   bottomSection,
                   SizedBox(height: 4),
                 ],
