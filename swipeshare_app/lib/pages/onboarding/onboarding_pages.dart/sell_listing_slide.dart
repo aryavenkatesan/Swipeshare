@@ -65,7 +65,7 @@ class OnboardingSellListingSlide extends StatelessWidget {
         horizontal: layout.horizontalBodyPadding,
       ),
       infoBody: const Text(
-        'Select your preferences — dining hall, time,\nprice, and payment — then post it!',
+        'Select your preferences: dining hall, time, price, and payment - then post it!',
         textAlign: TextAlign.center,
       ),
     );

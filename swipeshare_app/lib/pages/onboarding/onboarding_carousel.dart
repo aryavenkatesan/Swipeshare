@@ -128,6 +128,11 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
               controller: _controller,
               onPageChanged: (index) {
                 if (!mounted) return;
+                // Block swiping past the payment page with no selection.
+                if (index > _paymentPageIndex && _selectedPaymentOptions.isEmpty) {
+                  _controller.jumpToPage(_paymentPageIndex);
+                  return;
+                }
                 setState(() {
                   _currentPage = index;
                 });

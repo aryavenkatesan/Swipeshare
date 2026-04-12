@@ -25,7 +25,7 @@ class OnboardingCommunicationSlide extends StatelessWidget {
         horizontal: layout.horizontalBodyPadding,
       ),
       infoBody: const Text(
-        'Coordinate a time and place to meet with your partner.\nPay before you get swiped in!',
+        'Coordinate a time and place to meet in person with your partner.\nPay before you get swiped in!',
         textAlign: TextAlign.center,
       ),
     );
