@@ -30,7 +30,7 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    // --- B sends a message ---
+    // --- A sends a message ---
     await goToChat(tester, seller.displayName);
     await tester.enterText(findTextField(), 'Hey!');
     await tester.tap(find.byIcon(Icons.arrow_upward));
@@ -38,8 +38,6 @@ void main() {
     await waitForText(tester, 'Hey!');
 
     // --- A proposes a time ---
-    await switchUser(tester, buyer);
-    await goToChat(tester, seller.displayName);
     setTimePickerValue(const TimeOfDay(hour: 14, minute: 0)); // 2 PM
     await tester.tap(find.byIcon(Icons.more_time));
     await tester.pumpAndSettle();
