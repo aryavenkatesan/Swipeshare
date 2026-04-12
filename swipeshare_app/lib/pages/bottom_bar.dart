@@ -82,16 +82,6 @@ class _BottomBarState extends State<BottomBar>
         await Future.delayed(const Duration(milliseconds: 500));
       }
 
-      if (user.name.isEmpty) {
-        debugPrint('DEBUG: User name is still empty after retries.');
-        setState(() {
-          error =
-              'Unable to load your profile details. Please try again later.';
-          isLoading = false;
-        });
-        return;
-      }
-
       setState(() {
         userData = user;
         isLoading = false;

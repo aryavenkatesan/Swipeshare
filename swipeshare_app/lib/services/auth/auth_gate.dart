@@ -101,9 +101,10 @@ class _AuthGateState extends State<AuthGate> {
           );
         }
 
-        // Handle user document not found — sign out so the auth flow resets cleanly.
+        // Handle user document not found — wait for Cloud Functions to create it,
+        // then sign out only if it still doesn't appear after the grace period.
         if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-          FirebaseAuth.instance.signOut();
+          _startNoDocTimer(user.uid);
           return const Center(
             key: ValueKey('loading'),
             child: CircularProgressIndicator(),
