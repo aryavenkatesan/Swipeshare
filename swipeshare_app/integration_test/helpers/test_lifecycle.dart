@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swipeshare_app/services/dev_service.dart';
 
@@ -26,8 +25,6 @@ Future<void> testSetup() async {
 /// receive a permission-denied error when auth is revoked mid-stream, which
 /// also causes BulkWriter cancellations in the next test's clearData call.
 Future<void> testTeardown(WidgetTester tester) async {
-  await tester.pumpWidget(const SizedBox.shrink());
-  await tester.pumpAndSettle();
-  await signOut();
+  await disposeAndSignout(tester);
   await DevService.instance.clearData();
 }

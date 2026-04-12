@@ -49,6 +49,11 @@ const _clearData = async () => {
         lastError = undefined;
         break;
       } catch (e) {
+        if (attempt !== 2) {
+          console.warn(
+            `[devSeed] Warning: Failed to clear collection ${collectionName} (attempt ${attempt + 1}/3). Retrying...`,
+          );
+        }
         lastError = e;
       }
     }
