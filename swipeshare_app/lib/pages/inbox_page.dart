@@ -65,11 +65,8 @@ class _InboxPageState extends State<InboxPage> {
           .where((o) => o.status == OrderStatus.active)
           .toList();
 
-      final past =
-          orders.where((o) => o.status != OrderStatus.active).toList()
-            ..sort(
-              (a, b) => b.transactionDate.compareTo(a.transactionDate),
-            );
+      final past = orders.where((o) => o.status != OrderStatus.active).toList()
+        ..sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
 
       _syncMsgSubscriptions(active);
 
@@ -319,6 +316,12 @@ class _InboxOrderTileState extends State<_InboxOrderTile> {
             child: StreamBuilder<QuerySnapshot<Message>>(
               stream: _lastMsgStream,
               builder: (context, snap) {
+                if (snap.error != null) {
+                  return Text(
+                    "An error occured. Please close and reopen the app to try again.",
+                  );
+                }
+
                 final lastMsg = snap.data?.docs.firstOrNull?.data();
 
                 final preview = lastMsg == null

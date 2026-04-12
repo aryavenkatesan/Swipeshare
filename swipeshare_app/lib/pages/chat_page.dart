@@ -333,7 +333,7 @@ class _ChatPageState extends State<ChatPage> {
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Text("Error: ${snapshot.error}");
+          return Text("An error occured. Please close and reopen the app to try again.");
         }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());

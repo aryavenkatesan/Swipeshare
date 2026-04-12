@@ -130,31 +130,74 @@ class _RatingChip extends StatelessWidget {
   }
 }
 
-class _OrdersList extends StatelessWidget {
+class _OrdersList extends StatefulWidget {
   const _OrdersList();
+
+  @override
+  State<_OrdersList> createState() => _OrdersListState();
+}
+
+class _OrdersListState extends State<_OrdersList> {
+  late Stream<QuerySnapshot<MealOrder>> _stream;
+  int _retryCount = 0;
+  bool _retryPending = false;
+  static const int _maxRetries = 4;
+
+  @override
+  void initState() {
+    super.initState();
+    _stream = _buildStream();
+  }
+
+  Stream<QuerySnapshot<MealOrder>> _buildStream() {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    return OrderService.instance.orderCol
+        .where(
+          Filter.or(
+            Filter('seller.id', isEqualTo: userId),
+            Filter('buyer.id', isEqualTo: userId),
+          ),
+        )
+        .where(
+          'status',
+          whereIn: [OrderStatus.active.name, OrderStatus.cancelled.name],
+        )
+        .snapshots();
+  }
+
+  void _scheduleRetry() {
+    if (_retryPending || _retryCount >= _maxRetries || !mounted) return;
+    _retryPending = true;
+    final delay = Duration(milliseconds: 500 * (1 << _retryCount));
+    Future.delayed(delay, () {
+      if (!mounted) return;
+      setState(() {
+        _retryCount++;
+        _retryPending = false;
+        _stream = _buildStream();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final userId = FirebaseAuth.instance.currentUser!.uid;
 
     return StreamBuilder<QuerySnapshot<MealOrder>>(
-      stream: OrderService.instance.orderCol
-          .where(
-            Filter.or(
-              Filter('seller.id', isEqualTo: userId),
-              Filter('buyer.id', isEqualTo: userId),
-            ),
-          )
-          .where(
-            'status',
-            whereIn: [OrderStatus.active.name, OrderStatus.cancelled.name],
-          )
-          .snapshots(),
+      stream: _stream,
       builder: (context, snapshot) {
         if (snapshot.error != null) {
-          return Text('Error: ${snapshot.error.toString()}');
+          if (_retryCount < _maxRetries) {
+            _scheduleRetry();
+            return const Text('Loading..');
+          }
+          return _EmptyMessage(
+            message:
+                'Could not load orders. Close and reopen the app to try again.',
+            colors: colors,
+            textTheme: textTheme,
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -199,14 +242,35 @@ class _ListingsList extends StatefulWidget {
 
 class _ListingsListState extends State<_ListingsList> {
   bool _showPastListings = false;
-  late final Stream<QuerySnapshot<Listing>> _listingsStream;
+  late Stream<QuerySnapshot<Listing>> _listingsStream;
+  int _retryCount = 0;
+  bool _retryPending = false;
+  static const int _maxRetries = 4;
 
   @override
   void initState() {
     super.initState();
-    _listingsStream = ListingService.instance.listingCol
+    _listingsStream = _buildStream();
+  }
+
+  Stream<QuerySnapshot<Listing>> _buildStream() {
+    return ListingService.instance.listingCol
         .where("sellerId", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
         .snapshots();
+  }
+
+  void _scheduleRetry() {
+    if (_retryPending || _retryCount >= _maxRetries || !mounted) return;
+    _retryPending = true;
+    final delay = Duration(milliseconds: 500 * (1 << _retryCount));
+    Future.delayed(delay, () {
+      if (!mounted) return;
+      setState(() {
+        _retryCount++;
+        _retryPending = false;
+        _listingsStream = _buildStream();
+      });
+    });
   }
 
   @override
@@ -218,7 +282,16 @@ class _ListingsListState extends State<_ListingsList> {
       stream: _listingsStream,
       builder: (context, snapshot) {
         if (snapshot.error != null) {
-          return Text('Error: ${snapshot.error.toString()}');
+          if (_retryCount < _maxRetries) {
+            _scheduleRetry();
+            return const Text('Loading..');
+          }
+          return _EmptyMessage(
+            message:
+                'Could not load listings. Close and reopen the app to try again.',
+            colors: colors,
+            textTheme: textTheme,
+          );
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text('Loading..');
