@@ -291,6 +291,8 @@ class _SwipesPageState extends State<SwipesPage> {
         ),
         const SizedBox(height: 28),
         _buildBody(textTheme),
+        const _SwipesExchangedBanner(),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -376,6 +378,55 @@ class _SwipesPageState extends State<SwipesPage> {
         itemBuilder: (context, index) =>
             _SwipeListingCard(listing: listings[index]),
       ),
+    );
+  }
+}
+
+class _SwipesExchangedBanner extends StatelessWidget {
+  const _SwipesExchangedBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final stream = FirebaseFirestore.instance
+        .collection('orders')
+        .where('status', isEqualTo: 'completed')
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final count = snapshot.data!.docs.length;
+
+        final textTheme = Theme.of(context).textTheme;
+        final colors = Theme.of(context).colorScheme;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 32, 20, 8),
+          child: Column(
+            children: [
+              Divider(color: colors.outlineVariant),
+              const SizedBox(height: 20),
+              Text(
+                '$count',
+                style: textTheme.displayLarge?.copyWith(
+                  color: colors.primary,
+                  fontSize: 52,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'swipes exchanged on campus',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
     );
   }
 }

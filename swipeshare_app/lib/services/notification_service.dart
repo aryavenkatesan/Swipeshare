@@ -127,11 +127,20 @@ class NotificationService {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    await _firestore.collection('users').doc(user.uid).set({
-      'fcmToken': token,
-      'lastTokenUpdate': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    debugPrint("Updated Firestore FCM token to $token");
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'fcmToken': token,
+        'lastTokenUpdate': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      debugPrint("Updated Firestore FCM token to $token");
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        debugPrint("Permission denied saving FCM token — Firebase session expired. Signing out.");
+        await _auth.signOut();
+      } else {
+        rethrow;
+      }
+    }
   }
 
   /// Handles incoming messages when the app is in the foreground

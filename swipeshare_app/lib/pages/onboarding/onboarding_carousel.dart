@@ -123,9 +123,9 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                   SmoothPageIndicator(
                     controller: _controller,
                     count: 7,
-                    effect: WormEffect(
-                      dotHeight: 20,
-                      dotWidth: 20,
+                    effect: const WormEffect(
+                      dotHeight: 15,
+                      dotWidth: 15,
                       activeDotColor: Colors.black,
                       dotColor: Colors.grey,
                     ),
