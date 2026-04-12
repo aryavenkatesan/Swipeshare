@@ -56,6 +56,8 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final double vw = MediaQuery.of(context).size.width;
+    final double dotSize = (vw / 22).clamp(10.0, 20.0);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
@@ -66,9 +68,7 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.69,
-            //genuinly does not work on iphone se at 0.7 or 0.68
+          Expanded(
             child: PageView(
               controller: _controller,
               onPageChanged: (index) {
@@ -108,8 +108,8 @@ class _TutorialCarouselState extends State<TutorialCarousel> {
                     controller: _controller,
                     count: 7,
                     effect: WormEffect(
-                      dotHeight: 20,
-                      dotWidth: 20,
+                      dotHeight: dotSize,
+                      dotWidth: dotSize,
                       activeDotColor: Colors.black,
                       dotColor: Colors.grey,
                     ),

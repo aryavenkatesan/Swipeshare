@@ -44,17 +44,6 @@ class OnboardingPage2Controller extends ChangeNotifier {
   }
 }
 
-class OnboardingPage3Controller extends ChangeNotifier {
-  bool _showForm = false;
-
-  bool get showForm => _showForm;
-
-  void toggleForm() {
-    _showForm = !_showForm;
-    notifyListeners();
-  }
-}
-
 class OnboardingPage4Controller extends ChangeNotifier {
   int? _selectedCard;
 

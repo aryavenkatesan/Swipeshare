@@ -67,7 +67,8 @@ class _OnboardingBrowseSwipesSlideState
           ),
           spacingBeforeDivider: layout.sectionSpacing(40, 24),
           spacingAfterDivider: layout.sectionSpacing(40, 24),
-          infoTitle: 'How to Buy Swipes',
+          infoTitle: 'Buy Swipes',
+          infoIcon: Icons.attach_money_rounded,
           infoPadding: EdgeInsets.symmetric(
             horizontal: layout.horizontalBodyPadding,
           ),

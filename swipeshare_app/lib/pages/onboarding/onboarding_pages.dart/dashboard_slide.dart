@@ -55,6 +55,7 @@ class _OnboardingDashboardSlideState extends State<OnboardingDashboardSlide> {
           spacingBeforeDivider: layout.sectionSpacing(30, 16),
           spacingAfterDivider: layout.sectionSpacing(30, 16),
           infoTitle: _controller.title,
+          infoIcon: Icons.home_outlined,
           infoPadding: EdgeInsets.symmetric(
             horizontal: layout.horizontalBodyPadding,
           ),

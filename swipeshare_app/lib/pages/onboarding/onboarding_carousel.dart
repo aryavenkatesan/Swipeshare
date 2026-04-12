@@ -11,6 +11,7 @@ import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/dashboard_
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/final_step_slide.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/payment_methods_slide.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/sell_listing_slide.dart';
+import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/stars_feedback_slide.dart';
 import 'package:swipeshare_app/pages/onboarding/onboarding_pages.dart/welcome_slide.dart';
 import 'package:swipeshare_app/services/auth/auth_services.dart';
 import 'package:swipeshare_app/services/auth/email_code_verification_service.dart';
@@ -26,8 +27,8 @@ class OnboardingCarousel extends StatefulWidget {
 }
 
 class _OnboardingCarouselState extends State<OnboardingCarousel> {
-  static const int _lastPageIndex = 6;
-  static const int _paymentPageIndex = 5;
+  static const int _lastPageIndex = 7;
+  static const int _paymentPageIndex = 6;
 
   final PageController _controller = PageController();
   // Controller for the code input
@@ -104,6 +105,8 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final double vh = MediaQuery.of(context).size.height;
+    final double vw = MediaQuery.of(context).size.width;
+    final double dotSize = (vw / 22).clamp(10.0, 20.0);
 
     return Scaffold(
       appBar: AppBar(
@@ -136,6 +139,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
                 const OnboardingSellListingSlide(),
                 const OnboardingDashboardSlide(),
                 const OnboardingCommunicationSlide(),
+                const OnboardingStarsFeedbackSlide(),
                 OnboardingPaymentMethodsSlide(
                   selectedPaymentOptions: _selectedPaymentOptions,
                   onPaymentOptionsChanged: (options) {
@@ -181,10 +185,10 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
                   SmoothPageIndicator(
                     controller: _controller,
-                    count: 7,
-                    effect: const WormEffect(
-                      dotHeight: 20,
-                      dotWidth: 20,
+                    count: 8,
+                    effect: WormEffect(
+                      dotHeight: dotSize,
+                      dotWidth: dotSize,
                       activeDotColor: Colors.black,
                       dotColor: Colors.grey,
                     ),

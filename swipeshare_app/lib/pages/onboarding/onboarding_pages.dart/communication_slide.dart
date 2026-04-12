@@ -9,19 +9,18 @@ class OnboardingCommunicationSlide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vh = MediaQuery.of(context).size.height;
-    final vw = MediaQuery.of(context).size.width;
     final layout = OnboardingLayout.of(context);
 
     return OnboardingSlideScaffold(
       topSpacing: layout.topSpacing(vh * 0.06, vh * 0.03),
-      topContent: SizedBox(
-        width: vw * 0.85,
-        height: vh * 0.32,
+      topContent: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: const OnboardingChatMockup(),
       ),
       spacingBeforeDivider: layout.sectionSpacing(60, 30),
       spacingAfterDivider: layout.sectionSpacing(30, 16),
       infoTitle: 'Communicate',
+      infoIcon: Icons.chat_outlined,
       infoPadding: EdgeInsets.symmetric(
         horizontal: layout.horizontalBodyPadding,
       ),

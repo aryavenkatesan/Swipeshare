@@ -80,6 +80,7 @@ class _OnboardingStarsFeedbackSlideState
       spacingBeforeDivider: layout.sectionSpacing(36, 22),
       spacingAfterDivider: layout.sectionSpacing(28, 16),
       infoTitle: 'Stars',
+      infoIcon: Icons.star_rounded,
       infoPadding: EdgeInsets.symmetric(horizontal: layout.horizontalBodyPadding),
       infoBody: Text(
         'After each completed order, leave a quick star rating and optional feedback to help keep the community safe and reliable.',

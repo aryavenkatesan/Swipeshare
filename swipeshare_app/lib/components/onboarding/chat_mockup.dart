@@ -105,27 +105,35 @@ class _OnboardingChatMockupState extends State<OnboardingChatMockup>
         ).animate(animation),
         child: Align(
           alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.6,
-            ),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(18),
-                topRight: const Radius.circular(18),
-                bottomLeft: Radius.circular(isSent ? 18 : 4),
-                bottomRight: Radius.circular(isSent ? 4 : 18),
-              ),
-            ),
-            child: Text(
-              text,
-              style: (textTheme.bodyLarge ?? const TextStyle()).copyWith(
-                color: isSent ? Colors.white : Colors.black87,
-                fontSize: 15,
-              ),
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxW = constraints.hasBoundedWidth
+                  ? constraints.maxWidth * 0.7
+                  : 260.0;
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                constraints: BoxConstraints(maxWidth: maxW),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isSent ? 18 : 4),
+                    bottomRight: Radius.circular(isSent ? 4 : 18),
+                  ),
+                ),
+                child: Text(
+                  text,
+                  style: (textTheme.bodyLarge ?? const TextStyle()).copyWith(
+                    color: isSent ? Colors.white : Colors.black87,
+                    fontSize: 15,
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
