@@ -29,7 +29,7 @@ class DashboardPage extends StatelessWidget {
     return RefreshablePage(
       header: DashboardHeader(userData: userData),
       onRefresh: onRefresh,
-      child: const DashboardContent(),
+      child: DashboardContent(userData: userData),
     );
   }
 }
@@ -63,7 +63,9 @@ class DashboardHeader extends StatelessWidget {
 }
 
 class DashboardContent extends StatelessWidget {
-  const DashboardContent({super.key});
+  final UserModel userData;
+
+  const DashboardContent({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +83,11 @@ class DashboardContent extends StatelessWidget {
           Text("Your Listings", style: textTheme.headlineMedium),
           const SizedBox(height: 8),
           const _ListingsList(),
+          const SizedBox(height: 24),
+          _MoneyStats(
+            moneySaved: userData.moneySaved,
+            moneyEarned: userData.moneyEarned,
+          ),
         ],
       ),
     );
@@ -345,6 +352,62 @@ class _PastListingsDropdown extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _MoneyStats extends StatelessWidget {
+  final double moneySaved;
+  final double moneyEarned;
+
+  const _MoneyStats({required this.moneySaved, required this.moneyEarned});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _StatRow(label: 'Money Saved', amount: moneySaved),
+          Divider(height: 1, color: colors.outlineVariant),
+          _StatRow(label: 'Money Earned', amount: moneyEarned),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  final String label;
+  final double amount;
+
+  const _StatRow({required this.label, required this.amount});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+          ),
+          Text(
+            '\$${amount.toStringAsFixed(2)}',
+            style: textTheme.titleMedium,
+          ),
+        ],
+      ),
     );
   }
 }

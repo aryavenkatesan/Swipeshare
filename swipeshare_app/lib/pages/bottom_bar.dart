@@ -253,7 +253,7 @@ class _BottomBarState extends State<BottomBar>
     ];
 
     final bodies = <Widget>[
-      const DashboardContent(),
+      DashboardContent(userData: userData!,),
       const SwipesPage(),
       const InboxPage(),
       const ProfilePage(),
