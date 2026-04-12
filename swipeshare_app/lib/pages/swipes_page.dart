@@ -388,15 +388,16 @@ class _SwipesExchangedBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stream = FirebaseFirestore.instance
-        .collection('orders')
-        .where('status', isEqualTo: 'completed')
+        .collection('stats')
+        .doc('platform')
         .snapshots();
 
-    return StreamBuilder<QuerySnapshot>(
+    return StreamBuilder<DocumentSnapshot>(
       stream: stream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox.shrink();
-        final count = snapshot.data!.docs.length;
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+        final count = data?['completedOrders'] as int? ?? 0;
 
         final textTheme = Theme.of(context).textTheme;
         final colors = Theme.of(context).colorScheme;

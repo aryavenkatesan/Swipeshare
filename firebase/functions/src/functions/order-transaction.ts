@@ -128,6 +128,12 @@ export const handleOrderMarkedCompleteUpdate =
       batch,
     );
 
+    batch.set(
+      admin.firestore().collection("stats").doc("platform"),
+      { completedOrders: FieldValue.increment(1) },
+      { merge: true },
+    );
+
     await batch.commit();
 
     console.log(`Order ${orderId} completed via mutual confirmation.`);

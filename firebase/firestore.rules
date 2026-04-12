@@ -138,6 +138,11 @@ service cloud.firestore {
       allow delete: if isVerifiedOrderParticipant();
     }
     
+    // Platform stats (read-only for verified users, written only by Cloud Functions)
+    match /stats/{docId} {
+      allow read: if isVerified();
+    }
+
     // Feedback
     match /feedback/{feedbackId} {
       allow create: if isVerified() && isCurrentUser(request.resource.data.userId);
