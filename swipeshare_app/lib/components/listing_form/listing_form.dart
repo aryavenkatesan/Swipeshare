@@ -101,6 +101,13 @@ class _ListingFormState extends State<ListingForm> {
     return e > s;
   }
 
+  bool get _isTimeRangeTooLong {
+    if (_timeStart == null || _timeEnd == null) return false;
+    final s = _timeStart!.hour * 60 + _timeStart!.minute;
+    final e = _timeEnd!.hour * 60 + _timeEnd!.minute;
+    return (e - s) > 240;
+  }
+
   bool get _isTimeRangeInPast {
     if (_transactionDate == null || _timeEnd == null) return false;
     final now = DateTime.now();
@@ -121,7 +128,8 @@ class _ListingFormState extends State<ListingForm> {
       _timeEnd != null &&
       _paymentTypes.isNotEmpty &&
       _isValidTimeRange &&
-      !_isTimeRangeInPast;
+      !_isTimeRangeInPast &&
+      !_isTimeRangeTooLong;
 
   String? get _missingFieldsHint {
     final missing = <String>[];
@@ -130,6 +138,7 @@ class _ListingFormState extends State<ListingForm> {
     if (_timeEnd == null) missing.add('an end time');
     if (!_isValidTimeRange) missing.add('a valid time range');
     if (_isTimeRangeInPast) missing.add('a future time range');
+    if (_isTimeRangeTooLong) return 'Start and end times must be within 4 hours of each other';
     if (_paymentTypes.isEmpty) missing.add('payment methods');
     if (missing.isEmpty) return null;
     return 'Please select ${missing.join(', ')}';
