@@ -16,13 +16,20 @@ class EmailCodeVerificationService {
       throw Exception("No user logged in.");
     }
 
-    try {
-      await FirebaseFunctions.instance
-          .httpsCallable('sendVerificationCode')
-          .call();
-    } on FirebaseFunctionsException catch (e) {
-      debugPrint("Error sending verification code: $e");
-      throw Exception(e.message ?? "Failed to send code. Please try again later.");
+    // Retry once to handle cold-start failures on first invocation.
+    for (int attempt = 0; attempt < 2; attempt++) {
+      try {
+        await FirebaseFunctions.instance
+            .httpsCallable('sendVerificationCode')
+            .call();
+        return;
+      } on FirebaseFunctionsException catch (e) {
+        debugPrint("Error sending verification code (attempt ${attempt + 1}): $e");
+        if (attempt == 1) {
+          throw Exception(e.message ?? "Failed to send code. Please try again later.");
+        }
+        await Future.delayed(const Duration(seconds: 2));
+      }
     }
   }
 
