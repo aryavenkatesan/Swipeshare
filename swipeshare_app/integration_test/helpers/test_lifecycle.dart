@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swipeshare_app/services/dev_service.dart';
 
-import 'auth_helper.dart';
+import 'auth_helpers.dart';
 import 'setup.dart';
 
 /// Call at the top of every testWidgets body before any other steps.
