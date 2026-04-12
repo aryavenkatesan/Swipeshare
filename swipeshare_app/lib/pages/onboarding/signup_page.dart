@@ -23,6 +23,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
+  bool _isLoading = false;
 
   void signUp() async {
     final authService = Provider.of<AuthServices>(context, listen: false);
@@ -77,6 +78,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    setState(() => _isLoading = true);
     try {
       await authService.signUpWithEmailandPassword(
         emailController.text,
@@ -92,6 +94,8 @@ class _RegisterPageState extends State<RegisterPage> {
           context,
         ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -269,7 +273,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 width: double.infinity,
                 height: vh > 767 ? 56 : 44,
                 child: ElevatedButton(
-                  onPressed: () => signUp(),
+                  onPressed: _isLoading ? null : () => signUp(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
@@ -279,7 +283,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     elevation: 0,
                     textStyle: textTheme.labelLarge,
                   ),
-                  child: const Text("Register"),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text("Register"),
                 ),
               ),
 

@@ -2,7 +2,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swipeshare_app/services/notification_service.dart';
-import 'package:swipeshare_app/services/user_service.dart';
 
 class AuthServices extends ChangeNotifier {
   //instance of auth
@@ -34,20 +33,17 @@ class AuthServices extends ChangeNotifier {
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      await FirebaseFunctions.instance.httpsCallable('createUserDocument').call(
-        {'name': name, 'referralEmail': referralEmail},
-      );
-
-      // Wait until the Firestore doc is readable (Cloud Function write may not be
-      // immediately visible to the client).
-      const maxAttempts = 10;
-      for (var i = 0; i < maxAttempts; i++) {
+      // Retry createUserDocument once to handle cold-start failures.
+      for (int attempt = 0; attempt < 2; attempt++) {
         try {
-          await UserService.instance.getUserData(userCredential.user!.uid);
+          await FirebaseFunctions.instance
+              .httpsCallable('createUserDocument')
+              .call({'name': name, 'referralEmail': referralEmail});
           break;
-        } catch (_) {
-          if (i == maxAttempts - 1) rethrow;
-          await Future.delayed(const Duration(milliseconds: 500));
+        } on FirebaseFunctionsException catch (e) {
+          if (e.code == 'already-exists') break; // doc already exists, continue
+          if (attempt == 1) throw Exception('Failed to create account. Please try again.');
+          await Future.delayed(const Duration(seconds: 2));
         }
       }
 
