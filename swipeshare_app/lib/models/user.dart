@@ -114,11 +114,13 @@ class NotifSettings {
   final bool newOrders;
   final bool newMessages;
   final bool orderConfirmations;
+  final bool orderCancellations;
 
   const NotifSettings({
     this.newOrders = true,
     this.newMessages = true,
     this.orderConfirmations = true,
+    this.orderCancellations = true,
   });
 
   factory NotifSettings.fromMap(Map<String, dynamic> data) {
@@ -126,6 +128,7 @@ class NotifSettings {
       newOrders: data['newOrders'] ?? true,
       newMessages: data['newMessages'] ?? true,
       orderConfirmations: data['orderConfirmations'] ?? true,
+      orderCancellations: data['orderCancellations'] ?? true,
     );
   }
 
@@ -134,6 +137,7 @@ class NotifSettings {
       'newOrders': newOrders,
       'newMessages': newMessages,
       'orderConfirmations': orderConfirmations,
+      'orderCancellations': orderCancellations,
     };
   }
 }

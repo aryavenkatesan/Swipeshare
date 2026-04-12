@@ -129,6 +129,7 @@ export type NotifSettings = {
   newOrders: boolean;
   newMessages: boolean;
   orderConfirmations?: boolean;
+  orderCancellations?: boolean;
 };
 
 export type Rating = {

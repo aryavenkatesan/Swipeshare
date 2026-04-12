@@ -14,6 +14,7 @@ export const notificationType = {
   newOrder: "new_order",
   timeProposalUpdate: "time_proposal_update",
   orderConfirmation: "order_confirmation",
+  orderCancellation: "order_cancellation",
 } as const;
 
 export type NotificationType =
@@ -322,6 +323,64 @@ export const sendMarkCompleteNotification =
       console.log(`Mark-complete notification sent successfully: ${response}`);
     } catch (error) {
       console.error("Error sending mark-complete notification:", error);
+      throw error;
+    }
+  });
+
+/**
+ * Sends a push notification to the party who did NOT cancel when an order is cancelled.
+ */
+export const sendOrderCancelledNotification =
+  functions.firestore.onDocumentUpdated("orders/{orderId}", async (event) => {
+    const { orderId } = event.params;
+    const before = event.data?.before.data() as Order | undefined;
+    const after = event.data?.after.data() as Order | undefined;
+
+    if (!before || !after) {
+      return;
+    }
+
+    // Only fire when status transitions to cancelled
+    if (before.status === orderStatus.cancelled || after.status !== orderStatus.cancelled) {
+      return;
+    }
+
+    const cancelledBy = after.cancelledBy;
+    if (!cancelledBy) {
+      console.log(`Order cancellation notification skipped for ${orderId}: no cancelledBy field.`);
+      return;
+    }
+
+    const cancellerName = cancelledBy === "seller" ? after.seller.name : after.buyer.name;
+    const recipientId = cancelledBy === "seller" ? after.buyer.id : after.seller.id;
+
+    try {
+      const recipientData = await getUserWithFcm(recipientId);
+      if (!recipientData) {
+        return;
+      }
+
+      if (recipientData.notifSettings?.orderCancellations === false) {
+        console.log(`User ${recipientId} has disabled order cancellation notifications. No notification sent.`);
+        return;
+      }
+
+      const payload = await payloadWithNotifs(recipientId, {
+        notification: {
+          title: cancellerName,
+          body: "Cancelled an order",
+        },
+        data: {
+          orderId,
+          type: notificationType.orderCancellation,
+        },
+        token: recipientData.fcmToken,
+      });
+
+      const response = await admin.messaging().send(payload);
+      console.log(`Order cancelled notification sent successfully: ${response}`);
+    } catch (error) {
+      console.error("Error sending order cancelled notification:", error);
       throw error;
     }
   });
