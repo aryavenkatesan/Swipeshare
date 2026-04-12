@@ -1,9 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as crypto from "crypto";
-
-
 
 export const requestPasswordReset = functions.https.onCall(async (request) => {
   const email = request.data.email;
@@ -13,14 +12,14 @@ export const requestPasswordReset = functions.https.onCall(async (request) => {
   }
 
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 12 * 60 * 60 * 1000));
+  const expires = Timestamp.fromDate(new Date(Date.now() + 12 * 60 * 60 * 1000));
   //expires after 12 hours, we could change this
 
   try {
     await admin.firestore().collection('password_resets').doc(email).set({
       code,
       expires,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     await admin.firestore().collection('mail').add({
@@ -49,7 +48,7 @@ export const verifyResetCode = onCall(async (request) => {
   const resetData = doc.data()!;
 
   // 1. Check expiration and code match
-  if (resetData.expires.toMillis() < admin.firestore.Timestamp.now().toMillis()) {
+  if (resetData.expires.toMillis() < Timestamp.now().toMillis()) {
     throw new HttpsError('deadline-exceeded', 'The code has expired.');
   }
 
@@ -65,7 +64,7 @@ export const verifyResetCode = onCall(async (request) => {
     isVerified: true,
     verifiedToken: verifiedToken,
     // 15-minute window to complete the password change
-    tokenExpires: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 15 * 60000))
+    tokenExpires: Timestamp.fromDate(new Date(Date.now() + 15 * 60000))
   });
 
   return { success: true, token: verifiedToken };
@@ -95,7 +94,7 @@ export const updateUserPassword = onCall(async (request) => {
       throw new HttpsError("permission-denied", "Invalid or missing verification token.");
     }
 
-    if (resetData.tokenExpires.toMillis() < admin.firestore.Timestamp.now().toMillis()) {
+    if (resetData.tokenExpires.toMillis() < Timestamp.now().toMillis()) {
       throw new HttpsError("deadline-exceeded", "Verification session expired.");
     }
 

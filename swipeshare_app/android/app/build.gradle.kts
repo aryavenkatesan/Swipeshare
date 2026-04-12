@@ -21,8 +21,8 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.example.swipeshare_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
-
+    ndkVersion = "28.2.13676358"
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -34,7 +34,7 @@ android {
 
     defaultConfig {
         applicationId = "app.swipeshare.swipesharemobile"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

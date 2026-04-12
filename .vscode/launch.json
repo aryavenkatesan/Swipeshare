@@ -22,6 +22,16 @@
       "request": "launch",
       "program": "lib/main_dev.dart",
       "cwd": "swipeshare_app"
+    },
+    {
+      "name": "Integration Tests",
+      "type": "dart",
+      "request": "launch",
+      "program": "integration_test/app_test.dart",
+      "cwd": "swipeshare_app",
+      "args": ["--ignore-timeouts"],
+      "preLaunchTask": "Start Emulators and Seed",
+      "console": "debugConsole",
     }
   ]
 }

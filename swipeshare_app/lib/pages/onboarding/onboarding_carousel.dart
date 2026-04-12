@@ -302,10 +302,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
           ),
         );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        // Auth gate manages navigation to home page
       }
     } catch (e) {
       if (mounted) {
@@ -333,13 +330,20 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
           SnackBar(
             content: Text(SnackbarMessages.verificationCodeSent),
             backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 70, left: 16, right: 16),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 70, left: 16, right: 16),
+          ),
         );
       }
     } finally {

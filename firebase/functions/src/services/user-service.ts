@@ -2,6 +2,35 @@ import * as admin from "firebase-admin";
 import { DocumentData, Firestore, Transaction, UpdateData, WriteResult } from "firebase-admin/firestore";
 import { FirestoreWriter, Rating, User } from "../types";
 
+export const createUser = async (
+  uid: string,
+  email: string,
+  name: string,
+  referralEmail: string,
+): Promise<void> => {
+  const docRef = admin.firestore().collection("users").doc(uid);
+  const existing = await docRef.get();
+
+  if (existing.exists) {
+    throw new Error(`User document already exists for uid: ${uid}`);
+  }
+
+  await docRef.set({
+    uid,
+    email,
+    name,
+    payment_types: [],
+    stars: 5,
+    transactions_completed: 0,
+    moneySaved: 0,
+    moneyEarned: 0,
+    referral_email: referralEmail,
+    blocked_users: [],
+    isEmailVerified: false,
+    status: "active",
+  });
+};
+
 export const getUser = async (
   userId: string,
   transaction?: Transaction,
