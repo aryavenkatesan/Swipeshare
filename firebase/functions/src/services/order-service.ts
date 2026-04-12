@@ -309,6 +309,12 @@ export const completeExpiredOrders = async (): Promise<{
     );
   });
 
+  batch.set(
+    admin.firestore().collection("stats").doc("platform"),
+    { completedOrders: FieldValue.increment(snapshot.size) },
+    { merge: true },
+  );
+
   await batch.commit();
 
   console.log(`Successfully completed ${snapshot.size} orders.`);

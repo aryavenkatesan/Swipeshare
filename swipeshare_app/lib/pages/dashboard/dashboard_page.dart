@@ -29,7 +29,7 @@ class DashboardPage extends StatelessWidget {
     return RefreshablePage(
       header: DashboardHeader(userData: userData),
       onRefresh: onRefresh,
-      child: const DashboardContent(),
+      child: DashboardContent(userData: userData),
     );
   }
 }
@@ -63,7 +63,9 @@ class DashboardHeader extends StatelessWidget {
 }
 
 class DashboardContent extends StatelessWidget {
-  const DashboardContent({super.key});
+  final UserModel userData;
+
+  const DashboardContent({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +76,13 @@ class DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (userData.moneySaved + userData.moneyEarned > 0) ...[
+            const SizedBox(height: 0),
+            _ValueBanner(total: userData.moneySaved + userData.moneyEarned),
+            const SizedBox(height: 4),
+            const Divider(),
+            const SizedBox(height: 8),
+          ],
           Text("Active Orders", style: textTheme.headlineMedium),
           const SizedBox(height: 8),
           const _OrdersList(),
@@ -421,6 +430,38 @@ class _PastListingsDropdown extends StatelessWidget {
     );
   }
 }
+
+class _ValueBanner extends StatelessWidget {
+  final double total;
+
+  const _ValueBanner({required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          'saved ',
+          style: textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+        ),
+        Text(
+          '\$${total.toStringAsFixed(2)}',
+          style: textTheme.headlineMedium?.copyWith(color: colors.primary, fontSize: 24),
+        ),
+        Text(
+          ' on campus dining',
+          style: textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+}
+
 
 class _EmptyMessage extends StatelessWidget {
   final String message;

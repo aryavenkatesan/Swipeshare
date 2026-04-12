@@ -101,11 +101,9 @@ class _AuthGateState extends State<AuthGate> {
           );
         }
 
-        // Doc doesn't exist yet — transient state during signup while the Cloud
-        // Function is creating it. Start a timeout; if the doc never appears,
-        // sign the user out so they don't spin forever.
+        // Handle user document not found — sign out so the auth flow resets cleanly.
         if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-          _startNoDocTimer(user.uid);
+          FirebaseAuth.instance.signOut();
           return const Center(
             key: ValueKey('loading'),
             child: CircularProgressIndicator(),
