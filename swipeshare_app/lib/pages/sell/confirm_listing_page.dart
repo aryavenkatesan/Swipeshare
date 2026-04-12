@@ -76,7 +76,7 @@ class ConfirmListingPage extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Successfully Placed Listing!'),
         content: const Text(
-          'Check back again soon once someone contacts you for the order!',
+          'Make sure to check your notifications once you connect with someone- don\'t leave them hanging!',
         ),
         actions: [
           TextButton(

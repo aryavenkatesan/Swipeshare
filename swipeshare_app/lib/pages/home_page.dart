@@ -442,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.error != null) {
-          return Text('Error: ${snapshot.error.toString()}');
+          return Text("An error occured. Please close and reopen the app to try again.");
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text('Loading..');
@@ -498,7 +498,7 @@ class _HomeScreenState extends State<HomeScreen>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.error != null) {
-          return Text('Error: ${snapshot.error.toString()}');
+          return Text("An error occured. Please close and reopen the app to try again.");
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text('Loading..');

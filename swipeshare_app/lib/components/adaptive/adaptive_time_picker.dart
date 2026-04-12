@@ -25,27 +25,41 @@ class AdaptiveTimePicker {
   static Future<TimeOfDay?> showAdaptiveTimePicker({
     required BuildContext context,
     required TimeOfDay initialTime,
+    TimeOfDay? minTime,
+    TimeOfDay? maxTime,
     String? helpText,
     String confirmText = 'Done',
   }) async {
+    final clampedInitial = _clampTime(
+      initialTime,
+      minTime: minTime,
+      maxTime: maxTime,
+    );
     if (testTimeOverride != null) {
       final value = testTimeOverride;
       testTimeOverride = null;
-      return value;
+      return value == null
+          ? null
+          : _clampTime(value, minTime: minTime, maxTime: maxTime);
     }
     if (useCupertino) {
       return _showCupertinoTimePicker(
         context: context,
-        initialTime: initialTime,
+        initialTime: clampedInitial,
+        minTime: minTime,
+        maxTime: maxTime,
         helpText: helpText,
         confirmText: confirmText,
       );
     } else {
-      return _showMaterialTimePicker(
+      final result = await _showMaterialTimePicker(
         context: context,
-        initialTime: initialTime,
+        initialTime: clampedInitial,
         helpText: helpText,
       );
+      return result == null
+          ? null
+          : _clampTime(result, minTime: minTime, maxTime: maxTime);
     }
   }
 
@@ -53,10 +67,32 @@ class AdaptiveTimePicker {
   static Future<TimeOfDay?> _showCupertinoTimePicker({
     required BuildContext context,
     required TimeOfDay initialTime,
+    TimeOfDay? minTime,
+    TimeOfDay? maxTime,
     String? helpText,
     String confirmText = 'Done',
   }) async {
     TimeOfDay selectedTime = initialTime;
+    const refDate = (year: 2023, month: 1, day: 1);
+
+    final minimumDate = minTime == null
+        ? null
+        : DateTime(
+            refDate.year,
+            refDate.month,
+            refDate.day,
+            minTime.hour,
+            minTime.minute,
+          );
+    final maximumDate = maxTime == null
+        ? null
+        : DateTime(
+            refDate.year,
+            refDate.month,
+            refDate.day,
+            maxTime.hour,
+            maxTime.minute,
+          );
 
     final helpTextStyle = Theme.of(context).textTheme.labelMedium;
 
@@ -92,10 +128,12 @@ class AdaptiveTimePicker {
               child: CupertinoDatePicker(
                 mode: CupertinoDatePickerMode.time,
                 use24hFormat: false,
+                minimumDate: minimumDate,
+                maximumDate: maximumDate,
                 initialDateTime: DateTime(
-                  2023,
-                  1,
-                  1,
+                  refDate.year,
+                  refDate.month,
+                  refDate.day,
                   initialTime.hour,
                   initialTime.minute,
                 ),
@@ -113,6 +151,23 @@ class AdaptiveTimePicker {
     );
 
     return result;
+  }
+
+  static int _toMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+
+  static TimeOfDay _clampTime(
+    TimeOfDay time, {
+    TimeOfDay? minTime,
+    TimeOfDay? maxTime,
+  }) {
+    int minutes = _toMinutes(time);
+    if (minTime != null) {
+      minutes = minutes.clamp(_toMinutes(minTime), 1439);
+    }
+    if (maxTime != null) {
+      minutes = minutes.clamp(0, _toMinutes(maxTime));
+    }
+    return TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
   }
 
   /// Shows a Material-style time picker dialog with app theming

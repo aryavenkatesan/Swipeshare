@@ -176,12 +176,22 @@ class _SwipesPageState extends State<SwipesPage> {
   void _processSnapshot(QuerySnapshot snapshot, DateTime today) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
+    final now = DateTime.now();
+
     final candidates = snapshot.docs
         .map((doc) => Listing.fromFirestore(doc))
         .where((l) {
           if (l.status != ListingStatus.active) return false;
           if (uid != null && l.sellerId == uid) return false;
           if (_blockedUsers.contains(l.sellerId)) return false;
+          final endDateTime = DateTime(
+            l.transactionDate.year,
+            l.transactionDate.month,
+            l.transactionDate.day,
+            l.timeEnd.hour,
+            l.timeEnd.minute,
+          );
+          if (endDateTime.isBefore(now)) return false;
           return true;
         })
         .toList();

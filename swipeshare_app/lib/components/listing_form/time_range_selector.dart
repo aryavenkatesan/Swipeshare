@@ -10,6 +10,8 @@ class TimeRangeSelector extends StatefulWidget {
   final ValueChanged<TimeOfDay> onStartChanged;
   final ValueChanged<TimeOfDay> onEndChanged;
   final VoidCallback? onNow;
+  final TimeOfDay? minTime;
+  final TimeOfDay? maxTime;
 
   const TimeRangeSelector({
     super.key,
@@ -18,6 +20,8 @@ class TimeRangeSelector extends StatefulWidget {
     required this.onStartChanged,
     required this.onEndChanged,
     this.onNow,
+    this.minTime,
+    this.maxTime,
   });
 
   @override
@@ -36,8 +40,13 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
       _toMinutes(widget.timeStart!) >= _toMinutes(widget.timeEnd!);
 
   TimeOfDay _initialEndTime() {
-    if (widget.timeStart == null) return widget.timeEnd ?? const TimeOfDay(hour: 17, minute: 0);
-    if (widget.timeEnd != null && _toMinutes(widget.timeEnd!) > _toMinutes(widget.timeStart!)) return widget.timeEnd!;
+    if (widget.timeStart == null) {
+      return widget.timeEnd ?? const TimeOfDay(hour: 17, minute: 0);
+    }
+    if (widget.timeEnd != null &&
+        _toMinutes(widget.timeEnd!) > _toMinutes(widget.timeStart!)) {
+      return widget.timeEnd!;
+    }
     return widget.timeStart!;
   }
 
@@ -49,7 +58,8 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
   @override
   void didUpdateWidget(TimeRangeSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final wasShowing = oldWidget.onNow != null &&
+    final wasShowing =
+        oldWidget.onNow != null &&
         oldWidget.timeStart == null &&
         oldWidget.timeEnd == null;
     if (wasShowing && !_shouldShowNow && !_nowCollapsed) {
@@ -112,17 +122,12 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
             label: 'End at',
             time: widget.timeEnd,
             hasError: rangeError,
-            onTap: () => _pick(
-              context,
-              _initialEndTime(),
-              widget.onEndChanged,
-            ),
+            onTap: () => _pick(context, _initialEndTime(), widget.onEndChanged),
           ),
         ),
       ],
     );
   }
-
 
   Future<void> _pick(
     BuildContext context,
@@ -132,6 +137,8 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
     final result = await AdaptiveTimePicker.showAdaptiveTimePicker(
       context: context,
       initialTime: initial,
+      minTime: widget.minTime,
+      maxTime: widget.maxTime,
     );
     if (result != null) onChanged(result);
   }
@@ -169,14 +176,16 @@ class _TimeTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: textTheme.bodyMedium
-                      ?.copyWith(color: hasError ? colors.error : null),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: hasError ? colors.error : null,
+                  ),
                 ),
                 if (time != null)
                   Text(
                     TimeFormatter.formatTOD(time!),
-                    style: textTheme.bodyLarge
-                        ?.copyWith(color: hasError ? colors.error : null),
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: hasError ? colors.error : null,
+                    ),
                   ),
               ],
             ),
