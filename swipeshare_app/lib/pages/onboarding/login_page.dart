@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
@@ -214,7 +213,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     child: Text(
                       "Forgot password?",
-                      style: TextStyle(color: colorScheme.primary, fontSize: 14),
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ],

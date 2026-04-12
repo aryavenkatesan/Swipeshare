@@ -59,6 +59,7 @@ class Page7 extends StatelessWidget {
                   right: 16.0,
                 ),
                 child: TextField(
+                  key: Key("verification-code-field"),
                   controller: codeController,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,

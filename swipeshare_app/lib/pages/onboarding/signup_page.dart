@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:provider/provider.dart';
@@ -26,11 +25,14 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isConfirmPasswordObscured = true;
 
   void signUp() async {
+    final authService = Provider.of<AuthServices>(context, listen: false);
+
     if (nameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
       await safeVibrate(HapticsType.error);
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(SnackbarMessages.fillAllFields)));
@@ -41,6 +43,7 @@ class _RegisterPageState extends State<RegisterPage> {
         (!referralController.text.trim().toLowerCase().endsWith('unc.edu') &&
             referralController.text.isNotEmpty)) {
       await safeVibrate(HapticsType.error);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(SnackbarMessages.uncEmailRequired)),
       );
@@ -58,6 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (nameController.text.length > 18) {
       await safeVibrate(HapticsType.error);
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(SnackbarMessages.nameToolong)));
@@ -66,13 +70,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (ProfanityUtils.hasProfanityWord(nameController.text)) {
       await safeVibrate(HapticsType.error);
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(SnackbarMessages.profanityInName)));
       return;
     }
-
-    final authService = Provider.of<AuthServices>(context, listen: false);
 
     try {
       await authService.signUpWithEmailandPassword(
@@ -98,14 +101,16 @@ class _RegisterPageState extends State<RegisterPage> {
     Widget? suffixIcon,
     required ColorScheme colorScheme,
     required double vh,
-  }) 
-  {
+  }) {
     return InputDecoration(
       hintText: hintText,
       hintStyle: TextStyle(color: colorScheme.outlineVariant),
       filled: true,
       fillColor: colorScheme.surface,
-      contentPadding: EdgeInsets.symmetric(horizontal: vh > 767 ? 20 : 10, vertical: vh > 767 ? 18 : 9),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: vh > 767 ? 20 : 10,
+        vertical: vh > 767 ? 18 : 9,
+      ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -167,6 +172,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   children: [
                     TextField(
+                      key: Key("first-name-field"),
                       controller: nameController,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.name],
@@ -180,6 +186,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // --- Email Field ---
                     TextField(
+                      key: Key("email-field"),
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       textCapitalization: TextCapitalization.none,
@@ -195,6 +202,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // --- Password Field ---
                     TextField(
+                      key: Key("password-field"),
                       controller: passwordController,
                       obscureText: _isPasswordObscured,
                       keyboardType: TextInputType.visiblePassword,
@@ -223,6 +231,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // --- Confirm Password Field ---
                     TextField(
+                      key: Key("confirm-password-field"),
                       controller: confirmPasswordController,
                       obscureText: _isConfirmPasswordObscured,
                       keyboardType: TextInputType.visiblePassword,
@@ -254,9 +263,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
 
               SizedBox(height: vh > 767 ? 24 : 24),
-
-              // --- Referral field (currently commented out in original) ---
-              // TODO: Uncomment and style referral field if needed
 
               // --- Register button ---
               SizedBox(

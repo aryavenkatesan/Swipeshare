@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/https";
 import * as functions from "firebase-functions/v2";
 import { createListing } from "../services/listing-service";
@@ -8,6 +9,17 @@ import {
 } from "../services/order-service";
 import { getUser } from "../services/user-service";
 import { Listing, Order } from "../types"; // Order used in return type inference
+
+// Payment types per user, mirroring firebase/scripts/seed.ts — keep in sync.
+const SEED_PAYMENT_TYPES: Record<string, string[]> = {
+  "naasanov+a@unc.edu": ["Cash", "Venmo", "Zelle", "PayPal", "CashApp"],
+  "naasanov@unc.edu":   ["Cash", "Venmo", "Zelle", "PayPal", "CashApp"],
+  "vmshah2@unc.edu":    ["Cash", "Venmo"],
+  "aryav@unc.edu":      ["Cash", "Zelle", "Venmo", "Apple Pay", "PayPal", "CashApp"],
+  "testuser1@unc.edu":  ["Cash", "Venmo"],
+  "testuser2@unc.edu":  ["Cash", "Zelle"],
+  "testuser3@unc.edu":  ["Cash"],
+};
 
 export const devSeed = functions.https.onCall(async (request) => {
   if (!process.env.FUNCTIONS_EMULATOR) {
@@ -37,7 +49,7 @@ export const devSeed = functions.https.onCall(async (request) => {
 const _clearData = async () => {
   const db = admin.firestore();
   // Excludes 'users' — seed user profiles must survive between test runs.
-  const topLevelCollections = ["listings", "orders", "password_resets", "mail"];
+  const topLevelCollections = ["listings", "orders", "password_resets", "mail", "reports"];
 
   for (const collectionName of topLevelCollections) {
     // Retry up to 3 times: the emulator's BulkWriter occasionally cancels
@@ -60,10 +72,38 @@ const _clearData = async () => {
     if (lastError) throw lastError;
   }
 
+  await _resetUsers(db);
+
   console.log(
     `[devSeed] Cleared collections: ${topLevelCollections.join(", ")}`,
   );
   return { cleared: topLevelCollections };
+};
+
+const _resetUsers = async (db: admin.firestore.Firestore) => {
+  const usersSnap = await db.collection("users").get();
+  if (usersSnap.empty) return;
+
+  const batch = db.batch();
+  for (const doc of usersSnap.docs) {
+    const email = doc.data().email as string | undefined;
+    const paymentTypes = (email && SEED_PAYMENT_TYPES[email]) ?? [];
+    batch.update(doc.ref, {
+      stars: 5,
+      transactions_completed: 0,
+      payment_types: paymentTypes,
+      blocked_users: [],
+      moneySaved: 0,
+      moneyEarned: 0,
+      status: "active",
+      isEmailVerified: true,
+      hasSeenAppFeedback: false,
+      verificationCode: FieldValue.delete(),
+      verificationCodeExpires: FieldValue.delete(),
+    });
+  }
+  await batch.commit();
+  console.log(`[devSeed] Reset ${usersSnap.size} user(s) to defaults`);
 };
 
 const _createListing = async ({

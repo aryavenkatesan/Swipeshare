@@ -4,11 +4,9 @@ import 'package:integration_test/integration_test.dart';
 import 'package:swipeshare_app/services/dev_service.dart';
 
 import '../helpers/adaptive_helpers.dart';
-import '../helpers/app_harness.dart';
+import '../helpers/async_helpers.dart';
 import '../helpers/nav_helpers.dart';
-import '../helpers/picker_helpers.dart';
-import '../helpers/test_lifecycle.dart';
-import '../helpers/wait_helpers.dart';
+import '../helpers/setup.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

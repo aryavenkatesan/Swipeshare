@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 import * as functions from "firebase-functions/v2";
 import { patchListing } from "../services/listing-service";
 import { completeExpiredOrders } from "../services/order-service";
@@ -30,7 +31,7 @@ export const triggerCompleteOldOrders = functions.https.onCall(
 export const expireOldListings = functions.scheduler.onSchedule(
   { schedule: "0 0 * * *", timeZone: "America/New_York" }, // 12:00 AM EST
   async () => {
-    const now = admin.firestore.Timestamp.now();
+    const now = Timestamp.now();
 
     console.log(
       `Running listing expiration job at ${now.toDate().toISOString()}`,
