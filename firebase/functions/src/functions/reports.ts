@@ -1,21 +1,31 @@
-import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import * as functions from "firebase-functions";
 
 export const reportUser = functions.https.onCall(async (request) => {
   if (!request.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Must be signed in.");
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Must be signed in.",
+    );
   }
 
   const reporterId = request.auth.uid;
   const { orderId, reason } = request.data;
 
   if (!orderId || !reason) {
-    throw new functions.https.HttpsError("invalid-argument", "orderId and reason are required.");
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "orderId and reason are required.",
+    );
   }
 
   // Fetch the order to identify the other participant
-  const orderDoc = await admin.firestore().collection("orders").doc(orderId).get();
+  const orderDoc = await admin
+    .firestore()
+    .collection("orders")
+    .doc(orderId)
+    .get();
   if (!orderDoc.exists) {
     throw new functions.https.HttpsError("not-found", "Order not found.");
   }
@@ -26,7 +36,10 @@ export const reportUser = functions.https.onCall(async (request) => {
 
   // Verify the caller is a participant
   if (reporterId !== buyerId && reporterId !== sellerId) {
-    throw new functions.https.HttpsError("permission-denied", "You are not a participant in this order.");
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "You are not a participant in this order.",
+    );
   }
 
   const reportedId = reporterId === buyerId ? sellerId : buyerId;
@@ -37,14 +50,24 @@ export const reportUser = functions.https.onCall(async (request) => {
     admin.auth().getUser(reportedId),
   ]);
 
-  await admin.firestore().collection("reports").add({
-    reporterId,
-    reporterEmail: reporterRecord.email ?? "",
-    reportedId,
-    reportedEmail: reportedRecord.email ?? "",
-    reason,
-    timestamp: FieldValue.serverTimestamp(),
-  });
+  if (!reporterRecord?.emailVerified) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Your email must be verified to report a user.",
+    );
+  }
+
+  await admin
+    .firestore()
+    .collection("reports")
+    .add({
+      reporterId,
+      reporterEmail: reporterRecord.email ?? "",
+      reportedId,
+      reportedEmail: reportedRecord.email ?? "",
+      reason,
+      timestamp: FieldValue.serverTimestamp(),
+    });
 
   return { success: true };
 });

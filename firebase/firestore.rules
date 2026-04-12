@@ -31,8 +31,8 @@ service cloud.firestore {
       allow read: if isSignedIn() && isCurrentUser(userId);
       // User document creation is handled exclusively by the createUserDocument Cloud Function.
       allow create: if false;
-      // User can delete their own doc
-      allow delete: if isSignedIn() && isCurrentUser(userId);
+      // Delete account is only handled by Cloud Functions
+      allow delete: if false;
       // Only these fields may be updated directly by the client.
       // Everything else (isEmailVerified, stars, uid, email, etc.) is managed
       // exclusively by Cloud Functions via the Admin SDK.
