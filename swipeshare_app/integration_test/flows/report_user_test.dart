@@ -3,11 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:swipeshare_app/old_components/chat_screen/chat_settings.dart';
 import 'package:swipeshare_app/services/dev_service.dart';
+import 'package:swipeshare_app/utils/snackbar_messages.dart';
 
 import '../helpers/adaptive_helpers.dart';
-import '../helpers/app_harness.dart';
+import '../helpers/async_helpers.dart';
 import '../helpers/nav_helpers.dart';
-import '../helpers/test_lifecycle.dart';
+import '../helpers/setup.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,9 @@ void main() {
       "Inappropriate messages",
       submitText: "Report",
     );
+
+    // Wait for snackbar
+    await waitForText(tester, SnackbarMessages.reportSubmitted);
 
     await testTeardown(tester);
   });

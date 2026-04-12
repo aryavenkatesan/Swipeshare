@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:swipeshare_app/components/adaptive/adaptive_time_picker.dart';
 
 /// Finds a text input field regardless of platform.
 /// iOS uses [CupertinoTextField]; Android uses [TextField].
@@ -35,4 +36,16 @@ Future<void> cancelAdaptiveTextInput(
 }) async {
   await tester.tap(find.text(cancelText));
   await tester.pumpAndSettle();
+}
+
+/// Sets the value returned by the next [AdaptiveTimePicker.showAdaptiveTimePicker]
+/// call, bypassing all picker UI. Platform-independent.
+void setTimePickerValue(TimeOfDay value) {
+  AdaptiveTimePicker.testTimeOverride = value;
+}
+
+/// Sets the value returned by the next [AdaptiveTimePicker.showAdaptiveDatePicker]
+/// call, bypassing all picker UI. Platform-independent.
+void setDatePickerValue(DateTime value) {
+  AdaptiveTimePicker.testDateOverride = value;
 }

@@ -126,10 +126,7 @@ class ChatService extends ChangeNotifier {
     final order = await _orderService.getOrderById(orderId);
 
     if (order.me.hasNotifs) {
-      final field = order.currentUserRole == OrderRole.buyer
-          ? 'buyer.hasNotifs'
-          : 'seller.hasNotifs';
-      await _orderDoc.update({field: false});
+      await _orderDoc.update({"${order.currentUserRole.name}.hasNotifs": false});
     }
 
     await _notificationService.updateBadgeCount();

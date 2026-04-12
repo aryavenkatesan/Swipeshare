@@ -2,8 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:swipeshare_app/services/dev_service.dart';
 
-import 'app_harness.dart';
-import 'auth_helper.dart';
+import 'setup.dart';
+import 'auth_helpers.dart';
 
 /// Navigates to the Inbox tab and taps the chat with [counterpartyName].
 Future<void> goToChat(WidgetTester tester, String counterpartyName) async {

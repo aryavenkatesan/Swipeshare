@@ -10,6 +10,17 @@ import {
 import { getUser } from "../services/user-service";
 import { Listing, Order } from "../types"; // Order used in return type inference
 
+// Payment types per user, mirroring firebase/scripts/seed.ts — keep in sync.
+const SEED_PAYMENT_TYPES: Record<string, string[]> = {
+  "naasanov+a@unc.edu": ["Cash", "Venmo", "Zelle", "PayPal", "CashApp"],
+  "naasanov@unc.edu":   ["Cash", "Venmo", "Zelle", "PayPal", "CashApp"],
+  "vmshah2@unc.edu":    ["Cash", "Venmo"],
+  "aryav@unc.edu":      ["Cash", "Zelle", "Venmo", "Apple Pay", "PayPal", "CashApp"],
+  "testuser1@unc.edu":  ["Cash", "Venmo"],
+  "testuser2@unc.edu":  ["Cash", "Zelle"],
+  "testuser3@unc.edu":  ["Cash"],
+};
+
 export const devSeed = functions.https.onCall(async (request) => {
   if (!process.env.FUNCTIONS_EMULATOR) {
     throw new HttpsError("failed-precondition", "This function is dev-only.");
@@ -70,15 +81,17 @@ const _resetUsers = async (db: admin.firestore.Firestore) => {
 
   const batch = db.batch();
   for (const doc of usersSnap.docs) {
+    const email = doc.data().email as string | undefined;
+    const paymentTypes = (email && SEED_PAYMENT_TYPES[email]) ?? [];
     batch.update(doc.ref, {
       stars: 5,
       transactions_completed: 0,
-      payment_types: [],
+      payment_types: paymentTypes,
       blocked_users: [],
       moneySaved: 0,
       moneyEarned: 0,
       status: "active",
-      isEmailVerified: false,
+      isEmailVerified: true,
       hasSeenAppFeedback: false,
       verificationCode: FieldValue.delete(),
       verificationCodeExpires: FieldValue.delete(),

@@ -1,6 +1,32 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { createUser } from "../services/user-service";
+
+export const createUserDocument = functions.https.onCall(async (request) => {
+  if (!request.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Must be signed in.");
+  }
+
+  const uid = request.auth.uid;
+  const email = request.auth.token.email;
+  const { name, referralEmail } = request.data;
+
+  if (!email) {
+    throw new functions.https.HttpsError("invalid-argument", "User has no email.");
+  }
+  if (!name || typeof name !== "string" || name.trim() === "") {
+    throw new functions.https.HttpsError("invalid-argument", "Name is required.");
+  }
+
+  try {
+    await createUser(uid, email, name.trim(), referralEmail ?? "");
+  } catch (e) {
+    throw new functions.https.HttpsError("already-exists", "User document already exists.");
+  }
+
+  return { success: true };
+});
 
 export const sendVerificationCode = functions.https.onCall(async (request) => {
   if (!request.auth) {

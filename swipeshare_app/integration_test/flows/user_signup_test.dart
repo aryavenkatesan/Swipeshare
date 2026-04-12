@@ -3,10 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:swipeshare_app/services/user_service.dart';
 
-import '../helpers/app_harness.dart';
-import '../helpers/auth_helper.dart';
-import '../helpers/test_lifecycle.dart';
-import '../helpers/wait_helpers.dart';
+import '../helpers/async_helpers.dart';
+import '../helpers/auth_helpers.dart';
+import '../helpers/setup.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

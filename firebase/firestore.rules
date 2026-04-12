@@ -29,14 +29,17 @@ service cloud.firestore {
       // Users can only read their own document.
       // Other users' data is embedded in orders/listings — no cross-user reads needed.
       allow read: if isSignedIn() && isCurrentUser(userId);
-      // User can create or delete their own doc
-      allow create, delete: if isSignedIn() && isCurrentUser(userId);
+      // User document creation is handled exclusively by the createUserDocument Cloud Function.
+      allow create: if false;
+      // User can delete their own doc
+      allow delete: if isSignedIn() && isCurrentUser(userId);
       // Only these fields may be updated directly by the client.
       // Everything else (isEmailVerified, stars, uid, email, etc.) is managed
       // exclusively by Cloud Functions via the Admin SDK.
       function onlyAllowedFields() {
         return request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['name', 'payment_types', 'blocked_users', 'fcmToken', 'lastTokenUpdate']);
+          .hasOnly(['name', 'payment_types', 'blocked_users', 'fcmToken', 'lastTokenUpdate',
+                    'notifSettings', 'hasSeenAppFeedback', 'hasRequestedStoreReview']);
       }
       // User can update their own doc, but only allowed fields
       allow update: if isSignedIn() && isCurrentUser(userId) && onlyAllowedFields();
@@ -45,7 +48,7 @@ service cloud.firestore {
     match /password_resets/{email} {
       // Strictly deny all direct client access.
       // Access is handled exclusively by Cloud Functions via the Admin SDK.
-        allow read, write, list: if false;
+        allow read, write: if false;
       }
     }
 
@@ -56,29 +59,62 @@ service cloud.firestore {
     
     // Listings collection
     match /listings/{listingId} {
-      // Anyone verified can read or list listings
+      // Anyone verified can get or list listings
       allow read: if isVerified(); 
       
-      // Only the seller can create/update/delete their own listings
+      // Only the seller can create/update their own listings
       allow create: if isVerified() && isCurrentUser(request.resource.data.sellerId);
-      allow update: if isVerified() && isCurrentUser(resource.data.sellerId);
+
+      // Delete is not permitted; use status: cancelled
+      allow delete: if false;
+
+      // Seller may only edit mutable listing fields.
+      // sellerId, sellerName, and sellerRating are immutable after creation —
+      // blocking rating inflation and ownership transfer.
+      // Status may only be set to 'cancelled' by the client; all other status
+      // transitions (claimed, expired) are handled by Cloud Functions.
+      function onlyListingAllowedFields() {
+        let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
+        let allowedFields = ['diningHall', 'timeStart', 'timeEnd',
+                             'transactionDate', 'paymentTypes', 'price', 'status'];
+        return changedKeys.hasOnly(allowedFields)
+          && (!changedKeys.hasAny(['status'])
+              || request.resource.data.status == 'cancelled');
+      }
+      allow update: if isVerified() && isCurrentUser(resource.data.sellerId)
+                    && onlyListingAllowedFields();
     }
     
     // Orders collection
     match /orders/{orderId} {
-    	// Checks if the user is updating the order to add a rating, 
-    	// and makes sure they don't add a rating for themselves
-    	function canUpdateOrder() {
-      	let data = request.resource.data;
-    		let existingData = resource.data;
+      // Each participant may only touch their own sub-map plus shared fields.
+      // This prevents a buyer from flipping seller.markedComplete (forced completion),
+      // changing status/cancelledBy (those go through Cloud Functions), or
+      // tampering with embedded participant data (name, stars, id).
+      function canUpdateOrder() {
+        let data = request.resource.data;
+        let existingData = resource.data;
 
         let isBuyer = isCurrentUser(existingData.buyer.id);
         let isSeller = isCurrentUser(existingData.seller.id);
 
-        let buyerRatingChanged = data.get('buyer.rating', null) != existingData.get('buyer.rating', null);
-        let sellerRatingChanged = data.get('seller.rating', null) != existingData.get('seller.rating', null);
+        // Top-level keys that actually changed in this write
+        let changedKeys = data.diff(existingData).affectedKeys();
 
-        return (isBuyer && !sellerRatingChanged) || (isSeller && !buyerRatingChanged);
+        // Fields inside buyer/seller maps the owner may write
+        let ownSubKeys = ['hasNotifs', 'markedComplete', 'rating'];
+
+        let buyerOk = isBuyer
+          && changedKeys.hasOnly(['cancellationAcknowledged', 'displayTime', 'buyer'])
+          && (!changedKeys.hasAny(['buyer'])
+              || data.buyer.diff(existingData.buyer).affectedKeys().hasOnly(ownSubKeys));
+
+        let sellerOk = isSeller
+          && changedKeys.hasOnly(['cancellationAcknowledged', 'displayTime', 'seller'])
+          && (!changedKeys.hasAny(['seller'])
+              || data.seller.diff(existingData.seller).affectedKeys().hasOnly(ownSubKeys));
+
+        return buyerOk || sellerOk;
       }
     
       // Only VERIFIED participants can read an order
@@ -89,10 +125,10 @@ service cloud.firestore {
       // list orders; the client is responsible for always filtering by their own UID.
       allow list: if isVerified();
 
-      // Only verified users can create orders
-      allow create: if isVerified() && isCurrentUser(request.resource.data.buyer.id);
+      // Order creation should only be handled by cloud functions
+      allow create: if false;
       
-      // Both verified parties can update, delete
+      // Both verified parties can update
       allow update: if isVerified() && isOrderParticipant(resource.data) && canUpdateOrder();
     }
     
@@ -121,15 +157,22 @@ service cloud.firestore {
       }
 
       // Allow participant to read/list
-      allow read, list: if isVerifiedOrderParticipant();
+      allow read: if isVerifiedOrderParticipant();
         
       allow create: if isVerifiedOrderParticipant()
         && isClientAuthoredMessageCreate();
       
-      // Only time proposals can be updated
+      // Only time proposals can be updated, and only their status field.
+      // Asserts all immutable fields are unchanged rather than using affectedKeys(),
+      // which has unreliable behaviour with server timestamps in rule evaluation.
       allow update: if isVerifiedOrderParticipant()
         && resource.data.messageType == "timeProposal"
-        && request.resource.data.messageType == "timeProposal";
+        && request.resource.data.messageType == "timeProposal"
+        && request.resource.data.senderId == resource.data.senderId
+        && request.resource.data.senderEmail == resource.data.senderEmail
+        && request.resource.data.senderName == resource.data.senderName
+        && request.resource.data.proposedTime == resource.data.proposedTime
+        && request.resource.data.timestamp == resource.data.timestamp;
       
       // Allows the _deleteSubcollection helper to work
       allow delete: if isVerifiedOrderParticipant();
@@ -138,12 +181,13 @@ service cloud.firestore {
     // Feedback
     match /feedback/{feedbackId} {
       allow create: if isVerified() && isCurrentUser(request.resource.data.userId);
+      allow read, update, delete: if false
     }
     
     // Reports
     match /reports/{reportId} {
-      // Only VERIFIED users can create reports
-      allow create: if isVerified() && isCurrentUser(request.resource.data.reporterId);
+      // All report creation should be done through cloud functions
+      allow read, write: if false;
     }
   }
 }

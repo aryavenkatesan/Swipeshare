@@ -64,7 +64,7 @@ class ChatSettingsMenu extends StatelessWidget {
     );
 
     if (reportText != null && context.mounted) {
-      chatService.reportUser(reportText);
+      await chatService.reportUser(reportText);
       await safeVibrate(HapticsType.success);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
