@@ -49,7 +49,16 @@ class DashboardHeader extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Hi, ${userData.name}", style: textTheme.displayLarge),
+            Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Hi, ${userData.name}",
+                    style: textTheme.displayLarge,
+                  ),
+                ),
+              ),
             _RatingChip(
               rating: userData.stars,
               transactionsCompleted: userData.transactionsCompleted,
@@ -167,10 +176,7 @@ class _OrdersListState extends State<_OrdersList> {
             Filter('buyer.id', isEqualTo: userId),
           ),
         )
-        .where(
-          'status',
-          whereIn: [OrderStatus.active.name, OrderStatus.cancelled.name],
-        )
+        .where('status', isEqualTo: OrderStatus.active.name)
         .snapshots();
   }
 
@@ -214,9 +220,7 @@ class _OrdersListState extends State<_OrdersList> {
         }
 
         final orders =
-            (snapshot.data?.docs.map((doc) => doc.data()) ?? <MealOrder>[])
-                .where((order) => order.isActiveOrUnacknowledged())
-                .toList();
+            snapshot.data?.docs.map((doc) => doc.data()).toList() ?? [];
 
         if (orders.isEmpty) {
           return _EmptyMessage(
