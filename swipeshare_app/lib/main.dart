@@ -1,31 +1,13 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:swipeshare_app/components/theme_data.dart';
-import 'package:swipeshare_app/firebase_options.dart';
-import 'package:swipeshare_app/services/auth/auth_gate.dart';
-import 'package:swipeshare_app/services/auth/auth_services.dart';
-import 'package:swipeshare_app/services/notification_service.dart';
-import 'package:swipeshare_app/utils/profanity_utils.dart';
+import 'package:swipeshare_app/pages/shutdown_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 bool isDevMode = false;
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  await NotificationService.instance.initialize(navigatorKey);
-
-  await ProfanityUtils.init();
-
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthServices(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -37,7 +19,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: swipeshareTheme(),
-      home: AuthGate(),
+      home: const ShutdownPage(),
     );
   }
 }
