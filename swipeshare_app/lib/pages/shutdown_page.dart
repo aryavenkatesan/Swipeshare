@@ -55,7 +55,7 @@ class ShutdownPage extends StatelessWidget {
                   ),
                   SizedBox(height: vh > 767 ? 14 : 10),
                   Text(
-                    'Due to conflicts with UNC dining policy, the app is now shut down.',
+                    'Due to conflicts with UNC dining policy, the app is no longer available.',
                     style: textTheme.bodyLarge?.copyWith(
                       height: 1.55,
                       color: colorScheme.onSurface.withValues(alpha: 0.65),
@@ -69,7 +69,7 @@ class ShutdownPage extends StatelessWidget {
                   ),
                   SizedBox(height: vh > 767 ? 20 : 14),
                   Text(
-                    'Thank you for using Swipeshare.',
+                    'We thank you for using Swipeshare.',
                     style: textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.55),
                     ),
